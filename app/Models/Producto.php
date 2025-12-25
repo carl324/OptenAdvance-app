@@ -16,12 +16,16 @@ class Producto extends Model
         'precio',
         'stock',
         'activo',
+        'iva',
+        'precio_con_iva',
     ];
 
     protected $casts = [
         'precio' => 'float',
         'stock'  => 'integer',
         'activo' => 'boolean',
+        'iva' => 'float',
+        'precio_con_iva' => 'float',
     ];
 
     // Scope: solo activos

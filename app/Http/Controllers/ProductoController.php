@@ -32,10 +32,14 @@ class ProductoController extends Controller
             'nombre' => 'required|string|max:100',
             'precio' => 'required|numeric|min:0',
             'stock'  => 'required|integer|min:0',
+            'iva'    => 'required|numeric|min:0|max:100',
         ]);
 
         // Normalizar nombre
         $data['nombre'] = trim(mb_strtolower($data['nombre']));
+
+        // Calcular precio con IVA
+        $data['precio_con_iva'] = $data['precio'] * (1 + ($data['iva'] / 100));
 
         // Evitar duplicados activos
         $existe = Producto::whereRaw('LOWER(nombre) = ?', [$data['nombre']])
@@ -63,6 +67,8 @@ class ProductoController extends Controller
             $producto = Producto::create([
                 'nombre' => $data['nombre'],
                 'precio' => $data['precio'],
+                'iva' => $data['iva'],
+                'precio_con_iva' => $data['precio_con_iva'],
                 'stock'  => 0,
             ]);
 
@@ -102,9 +108,13 @@ class ProductoController extends Controller
         $data = $request->validate([
             'nombre' => 'required|string|max:100',
             'precio' => 'required|numeric|min:0',
+            'iva'    => 'required|numeric|min:0|max:100',
         ]);
 
         $data['nombre'] = trim(mb_strtolower($data['nombre']));
+
+        // Calcular precio con IVA
+        $data['precio_con_iva'] = $data['precio'] * (1 + ($data['iva'] / 100));
 
         // Evitar duplicados al editar
         $existe = Producto::whereRaw('LOWER(nombre) = ?', [$data['nombre']])
