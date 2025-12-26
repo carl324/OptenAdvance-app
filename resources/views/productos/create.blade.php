@@ -182,7 +182,8 @@ selectIva.addEventListener('change', actualizarPreview);
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    mensaje.style.display = 'none';
+    // Ocultar mensajes previos
+    mensaje.classList.remove('show');
     boxExistente.classList.remove('show');
 
     btnGuardar.disabled = true;
@@ -198,9 +199,10 @@ form.addEventListener('submit', async (e) => {
     // Validación adicional
     if (data.precio === 0) {
         mensaje.className = 'mensaje error show';
-        mensaje.innerText = 'El precio debe ser mayor a 0';
+        mensaje.innerHTML = '❌ El precio debe ser mayor a 0';
         btnGuardar.disabled = false;
         btnGuardar.innerText = MENSAJES.btnDefault;
+        inputPrecio.focus();
         return;
     }
 
@@ -221,25 +223,29 @@ form.addEventListener('submit', async (e) => {
 
         // ✅ ÉXITO
         mensaje.className = 'mensaje success show';
-        mensaje.innerText = MENSAJES.exito;
+        mensaje.innerHTML = MENSAJES.exito;
 
-        // Limpiar formulario
-        form.reset();
-        inputPrecio.value = '';
-        inputPrecioValor.value = '0';
-        selectIva.value = '19';
-        actualizarPreview();
+        // Limpiar formulario después de 2 segundos
+        setTimeout(() => {
+            form.reset();
+            inputPrecio.value = '';
+            inputPrecioValor.value = '0';
+            selectIva.value = '19';
+            actualizarPreview();
+            mensaje.classList.remove('show');
+        }, 2000);
 
     } catch (error) {
         mensaje.className = 'mensaje error show';
 
         // Validaciones del servidor
         if (error.errors) {
-            mensaje.innerText = Object.values(error.errors)[0][0];
+            const primerError = Object.values(error.errors)[0][0];
+            mensaje.innerHTML = `❌ ${primerError}`;
         }
         // Producto duplicado
         else if (error.message === 'El producto ya existe' && error.producto) {
-            mensaje.innerText = MENSAJES.productoExiste;
+            mensaje.innerHTML = MENSAJES.productoExiste;
 
             document.getElementById('ex-nombre').innerText = error.producto.nombre;
             document.getElementById('ex-precio').innerText = formatoPrecio(error.producto.precio);
@@ -250,7 +256,7 @@ form.addEventListener('submit', async (e) => {
             boxExistente.classList.add('show');
         }
         else {
-            mensaje.innerText = MENSAJES.errorGenerico;
+            mensaje.innerHTML = MENSAJES.errorGenerico;
         }
     } finally {
         btnGuardar.disabled = false;
