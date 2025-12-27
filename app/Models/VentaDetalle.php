@@ -13,24 +13,24 @@ class VentaDetalle extends Model
         'producto_id',
         'cantidad',
         'precio_unitario',
+        'iva',          // ← nuevo
         'subtotal',
     ];
 
     protected $casts = [
-        'cantidad' => 'integer',
+        'cantidad'        => 'integer',
         'precio_unitario' => 'float',
-        'subtotal' => 'float',
+        'iva'             => 'float',   // ← nuevo
+        'subtotal'        => 'float',
     ];
 
-    public $timestamps = false; // Esta tabla no tiene created_at/updated_at
+    public $timestamps = false;
 
-    // Relación con venta
     public function venta()
     {
         return $this->belongsTo(Venta::class, 'venta_id');
     }
 
-    // Relación con producto
     public function producto()
     {
         return $this->belongsTo(Producto::class, 'producto_id');

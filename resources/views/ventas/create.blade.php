@@ -29,7 +29,7 @@
         
         .cliente-section { margin-bottom: 20px; }
         .cliente-section label { display: block; margin-bottom: 8px; font-weight: 500; }
-        #cliente { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; }
+        #cliente, #cliente_nit, #forma_pago { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 10px; }
         
         .carrito-section { margin-bottom: 20px; }
         .carrito-vacio { text-align: center; padding: 40px; color: #999; }
@@ -111,8 +111,10 @@
     </div>
 
     <div class="cliente-section">
-        <label for="cliente">Cliente (opcional):</label>
+        <label>Cliente (opcional):</label>
         <input type="text" id="cliente" placeholder="Nombre del cliente">
+        <input type="text" id="cliente_nit" placeholder="NIT (opcional)">
+        <input type="text" id="forma_pago" placeholder="Forma de pago (opcional)">
     </div>
 
     <div class="carrito-section">
@@ -275,7 +277,7 @@ function mostrarResultados(productos) {
             <div class="search-item" data-index="${index}" data-producto='${JSON.stringify(p)}'>
                 <div class="search-item-name">${p.nombre}</div>
                 <div class="search-item-details">
-                    Precio: ${formatoPrecio(p.precio)}
+                    Precio: ${formatoPrecio(p.precio)} ${p.iva ? '(+IVA)' : '(sin IVA)'}
                     <span class="search-item-stock ${stockClass}">${stockText}</span>
                 </div>
             </div>
@@ -327,7 +329,8 @@ function agregarAlCarrito(producto) {
             nombre: producto.nombre,
             precio: parseFloat(producto.precio),
             cantidad: 1,
-            stock: producto.stock
+            stock: producto.stock,
+            iva: producto.iva || 0
         });
     }
 
@@ -358,9 +361,13 @@ function actualizarCarrito() {
                 </tr>
             </thead>
             <tbody>
-                ${carrito.map((item, index) => `
+                ${carrito.map((item, index) => {
+                    const subtotal = item.cantidad * item.precio;
+                    const ivaValor = item.iva ? subtotal * (item.iva / 100) : 0;
+                    const totalConIva = subtotal + ivaValor;
+                    return `
                     <tr>
-                        <td>${item.nombre}<br><small style="color: #999;">Stock: ${item.stock}</small></td>
+                        <td>${item.nombre}${item.iva ? `<br><small>IVA ${item.iva}%</small>` : ''}<br><small style="color: #999;">Stock: ${item.stock}</small></td>
                         <td>
                             <input 
                                 type="number" 
@@ -372,12 +379,12 @@ function actualizarCarrito() {
                             >
                         </td>
                         <td style="text-align: right;">${formatoPrecio(item.precio)}</td>
-                        <td style="text-align: right;"><strong>${formatoPrecio(item.cantidad * item.precio)}</strong></td>
+                        <td style="text-align: right;"><strong>${formatoPrecio(totalConIva)}</strong></td>
                         <td>
                             <button class="btn-eliminar" onclick="confirmarEliminar(${index})">✕</button>
                         </td>
                     </tr>
-                `).join('')}
+                `}).join('')}
             </tbody>
         </table>
     `;
@@ -424,7 +431,11 @@ function eliminarDelCarrito(index) {
 }
 
 function actualizarTotal() {
-    const total = carrito.reduce((sum, item) => sum + (item.cantidad * item.precio), 0);
+    const total = carrito.reduce((sum, item) => {
+        const subtotal = item.cantidad * item.precio;
+        const ivaValor = item.iva ? subtotal * (item.iva / 100) : 0;
+        return sum + subtotal + ivaValor;
+    }, 0);
     totalSpan.textContent = formatoPrecio(total);
 }
 
@@ -434,7 +445,12 @@ function confirmarVenta() {
         return;
     }
 
-    const total = carrito.reduce((sum, item) => sum + (item.cantidad * item.precio), 0);
+    const total = carrito.reduce((sum, item) => {
+        const subtotal = item.cantidad * item.precio;
+        const ivaValor = item.iva ? subtotal * (item.iva / 100) : 0;
+        return sum + subtotal + ivaValor;
+    }, 0);
+
     const cliente = document.getElementById('cliente').value.trim();
     
     const detallesHTML = `
@@ -442,15 +458,19 @@ function confirmarVenta() {
             ${cliente ? `<p style="margin-bottom: 10px;"><strong>Cliente:</strong> ${cliente}</p>` : ''}
             
             <div class="venta-items">
-                ${carrito.map(item => `
+                ${carrito.map(item => {
+                    const subtotal = item.cantidad * item.precio;
+                    const ivaValor = item.iva ? subtotal * (item.iva / 100) : 0;
+                    const totalConIva = subtotal + ivaValor;
+                    return `
                     <div class="venta-item">
                         <div>
                             <div class="venta-item-nombre">${item.nombre}</div>
-                            <div class="venta-item-detalle">${item.cantidad} x ${formatoPrecio(item.precio)}</div>
+                            <div class="venta-item-detalle">${item.cantidad} x ${formatoPrecio(item.precio)} ${item.iva ? `(IVA ${item.iva}%)` : ''}</div>
                         </div>
-                        <div><strong>${formatoPrecio(item.cantidad * item.precio)}</strong></div>
+                        <div><strong>${formatoPrecio(totalConIva)}</strong></div>
                     </div>
-                `).join('')}
+                `}).join('')}
             </div>
             
             <div class="venta-total">
@@ -479,10 +499,13 @@ async function finalizarVenta() {
 
     const data = {
         cliente: document.getElementById('cliente').value.trim() || null,
+        cliente_nit: document.getElementById('cliente_nit').value.trim() || null,
+        forma_pago: document.getElementById('forma_pago').value.trim() || null,
         productos: carrito.map(item => ({
             id: item.id,
             cantidad: item.cantidad,
-            precio: item.precio
+            precio: item.precio,
+            iva: item.iva || 0
         }))
     };
 
@@ -501,13 +524,11 @@ async function finalizarVenta() {
 
         if (!res.ok) throw result;
 
-        // Mostrar mensaje de éxito
         mostrarMensaje(
             `✅ ${result.message} - Venta #${result.venta_id} - Total: ${formatoPrecio(result.total)}`, 
             'success'
         );
 
-        // Mostrar opción de imprimir
         mostrarModalImpresion(result.venta_id, result.total, data.cliente, carrito);
 
         limpiarVenta();
@@ -523,6 +544,8 @@ async function finalizarVenta() {
 function limpiarVenta() {
     carrito = [];
     document.getElementById('cliente').value = '';
+    document.getElementById('cliente_nit').value = '';
+    document.getElementById('forma_pago').value = '';
     inputBuscar.value = '';
     actualizarCarrito();
     inputBuscar.focus();
@@ -538,7 +561,6 @@ function mostrarMensaje(texto, tipo) {
 }
 
 function mostrarModalImpresion(ventaId, total, cliente, items) {
-    // Preparar datos del ticket
     const ahora = new Date();
     const fecha = ahora.toLocaleDateString('es-CO', { 
         year: 'numeric', 
@@ -553,18 +575,21 @@ function mostrarModalImpresion(ventaId, total, cliente, items) {
     document.getElementById('ticket-cliente').textContent = cliente ? `Cliente: ${cliente}` : '';
     document.getElementById('ticket-total').textContent = formatoPrecio(total);
     
-    // Generar items
-    const itemsHTML = items.map(item => `
-        <div class="ticket-item">
-            <span class="ticket-item-desc">${item.nombre}</span>
-            <span class="ticket-item-qty">${item.cantidad}x</span>
-            <span>${formatoPrecio(item.cantidad * item.precio)}</span>
-        </div>
-    `).join('');
+    const itemsHTML = items.map(item => {
+        const subtotal = item.cantidad * item.precio;
+        const ivaValor = item.iva ? subtotal * (item.iva / 100) : 0;
+        const totalConIva = subtotal + ivaValor;
+        return `
+            <div class="ticket-item">
+                <span class="ticket-item-desc">${item.nombre}</span>
+                <span class="ticket-item-qty">${item.cantidad}x</span>
+                <span>${formatoPrecio(totalConIva)}</span>
+            </div>
+        `;
+    }).join('');
     
     document.getElementById('ticket-items').innerHTML = itemsHTML;
     
-    // Mostrar modal
     mostrarModal(
         '✅ Venta Registrada',
         `
