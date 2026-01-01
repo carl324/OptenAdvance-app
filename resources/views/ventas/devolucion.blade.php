@@ -1,3 +1,6 @@
+@extends('layouts.app')
+
+@section('content')
 <form id="anularForm" method="POST" action="{{ route('ventas.devolucion.confirmar', $venta) }}">
 	@csrf
 	<div class="mb-3">
@@ -10,3 +13,4 @@
 		<button type="submit" class="btn-danger-plain">Sí, anular</button>
 	</div>
 </form>
+@endsection

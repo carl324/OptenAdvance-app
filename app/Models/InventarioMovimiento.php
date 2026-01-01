@@ -22,39 +22,37 @@ class InventarioMovimiento extends Model
 
     public static function entrada($productoId, $cantidad, $origen, $referenciaId = null, $descripcion = null)
     {
-        DB::transaction(function () use ($productoId, $cantidad, $origen, $referenciaId, $descripcion) {
+        // Nota: no envolver en transacción aquí para permitir que el caller
+        // (p.ej. VentaController::store) controle la transacción global.
+        self::create([
+            'producto_id'   => $productoId,
+            'tipo'          => 'entrada',
+            'cantidad'      => $cantidad,
+            'origen'        => $origen,
+            'referencia_id' => $referenciaId,
+            'descripcion'   => $descripcion,
+        ]);
 
-            self::create([
-                'producto_id'   => $productoId,
-                'tipo'          => 'entrada',
-                'cantidad'      => $cantidad,
-                'origen'        => $origen,
-                'referencia_id' => $referenciaId,
-                'descripcion'   => $descripcion,
-            ]);
-
-            DB::table('productos')
-                ->where('id', $productoId)
-                ->increment('stock', $cantidad);
-        });
+        DB::table('productos')
+            ->where('id', $productoId)
+            ->increment('stock', $cantidad);
     }
 
     public static function salida($productoId, $cantidad, $origen, $referenciaId = null, $descripcion = null)
     {
-        DB::transaction(function () use ($productoId, $cantidad, $origen, $referenciaId, $descripcion) {
+        // Nota: no envolver en transacción aquí para permitir que el caller
+        // (p.ej. VentaController::store) controle la transacción global.
+        self::create([
+            'producto_id'   => $productoId,
+            'tipo'          => 'salida',
+            'cantidad'      => $cantidad,
+            'origen'        => $origen,
+            'referencia_id' => $referenciaId,
+            'descripcion'   => $descripcion,
+        ]);
 
-            self::create([
-                'producto_id'   => $productoId,
-                'tipo'          => 'salida',
-                'cantidad'      => $cantidad,
-                'origen'        => $origen,
-                'referencia_id' => $referenciaId,
-                'descripcion'   => $descripcion,
-            ]);
-
-            DB::table('productos')
-                ->where('id', $productoId)
-                ->decrement('stock', $cantidad);
-        });
+        DB::table('productos')
+            ->where('id', $productoId)
+            ->decrement('stock', $cantidad);
     }
 }

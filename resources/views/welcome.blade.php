@@ -1,3 +1,51 @@
+@extends('layouts.app')
+
+@section('content')
+<div style="max-width:720px;margin:3rem auto;padding:1.5rem;background:#fff;border:1px solid #e6e6e6;border-radius:8px;text-align:center;">
+    <h1 style="margin:0 0 1rem;font-size:1.5rem;color:#1b1b18;">{{ config('app.name', 'POS MVP') }}</h1>
+    <p style="margin:0 0 1.25rem;color:#706f6c;">Sistema de punto de venta — versión inicial. Usa la navegación superior para acceder a las secciones.</p>
+
+    <div style="display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:1rem;">
+        @if (Route::has('login'))
+            @auth
+                <a href="{{ url('/dashboard') }}" style="padding:.5rem .75rem;border-radius:6px;border:1px solid #e3e3e0;color:#1b1b18;text-decoration:none;">Dashboard</a>
+            @else
+                <a href="{{ route('login') }}" style="padding:.5rem .75rem;border-radius:6px;border:1px solid #e3e3e0;color:#1b1b18;text-decoration:none;">Iniciar sesión</a>
+                @if (Route::has('register'))
+                    <a href="{{ route('register') }}" style="padding:.5rem .75rem;border-radius:6px;border:1px solid #e3e3e0;color:#1b1b18;text-decoration:none;">Registro</a>
+                @endif
+            @endauth
+        @endif
+
+        <a href="{{ route('empresa.index') }}" style="padding:.5rem .75rem;border-radius:6px;border:1px solid #e3e3e0;color:#1b1b18;text-decoration:none;">Editar Empresa</a>
+    </div>
+</div>
+
+@endsection
+@extends('layouts.app')
+
+@section('content')
+<div style="max-width:720px;margin:3rem auto;padding:1.5rem;background:#fff;border:1px solid #e6e6e6;border-radius:8px;text-align:center;">
+    <h1 style="margin:0 0 1rem;font-size:1.5rem;color:#1b1b18;">{{ config('app.name', 'POS MVP') }}</h1>
+    <p style="margin:0 0 1.25rem;color:#706f6c;">Sistema de punto de venta — versión inicial. Usa la navegación superior para acceder a las secciones.</p>
+
+    <div style="display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:1rem;">
+        @if (Route::has('login'))
+            @auth
+                <a href="{{ url('/dashboard') }}" style="padding:.5rem .75rem;border-radius:6px;border:1px solid #e3e3e0;color:#1b1b18;text-decoration:none;">Dashboard</a>
+            @else
+                <a href="{{ route('login') }}" style="padding:.5rem .75rem;border-radius:6px;border:1px solid #e3e3e0;color:#1b1b18;text-decoration:none;">Iniciar sesión</a>
+                @if (Route::has('register'))
+                    <a href="{{ route('register') }}" style="padding:.5rem .75rem;border-radius:6px;border:1px solid #e3e3e0;color:#1b1b18;text-decoration:none;">Registro</a>
+                @endif
+            @endauth
+        @endif
+
+        <a href="{{ route('empresa.index') }}" style="padding:.5rem .75rem;border-radius:6px;border:1px solid #e3e3e0;color:#1b1b18;text-decoration:none;">Editar Empresa</a>
+    </div>
+</div>
+
+@endsection
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>

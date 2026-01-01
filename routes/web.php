@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\EmpresaController;
+use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\BackupController;
 
 Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
 Route::get('/ventas/nueva', [VentaController::class, 'create'])->name('ventas.create');
@@ -22,12 +24,26 @@ Route::post('/ventas/{venta}/devolucion', [VentaController::class, 'confirmarDev
 Route::get('/api/productos/buscar', [VentaController::class, 'buscarProductos'])
     ->name('productos.buscar');
 
-Route::get('/productos/create', [ProductoController::class, 'create']);
-Route::post('/productos', [ProductoController::class, 'store']);
-Route::get('/productos', [ProductoController::class, 'index']);
+// Reportes simple: vista y export
+Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+Route::get('/reportes/export', [ReporteController::class, 'export'])->name('reportes.export');
+
+Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
+Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
+Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
 Route::put('/productos/{id}', [ProductoController::class, 'update']);
 Route::delete('/productos/{id}', [ProductoController::class, 'destroy']);
 
-// Rutas para editar la única fila de 'empresa'
-Route::get('/empresa/edit', [EmpresaController::class, 'edit'])->name('empresa.edit');
-Route::put('/empresa', [EmpresaController::class, 'update'])->name('empresa.update');
+// Rutas para editar la única fila de 'empresa' (mostrar y guardar cambios)
+// GET  /empresa -> mostrar formulario con datos actuales
+// POST /empresa -> guardar cambios
+Route::get('/empresa', [EmpresaController::class, 'edit'])->name('empresa.index');
+Route::post('/empresa', [EmpresaController::class, 'update'])->name('empresa.update');
+
+// Copia de seguridad manual: copia el archivo SQLite a la carpeta Downloads/opten-backups del usuario
+Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
+
+// Onboarding simple: vista independiente (closure que devuelve la vista)
+Route::get('/onboarding', function () {
+    return view('onboarding');
+})->name('onboarding');

@@ -16,7 +16,9 @@
 						<th>Fecha</th>
 						<th>Cliente</th>
 						<th class="text-end">Total</th>
+						@if($empresa && $empresa->cobra_iva)
 						<th class="text-end">IVA / impuestos</th>
+						@endif
 						<th>Forma de pago</th>
 						<th>Estado</th>
 						<th>Acciones</th>
@@ -30,7 +32,9 @@
 							<td>{{ optional($venta->fecha)->format('Y-m-d H:i') ?? '-' }}</td>
 							<td>{{ $venta->factura->cliente_nombre ?? 'Consumidor final' }}</td>
 							<td class="text-end">{{ number_format($venta->total ?? 0, 0, ',', '.') }}</td>
+							@if($empresa && $empresa->cobra_iva)
 							<td class="text-end">{{ number_format(optional($venta->factura)->impuestos ?? 0, 0, ',', '.') }}</td>
+							@endif
 							<td>{{ $venta->factura->forma_pago ?? '-' }}</td>
 							<td>{{ ucfirst($venta->estado ?? '---') }}</td>
 							<td>
@@ -41,10 +45,10 @@
 									);
 								@endphp
 								@if($puedeAnular)
-												<a href="{{ route('ventas.factura', $venta) }}" target="_blank" class="btn btn-sm btn-outline-primary">Ver factura</a>
+												<a href="{{ route('ventas.factura', $venta) }}" target="_blank" class="btn btn-sm btn-outline-primary">Imprimir factura</a>
 												<button class="btn btn-sm btn-danger btn-anular" data-url="{{ route('ventas.devolucion.confirmar', $venta) }}">Anular</button>
 								@else
-												<a href="{{ route('ventas.factura', $venta) }}" target="_blank" class="btn btn-sm btn-outline-primary">Ver factura</a>
+												<a href="{{ route('ventas.factura', $venta) }}" target="_blank" class="btn btn-sm btn-outline-primary">Imprimir factura</a>
 												<button class="btn btn-sm" disabled title="Solo se puede anular el mismo día">Solo se puede anular el mismo día</button>
 								@endif
 							</td>

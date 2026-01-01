@@ -17,13 +17,15 @@ class ProductoController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        return view('productos.index', compact('productos'));
+        $empresa = \App\Models\Empresa::first();
+        return view('productos.index', compact('productos', 'empresa'));
     }
 
     // Vista de registro
     public function create()
     {
-        return view('productos.create');
+        $empresa = \App\Models\Empresa::first();
+        return view('productos.create', compact('empresa'));
     }
 
     // Registrar producto + movimiento inicial (AJAX)

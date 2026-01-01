@@ -1,11 +1,8 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Editar Empresa</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-</head>
-<body>
+@extends('layouts.app')
+
+@section('title','Editar Empresa')
+
+@section('content')
   <h2>Editar datos de la empresa</h2>
 
   @if(session('success'))
@@ -27,7 +24,6 @@
 
   <form action="{{ route('empresa.update') }}" method="POST">
     @csrf
-    @method('PUT')
 
     <div>
       <label>Nombre *</label><br>
@@ -64,5 +60,4 @@
     </div>
   </form>
 
-</body>
-</html>
+@endsection

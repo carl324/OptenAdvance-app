@@ -11,18 +11,12 @@ class EmpresaController extends Controller
     /** Mostrar formulario de edición de la empresa (único registro) */
     public function edit()
     {
+        // Obtener el primer (y único) registro de la tabla `empresa` (puede ser null)
         $empresa = Empresa::first();
 
-        if (! $empresa) {
-            // Si existe una ruta de creación inicial, redirigimos ahí; si no, a la raíz
-            if (RouteFacade::has('empresa.create')) {
-                return redirect()->route('empresa.create');
-            }
-
-            return redirect('/');
-        }
-
-        return view('empresa.edit', compact('empresa'));
+        // Mostrar siempre la vista `empresa.index`. Si no existe empresa,
+        // la vista debe mostrar el formulario vacío para registrar los datos.
+        return view('empresa.index', compact('empresa'));
     }
 
     /** Actualizar datos de la empresa existente */
@@ -37,16 +31,14 @@ class EmpresaController extends Controller
             'moneda' => 'required|string|max:10',
         ]);
 
-        $empresa = Empresa::first();
-        if (! $empresa) {
-            if (RouteFacade::has('empresa.create')) {
-                return redirect()->route('empresa.create')->with('error', 'Empresa no encontrada, por favor cree la empresa inicial.');
-            }
-            return redirect('/')->with('error', 'Empresa no encontrada');
-        }
+        // Usar updateOrCreate para crear o actualizar el único registro de empresa.
+        $existingId = Empresa::value('id');
+        Empresa::updateOrCreate(
+            ['id' => $existingId],
+            $validated
+        );
 
-        $empresa->update($validated);
-
-        return redirect()->route('empresa.edit')->with('success', 'Datos de la empresa actualizados correctamente.');
+        // Volver a la página de edición con mensaje de éxito
+        return redirect()->route('empresa.index')->with('success', 'Los datos de la empresa se guardaron correctamente.');
     }
 }

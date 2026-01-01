@@ -1,10 +1,16 @@
+@extends('layouts.app')
+
+@section('content')
+
 <table border="1" cellpadding="5">
     <thead>
-        <tr>
+            <tr>
             <th>ID</th>
             <th>Nombre</th>
             <th>Precio s/IVA</th>
+            @if($empresa && $empresa->cobra_iva)
             <th>IVA %</th>
+            @endif
             <th>Precio c/IVA</th>
             <th>Stock</th>
             <th>Acciones</th>
@@ -16,17 +22,18 @@
                 <td>{{ $producto->id }}</td>
 
                 <td>
-                    <span class="view">{{ $producto->nombre }}</span>
+                    <span class="view" data-field="nombre">{{ $producto->nombre }}</span>
                     <input class="edit" data-field="nombre" type="text" value="{{ $producto->nombre }}" hidden>
                 </td>
 
                 <td>
-                    <span class="view">${{ number_format($producto->precio, 0, ',', '.') }}</span>
+                    <span class="view" data-field="precio">${{ number_format($producto->precio, 0, ',', '.') }}</span>
                     <input class="edit precio_input" data-field="precio" type="text" inputmode="numeric" pattern="\d*" value="{{ number_format($producto->precio, 0, ',', '.') }}" hidden>
                 </td>
 
+                @if($empresa && $empresa->cobra_iva)
                 <td>
-                    <span class="view">{{ $producto->iva }}%</span>
+                    <span class="view" data-field="iva">{{ $producto->iva }}%</span>
                     <!-- ✅ CAMBIADO: input en lugar de select -->
                     <input 
                         class="edit iva_input" 
@@ -37,14 +44,15 @@
                         placeholder="Ej: 19"
                         hidden>
                 </td>
+                @endif
 
                 <td>
-                    <span class="view precio_con_iva_span">${{ number_format($producto->precio_con_iva, 0, ',', '.') }}</span>
+                    <span class="view precio_con_iva_span" data-field="precio_con_iva">${{ number_format($producto->precio_con_iva, 0, ',', '.') }}</span>
                     <input class="edit" data-field="precio_con_iva" type="text" value="{{ number_format($producto->precio_con_iva, 0, ',', '.') }}" hidden readonly>
                 </td>
 
                 <td>
-                    <span class="view stock_view">{{ $producto->stock }}</span>
+                    <span class="view stock_view" data-field="stock">{{ $producto->stock }}</span>
                     <input 
                         class="edit stock_input" 
                         data-field="stock" 
@@ -159,7 +167,7 @@ function cancelarEdicion(id) {
     tr.querySelector('.msg').innerText = '';
 
     const precioInput = tr.querySelector('.precio_input');
-    const precioView = tr.querySelectorAll('.view')[1];
+    const precioView = tr.querySelector('span.view[data-field="precio"]');
     if (precioInput && precioView) precioInput.value = precioView.innerText.replace('$','').trim();
 
     const stockInput = tr.querySelector('.stock_input');
@@ -275,15 +283,18 @@ async function guardarProducto(id) {
         if (!res.ok) throw result;
 
         if (data.nombre !== undefined) {
-            tr.querySelector('span.view').innerText = data.nombre;
+            const nombreSpan = tr.querySelector('span.view[data-field="nombre"]');
+            if (nombreSpan) nombreSpan.innerText = data.nombre;
         }
 
         if (typeof data.precio !== 'undefined') {
-            tr.querySelectorAll('span.view')[1].innerText = '$' + formatCOP(data.precio);
+            const precioSpan = tr.querySelector('span.view[data-field="precio"]');
+            if (precioSpan) precioSpan.innerText = '$' + formatCOP(data.precio);
         }
 
         if (typeof data.iva !== 'undefined') {
-            tr.querySelectorAll('span.view')[2].innerText = data.iva + '%';
+            const ivaSpan = tr.querySelector('span.view[data-field="iva"]');
+            if (ivaSpan) ivaSpan.innerText = data.iva + '%';
         }
 
         if (result.producto && typeof result.producto.precio_con_iva !== 'undefined') {
@@ -348,3 +359,5 @@ function disableRow(tr, state) {
     tr.querySelectorAll('button, input, select').forEach(e => e.disabled = state);
 }
 </script>
+
+@endsection

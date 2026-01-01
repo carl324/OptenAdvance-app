@@ -1,9 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Registrar Producto</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <style>
+@extends('layouts.app')
+
+@section('title', 'Registrar Producto')
+
+@section('content')
+
+<style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; }
@@ -34,8 +35,6 @@
         .producto-existente.show { display: block; }
         .producto-existente strong { display: block; margin-bottom: 10px; color: #e65100; }
     </style>
-</head>
-<body>
 
 <div class="container">
     <h1>📦 Registrar Producto</h1>
@@ -55,9 +54,11 @@
         </div>
 
         <div class="form-group">
+            @if($empresa && $empresa->cobra_iva)
             <label for="iva">IVA (%) *</label>
             <input type="number" id="iva" name="iva" step="0.01" min="0" max="100" value="19" required placeholder="Ej: 19">
             <small>Ejemplos comunes: 0%, 5%, 19%</small>
+            @endif
         </div>
 
         <!-- Vista previa de precios -->
@@ -66,10 +67,12 @@
                 <span class="precio-label">Precio base:</span>
                 <span class="precio-valor" id="preview-base">$0</span>
             </div>
+            @if($empresa && $empresa->cobra_iva)
             <div class="precio-item">
                 <span class="precio-label">IVA (<span id="preview-iva-pct">19</span>%):</span>
                 <span class="precio-valor" id="preview-iva">$0</span>
             </div>
+            @endif
             <div class="precio-item precio-final">
                 <span class="precio-label">Precio con IVA:</span>
                 <span class="precio-valor" id="preview-total">$0</span>
@@ -163,18 +166,25 @@ inputPrecio.addEventListener('focus', function() {
 // ========================================
 function actualizarPreview() {
     const precioBase = parseFloat(inputPrecioValor.value) || 0;
-    const ivaPorcentaje = parseFloat(selectIva.value) || 0;
+    const ivaPorcentaje = selectIva ? parseFloat(selectIva.value) || 0 : 0;
     const montoIva = precioBase * (ivaPorcentaje / 100);
     const precioConIva = precioBase + montoIva;
 
-    document.getElementById('preview-base').textContent = formatoPrecio(precioBase);
-    document.getElementById('preview-iva-pct').textContent = ivaPorcentaje;
-    document.getElementById('preview-iva').textContent = formatoPrecio(montoIva);
-    document.getElementById('preview-total').textContent = formatoPrecio(precioConIva);
+    const previewBase = document.getElementById('preview-base');
+    const previewIvaPct = document.getElementById('preview-iva-pct');
+    const previewIva = document.getElementById('preview-iva');
+    const previewTotal = document.getElementById('preview-total');
+
+    if (previewBase) previewBase.textContent = formatoPrecio(precioBase);
+    if (previewIvaPct) previewIvaPct.textContent = ivaPorcentaje;
+    if (previewIva) previewIva.textContent = formatoPrecio(montoIva);
+    if (previewTotal) previewTotal.textContent = formatoPrecio(precioConIva);
 }
 
-selectIva.addEventListener('input', actualizarPreview);
-selectIva.addEventListener('change', actualizarPreview);
+if (selectIva) {
+    selectIva.addEventListener('input', actualizarPreview);
+    selectIva.addEventListener('change', actualizarPreview);
+}
 
 // ========================================
 // ENVIAR FORMULARIO
@@ -192,7 +202,7 @@ form.addEventListener('submit', async (e) => {
     const data = {
         nombre: form.nombre.value.trim(),
         precio: parseFloat(inputPrecioValor.value) || 0,
-        iva: parseFloat(form.iva.value),
+        iva: selectIva ? parseFloat(form.iva.value) : 0,
         stock: parseInt(form.stock.value)
     };
 
@@ -230,7 +240,7 @@ form.addEventListener('submit', async (e) => {
             form.reset();
             inputPrecio.value = '';
             inputPrecioValor.value = '0';
-            selectIva.value = '19';
+            if (selectIva) selectIva.value = '19';
             actualizarPreview();
             mensaje.classList.remove('show');
         }, 2000);
@@ -247,11 +257,17 @@ form.addEventListener('submit', async (e) => {
         else if (error.message === 'El producto ya existe' && error.producto) {
             mensaje.innerHTML = MENSAJES.productoExiste;
 
-            document.getElementById('ex-nombre').innerText = error.producto.nombre;
-            document.getElementById('ex-precio').innerText = formatoPrecio(error.producto.precio);
-            document.getElementById('ex-iva').innerText = error.producto.iva + '%';
-            document.getElementById('ex-precio-iva').innerText = formatoPrecio(error.producto.precio_con_iva);
-            document.getElementById('ex-stock').innerText = error.producto.stock;
+            const exNombre = document.getElementById('ex-nombre');
+            const exPrecio = document.getElementById('ex-precio');
+            const exIva = document.getElementById('ex-iva');
+            const exPrecioIva = document.getElementById('ex-precio-iva');
+            const exStock = document.getElementById('ex-stock');
+
+            if (exNombre) exNombre.innerText = error.producto.nombre;
+            if (exPrecio) exPrecio.innerText = formatoPrecio(error.producto.precio);
+            if (exIva) exIva.innerText = error.producto.iva + '%';
+            if (exPrecioIva) exPrecioIva.innerText = formatoPrecio(error.producto.precio_con_iva);
+            if (exStock) exStock.innerText = error.producto.stock;
 
             boxExistente.classList.add('show');
         }
@@ -266,7 +282,7 @@ form.addEventListener('submit', async (e) => {
 
 // Inicializar preview
 actualizarPreview();
+
 </script>
 
-</body>
-</html>
+@endsection

@@ -1,11 +1,10 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Nueva Venta - POS</title>
-    <style>
+@extends('layouts.app')
+
+@section('title', 'Nueva Venta')
+
+@section('content')
+
+<style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 8px; padding: 30px; }
@@ -97,8 +96,6 @@
         .ticket-total { display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; margin-top: 15px; padding-top: 10px; border-top: 2px solid #000; }
         .ticket-footer { text-align: center; margin-top: 20px; padding-top: 15px; border-top: 2px dashed #000; font-size: 12px; }
     </style>
-</head>
-<body>
 
 <div class="container">
     <h1>🛒 Nueva Venta</h1>
@@ -114,7 +111,12 @@
         <label>Cliente (opcional):</label>
         <input type="text" id="cliente" placeholder="Nombre del cliente">
         <input type="text" id="cliente_nit" placeholder="NIT (opcional)">
-        <input type="text" id="forma_pago" placeholder="Forma de pago (opcional)">
+        <label for="forma_pago">Forma de pago</label>
+        <select id="forma_pago">
+            <option value="efectivo" selected>efectivo</option>
+            <option value="transferencia">transferencia</option>
+            <option value="tarjeta">tarjeta</option>
+        </select>
     </div>
 
     <div class="carrito-section">
@@ -261,7 +263,7 @@ function mostrarResultados(productos) {
         resultadosDiv.classList.add('active');
         return;
     }
-
+    @if($empresa && $empresa->cobra_iva)
     const html = productos.map((p, index) => {
         let stockClass = 'stock-ok';
         let stockText = `Stock: ${p.stock}`;
@@ -283,6 +285,29 @@ function mostrarResultados(productos) {
             </div>
         `;
     }).join('');
+    @else
+    const html = productos.map((p, index) => {
+        let stockClass = 'stock-ok';
+        let stockText = `Stock: ${p.stock}`;
+        
+        if (p.stock === 0) {
+            stockClass = 'stock-cero';
+            stockText = 'Sin stock';
+        } else if (p.stock <= 10) {
+            stockClass = 'stock-bajo';
+        }
+        
+        return `
+            <div class="search-item" data-index="${index}" data-producto='${JSON.stringify(p)}'>
+                <div class="search-item-name">${p.nombre}</div>
+                <div class="search-item-details">
+                    Precio: ${formatoPrecio(p.precio)}
+                    <span class="search-item-stock ${stockClass}">${stockText}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+    @endif
 
     resultadosDiv.innerHTML = html;
     resultadosDiv.classList.add('active');
@@ -349,6 +374,7 @@ function actualizarCarrito() {
         return;
     }
 
+    @if($empresa && $empresa->cobra_iva)
     const html = `
         <table class="carrito-tabla">
             <thead>
@@ -388,6 +414,46 @@ function actualizarCarrito() {
             </tbody>
         </table>
     `;
+    @else
+    const html = `
+        <table class="carrito-tabla">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th style="width: 100px;">Cantidad</th>
+                    <th style="width: 100px; text-align: right;">Precio</th>
+                    <th style="width: 100px; text-align: right;">Subtotal</th>
+                    <th style="width: 70px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                ${carrito.map((item, index) => {
+                    const subtotal = item.cantidad * item.precio;
+                    const totalConIva = subtotal; // IVA not shown or applied in UI
+                    return `
+                    <tr>
+                        <td>${item.nombre}<br><small style="color: #999;">Stock: ${item.stock}</small></td>
+                        <td>
+                            <input 
+                                type="number" 
+                                class="cantidad-input" 
+                                value="${item.cantidad}" 
+                                min="1" 
+                                max="${item.stock}"
+                                onchange="cambiarCantidad(${index}, this.value)"
+                            >
+                        </td>
+                        <td style="text-align: right;">${formatoPrecio(item.precio)}</td>
+                        <td style="text-align: right;"><strong>${formatoPrecio(totalConIva)}</strong></td>
+                        <td>
+                            <button class="btn-eliminar" onclick="confirmarEliminar(${index})">✕</button>
+                        </td>
+                    </tr>
+                `}).join('')}
+            </tbody>
+        </table>
+    `;
+    @endif
 
     carritoDiv.innerHTML = html;
     btnFinalizar.disabled = false;
@@ -452,6 +518,20 @@ function confirmarVenta() {
     }, 0);
 
     const cliente = document.getElementById('cliente').value.trim();
+
+    // Advertencia: existe al menos un producto con precio 0?
+    const tienePrecioCero = carrito.some(item => Number(item.precio) === 0);
+    if (tienePrecioCero) {
+        mostrarModal(
+            '⚠️ Advertencia: producto con precio 0',
+            '<p>Hay uno o más productos con precio en 0. ¿Deseas continuar con la venta igual?</p>',
+            `
+                <button class="modal-btn modal-btn-cancel" onclick="cerrarModal()">Cancelar</button>
+                <button class="modal-btn modal-btn-confirm" onclick="finalizarVenta();">Continuar</button>
+            `
+        );
+        return; // detener flujo hasta que el usuario confirme
+    }
     
     const detallesHTML = `
         <div class="venta-resumen">
@@ -466,7 +546,7 @@ function confirmarVenta() {
                     <div class="venta-item">
                         <div>
                             <div class="venta-item-nombre">${item.nombre}</div>
-                            <div class="venta-item-detalle">${item.cantidad} x ${formatoPrecio(item.precio)} ${item.iva ? `(IVA ${item.iva}%)` : ''}</div>
+                            <div class="venta-item-detalle">${item.cantidad} x ${formatoPrecio(item.precio)}${item.iva ? ` (IVA ${item.iva}%)` : ''}</div>
                         </div>
                         <div><strong>${formatoPrecio(totalConIva)}</strong></div>
                     </div>
@@ -545,7 +625,7 @@ function limpiarVenta() {
     carrito = [];
     document.getElementById('cliente').value = '';
     document.getElementById('cliente_nit').value = '';
-    document.getElementById('forma_pago').value = '';
+    document.getElementById('forma_pago').value = 'efectivo';
     inputBuscar.value = '';
     actualizarCarrito();
     inputBuscar.focus();
@@ -600,25 +680,18 @@ function mostrarModalImpresion(ventaId, total, cliente, items) {
                 <p style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">
                     Total: ${formatoPrecio(total)}
                 </p>
-                <p style="color: #666;">
-                    ¿Deseas imprimir el ticket?
-                </p>
+                <p style="color: #666;">Puedes ver la factura de esta venta para imprimirla o compartirla.</p>
             </div>
         `,
         `
-            <button class="modal-btn modal-btn-cancel" onclick="cerrarModal()">No, gracias</button>
-            <button class="modal-btn modal-btn-confirm" onclick="imprimirTicket()">Imprimir Ticket</button>
+            <button class="modal-btn modal-btn-cancel" onclick="cerrarModal()">Cerrar</button>
+            <button class="modal-btn modal-btn-confirm" onclick="window.open('/ventas/${ventaId}/factura', '_blank')">Ver factura</button>
         `
     );
 }
 
-function imprimirTicket() {
-    cerrarModal();
-    window.print();
-}
-
 inputBuscar.focus();
+
 </script>
 
-</body>
-</html>
+@endsection

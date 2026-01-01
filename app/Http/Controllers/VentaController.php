@@ -17,7 +17,8 @@ class VentaController extends Controller
     // Vista del formulario
     public function create()
     {
-        return view('ventas.create');
+        $empresa = Empresa::first();
+        return view('ventas.create', compact('empresa'));
     }
 
     // Buscar productos (incluye IVA)
@@ -46,13 +47,15 @@ class VentaController extends Controller
             $data = $request->validate([
                 'cliente'        => 'nullable|string|max:100',
                 'cliente_nit'    => 'nullable|string|max:20',
-                'forma_pago'     => 'nullable|string|max:50',
+                'forma_pago'     => 'required|in:efectivo,transferencia,tarjeta',
                 'productos'      => 'required|array|min:1',
                 'productos.*.id' => 'required|exists:productos,id',
                 'productos.*.cantidad' => 'required|integer|min:1',
                 'productos.*.precio'   => 'required|numeric|min:0',
                 'productos.*.iva'      => 'nullable|numeric|min:0|max:100',
             ]);
+
+            $empresa = Empresa::first();
 
             DB::beginTransaction();
 
@@ -72,7 +75,8 @@ class VentaController extends Controller
             $totalIva  = 0;
             foreach ($data['productos'] as $item) {
                 $neto = $item['cantidad'] * $item['precio'];
-                $iva  = $neto * ($item['iva'] ?? 0) / 100;
+                $rate = ($empresa && !$empresa->cobra_iva) ? 0 : ($item['iva'] ?? 0);
+                $iva  = $neto * $rate / 100;
                 $totalNeto += $neto;
                 $totalIva  += $iva;
             }
@@ -81,6 +85,7 @@ class VentaController extends Controller
             // Venta
             $venta = Venta::create([
                 'cliente' => $data['cliente'] ?? null,
+                'forma_pago' => $data['forma_pago'] ?? null,
                 'total'   => $totalFinal,
                 'estado'  => 'completada',
                 'fecha'   => now(),
@@ -112,7 +117,8 @@ class VentaController extends Controller
             // Detalles y stock
             foreach ($data['productos'] as $item) {
                 $neto  = $item['cantidad'] * $item['precio'];
-                $iva   = $neto * ($item['iva'] ?? 0) / 100;
+                $rate  = ($empresa && !$empresa->cobra_iva) ? 0 : ($item['iva'] ?? 0);
+                $iva   = $neto * $rate / 100;
                 $final = $neto + $iva;
 
                 VentaDetalle::create([
@@ -166,7 +172,8 @@ class VentaController extends Controller
             ->orderByDesc('fecha')
             ->get();
 
-        return view('ventas.index', compact('ventas'));
+        $empresa = Empresa::first();
+        return view('ventas.index', compact('ventas', 'empresa'));
     }
 
     // Mostrar factura (devuelve fragmento HTML para modal)
@@ -175,13 +182,15 @@ class VentaController extends Controller
         $venta->load('detalles.producto', 'factura');
         $factura = $venta->factura;
 
-        return view('ventas.show', compact('venta', 'factura'));
+        $empresa = Empresa::first();
+        return view('ventas.show', compact('venta', 'factura', 'empresa'));
     }
 
     // Mostrar formulario de anulación (modal)
     public function devolucion(Venta $venta)
     {
-        return view('ventas.devolucion', compact('venta'));
+        $empresa = Empresa::first();
+        return view('ventas.devolucion', compact('venta', 'empresa'));
     }
 
     // Mostrar factura en página separada

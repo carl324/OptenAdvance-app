@@ -1,3 +1,6 @@
+@extends('layouts.app')
+
+@section('content')
 <div class="invoice p-3">
 	<div class="d-flex justify-content-between mb-3">
 		<div>
@@ -22,7 +25,6 @@
 				<th>Producto</th>
 				<th class="text-end">Cantidad</th>
 				<th class="text-end">Precio</th>
-				<th class="text-end">IVA</th>
 				<th class="text-end">Subtotal</th>
 			</tr>
 		</thead>
@@ -32,7 +34,6 @@
 				<td>{{ optional($d->producto)->nombre ?? 'Producto #' . $d->producto_id }}</td>
 				<td class="text-end">{{ $d->cantidad }}</td>
 				<td class="text-end">{{ number_format($d->precio_unitario,2,'.','') }}</td>
-				<td class="text-end">{{ number_format($d->iva,2,'.','') }}</td>
 				<td class="text-end">{{ number_format($d->subtotal,2,'.','') }}</td>
 			</tr>
 			@endforeach
@@ -41,10 +42,12 @@
 
 	<div class="d-flex justify-content-end">
 		<div class="w-50">
+			@if($empresa && $empresa->cobra_iva)
 			<div class="d-flex justify-content-between">
 				<div>IVA</div>
 				<div>{{ number_format($factura->impuestos ?? $venta->detalles->sum('iva'),2,'.','') }}</div>
 			</div>
+			@endif
 			<div class="d-flex justify-content-between fw-bold mt-2">
 				<div>Total</div>
 				<div>{{ number_format($factura->total ?? $venta->total,2,'.','') }}</div>
@@ -52,3 +55,4 @@
 		</div>
 	</div>
 </div>
+@endsection
