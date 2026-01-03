@@ -18,7 +18,12 @@ class ProductoController extends Controller
             ->get();
 
         $empresa = \App\Models\Empresa::first();
-        return view('productos.index', compact('productos', 'empresa'));
+        // Indica si existe al menos un producto con IVA > 0 (histórico)
+        $hayProductosConIVA = $productos->contains(function($p) {
+            return isset($p->iva) && (float)$p->iva > 0;
+        });
+
+        return view('productos.index', compact('productos', 'empresa', 'hayProductosConIVA'));
     }
 
     // Vista de registro
@@ -33,7 +38,7 @@ class ProductoController extends Controller
     {
         $data = $request->validate([
             'nombre' => 'required|string|max:100',
-            'precio' => 'required|numeric|min:0',
+            'precio' => 'required|numeric|gt:0',
             'stock'  => 'required|integer|min:0',
             'iva'    => 'required|numeric|min:0|max:100',
         ]);

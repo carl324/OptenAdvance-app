@@ -30,12 +30,22 @@ class VentaController extends Controller
             return response()->json([]);
         }
 
+        $empresa = Empresa::first();
+
         $productos = Producto::activos()
             ->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($query) . '%'])
             ->select('id', 'nombre', 'precio', 'stock', 'iva')
             ->orderByDesc('stock')
             ->limit(10)
             ->get();
+
+        // Si la empresa no cobra IVA, ocultar/normalizar el campo IVA en el flujo de ventas
+        if ($empresa && !$empresa->cobra_iva) {
+            $productos->transform(function ($p) {
+                $p->iva = 0;
+                return $p;
+            });
+        }
 
         return response()->json($productos);
     }
@@ -56,6 +66,8 @@ class VentaController extends Controller
             ]);
 
             $empresa = Empresa::first();
+            // Determina si actualmente la empresa cobra IVA (por defecto true si no existe registro)
+            $cobraIva = $empresa ? (bool) $empresa->cobra_iva : true;
 
             DB::beginTransaction();
 
@@ -75,7 +87,7 @@ class VentaController extends Controller
             $totalIva  = 0;
             foreach ($data['productos'] as $item) {
                 $neto = $item['cantidad'] * $item['precio'];
-                $rate = ($empresa && !$empresa->cobra_iva) ? 0 : ($item['iva'] ?? 0);
+                $rate = $cobraIva ? ($item['iva'] ?? 0) : 0;
                 $iva  = $neto * $rate / 100;
                 $totalNeto += $neto;
                 $totalIva  += $iva;
@@ -117,7 +129,7 @@ class VentaController extends Controller
             // Detalles y stock
             foreach ($data['productos'] as $item) {
                 $neto  = $item['cantidad'] * $item['precio'];
-                $rate  = ($empresa && !$empresa->cobra_iva) ? 0 : ($item['iva'] ?? 0);
+                $rate  = $cobraIva ? ($item['iva'] ?? 0) : 0;
                 $iva   = $neto * $rate / 100;
                 $final = $neto + $iva;
 

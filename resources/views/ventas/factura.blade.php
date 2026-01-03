@@ -1,9 +1,4 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Factura</title>
+
   <style>
     :root{--paper-width:80mm}
     html,body{margin:0;padding:0}
@@ -27,8 +22,7 @@
     .btn-back{background:#e5e7eb;color:#111}
     @media print{.no-print{display:none!important}} 
   </style>
-</head>
-<body>
+
   @extends('layouts.app')
 
 @section('title', 'Factura')
@@ -45,17 +39,54 @@
       </div>
       <div class="cliente">
         <div><strong>Factura:</strong> {{ $venta->factura->numero ?? '-' }}</div>
-        <div><strong>Fecha:</strong> {{ optional($venta->factura->fecha_emision ?? $venta->fecha)->format('Y-m-d H:i') }}</div>
+        @php
+          $fechaRaw = $venta->factura->created_at ?? $venta->created_at ?? $venta->fecha ?? $venta->factura->fecha_emision ?? now();
+          try {
+              $displayFecha = \Carbon\Carbon::parse($fechaRaw)->format('d/m/Y H:i');
+          } catch (\Exception $e) {
+              $displayFecha = (string) $fechaRaw;
+          }
+        @endphp
+        <div><strong>Fecha:</strong> {{ $displayFecha }}</div>
         <div style="margin-top:8px"><strong>Cliente:</strong><br>{{ $venta->factura->cliente_nombre ?? $venta->cliente ?? 'Consumidor final' }}<br>{{ $venta->factura->cliente_nit ?? '' }}</div>
       </div>
     </div>
+
+    @php
+      // Valores históricos de la venta/factura (no usar configuración actual de la empresa)
+      $total = $venta->factura->total ?? $venta->total ?? 0;
+      $impuestos = $venta->factura->impuestos ?? null;
+      if (is_null($impuestos)) {
+        // sumar los IVA históricos por línea cuando no exista el campo en factura
+        $impuestos = $venta->detalles->sum(function($d){ return $d->iva ?? 0; });
+      }
+      $hasIva = ((float) $impuestos) > 0;
+
+      // Inferir las tasas históricas por línea (solo para mostrar, no recalculamos montos)
+      $tasas = [];
+      foreach ($venta->detalles as $d) {
+        $netoLinea = ($d->cantidad * ($d->precio_unitario ?? 0));
+        $ivaLinea = $d->iva ?? 0;
+        if ($ivaLinea > 0 && $netoLinea > 0) {
+          $rate = ($ivaLinea / $netoLinea) * 100;
+          $tasas[] = round($rate, 2);
+        }
+      }
+      $tasas = array_values(array_unique($tasas));
+      $tasaTotales = count($tasas) === 1 ? $tasas[0] : null;
+
+      $subtotal = $total - $impuestos;
+    @endphp
 
     <table>
       <thead>
         <tr>
           <th>Producto</th>
           <th class="text-right">Cantidad</th>
-          <th class="text-right">Precio</th>
+          <th class="text-right">Precio unitario</th>
+          @if($hasIva)
+            <th class="text-right">IVA{{ $tasaTotales !== null ? ' (' . number_format($tasaTotales, 2, ',', '.') . '%)' : ' (varios)' }}</th>
+          @endif
           <th class="text-right">Total</th>
         </tr>
       </thead>
@@ -65,6 +96,12 @@
           <td>{{ optional($d->producto)->nombre ?? 'Producto #' . $d->producto_id }}</td>
           <td class="qty">{{ $d->cantidad }}</td>
           <td class="price">{{ number_format($d->precio_unitario, 0, ',', '.') }}</td>
+          @if($hasIva)
+            @php
+              $ivaLinea = $d->iva ?? 0;
+            @endphp
+            <td class="price">{{ number_format($ivaLinea, 0, ',', '.') }}</td>
+          @endif
           <td class="price">{{ number_format($d->subtotal, 0, ',', '.') }}</td>
         </tr>
         @endforeach
@@ -74,23 +111,27 @@
     <div class="totales">
       <table>
         <tbody>
-          @if($empresa && $empresa->cobra_iva)
+          @if($hasIva)
           <tr>
             <td>Subtotal</td>
-            <td class="text-right">{{ number_format((($venta->factura->total ?? $venta->total) - ($venta->factura->impuestos ?? 0)), 0, ',', '.') }}</td>
+            <td class="text-right">{{ number_format($subtotal, 0, ',', '.') }}</td>
           </tr>
           <tr>
-            <td>IVA / impuestos</td>
-            <td class="text-right">{{ number_format($venta->factura->impuestos ?? 0, 0, ',', '.') }}</td>
+            <td>IVA{{ $tasaTotales !== null ? ' (' . number_format($tasaTotales, 2, ',', '.') . '%)' : ' (varios)' }}</td>
+            <td class="text-right">{{ number_format($impuestos, 0, ',', '.') }}</td>
           </tr>
           <tr>
             <th>Total</th>
-            <th class="text-right">{{ number_format($venta->factura->total ?? $venta->total, 0, ',', '.') }}</th>
+            <th class="text-right">{{ number_format($total, 0, ',', '.') }}</th>
           </tr>
           @else
           <tr>
+            <td>Subtotal</td>
+            <td class="text-right">{{ number_format($subtotal, 0, ',', '.') }}</td>
+          </tr>
+          <tr>
             <th>Total</th>
-            <th class="text-right">{{ number_format($venta->factura->total ?? $venta->total, 0, ',', '.') }}</th>
+            <th class="text-right">{{ number_format($total, 0, ',', '.') }}</th>
           </tr>
           @endif
         </tbody>
