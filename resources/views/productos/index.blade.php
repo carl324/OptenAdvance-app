@@ -5,16 +5,20 @@
 <table border="1" cellpadding="5">
     <thead>
             <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Precio s/IVA</th>
-            @if($empresa && $empresa->cobra_iva)
-            <th>IVA %</th>
-            @endif
-            <th>Precio c/IVA</th>
-            <th>Stock</th>
-            <th>Acciones</th>
-        </tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Precio s/IVA</th>
+                @if( ($empresa && $empresa->cobra_iva) || (!empty($hayProductosConIVA) && $hayProductosConIVA) )
+                <th>IVA %</th>
+                @endif
+                @if( ($empresa && $empresa->cobra_iva) || (!empty($hayProductosConIVA) && $hayProductosConIVA) )
+                <th>Precio c/IVA</th>
+                @else
+                <th>Precio</th>
+                @endif
+                <th>Stock</th>
+                <th>Acciones</th>
+            </tr>
     </thead>
     <tbody>
         @foreach($productos as $producto)
@@ -31,10 +35,9 @@
                     <input class="edit precio_input" data-field="precio" type="text" inputmode="numeric" pattern="\d*" value="{{ number_format($producto->precio, 0, ',', '.') }}" hidden>
                 </td>
 
-                @if($empresa && $empresa->cobra_iva)
+                @if( ($empresa && $empresa->cobra_iva) || (!empty($hayProductosConIVA) && $hayProductosConIVA) )
                 <td>
-                    <span class="view" data-field="iva">{{ $producto->iva }}%</span>
-                    <!-- ✅ CAMBIADO: input en lugar de select -->
+                    <span class="view" data-field="iva">{{ $producto->iva > 0 ? $producto->iva . '%' : '-' }}</span>
                     <input 
                         class="edit iva_input" 
                         data-field="iva" 
@@ -44,12 +47,17 @@
                         placeholder="Ej: 19"
                         hidden>
                 </td>
-                @endif
 
                 <td>
                     <span class="view precio_con_iva_span" data-field="precio_con_iva">${{ number_format($producto->precio_con_iva, 0, ',', '.') }}</span>
                     <input class="edit" data-field="precio_con_iva" type="text" value="{{ number_format($producto->precio_con_iva, 0, ',', '.') }}" hidden readonly>
                 </td>
+                @else
+                <td>
+                    <span class="view precio_con_iva_span" data-field="precio_con_iva">${{ number_format($producto->precio, 0, ',', '.') }}</span>
+                    <input class="edit" data-field="precio_con_iva" type="text" value="{{ number_format($producto->precio, 0, ',', '.') }}" hidden readonly>
+                </td>
+                @endif
 
                 <td>
                     <span class="view stock_view" data-field="stock">{{ $producto->stock }}</span>
@@ -168,7 +176,7 @@ function cancelarEdicion(id) {
 
     const precioInput = tr.querySelector('.precio_input');
     const precioView = tr.querySelector('span.view[data-field="precio"]');
-    if (precioInput && precioView) precioInput.value = precioView.innerText.replace('$','').trim();
+    if (precioInput && precioView) precioInput.value = formatCOP(parseCOP(precioView.innerText));
 
     const stockInput = tr.querySelector('.stock_input');
     if (stockInput) {
@@ -261,6 +269,19 @@ async function guardarProducto(id) {
         data[field] = input.value;
     });
 
+    // Frontend validation: precio must be > 0
+    const precioVal = typeof data.precio !== 'undefined' ? Number(data.precio) : 0;
+    if (!precioVal || precioVal <= 0) {
+        msg.style.color = 'red';
+        msg.innerText = 'El precio debe ser mayor a 0.';
+        // keep row in edit mode, do not send request
+        return;
+    }
+
+    // Prevent double submission for this row
+    if (tr.dataset.saving === '1') return;
+    tr.dataset.saving = '1';
+
     disableRow(tr, true);
 
     try {
@@ -326,6 +347,7 @@ async function guardarProducto(id) {
         msg.innerText = e.message || 'Error al actualizar';
     } finally {
         disableRow(tr, false);
+        tr.dataset.saving = '0';
     }
 }
 
