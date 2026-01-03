@@ -519,48 +519,53 @@ function confirmarVenta() {
 
     const cliente = document.getElementById('cliente').value.trim();
 
-    // Advertencia: existe al menos un producto con precio 0?
-    const tienePrecioCero = carrito.some(item => Number(item.precio) === 0);
-    if (tienePrecioCero) {
-        mostrarModal(
-            '⚠️ Advertencia: producto con precio 0',
-            '<p>Hay uno o más productos con precio en 0. ¿Deseas continuar con la venta igual?</p>',
-            `
-                <button class="modal-btn modal-btn-cancel" onclick="cerrarModal()">Cancelar</button>
-                <button class="modal-btn modal-btn-confirm" onclick="finalizarVenta();">Continuar</button>
-            `
-        );
-        return; // detener flujo hasta que el usuario confirme
-    }
+    // ...eliminar advertencia modal independiente de precio 0...
     
+    const tienePrecioCero = carrito.some(item => Number(item.precio) === 0);
+    let advertenciaHTML = '';
+    if (tienePrecioCero) {
+        advertenciaHTML = `
+            <div style="background: #fffbe6; color: #b26a00; border-left: 6px solid #ffe066; padding: 14px 18px; border-radius: 6px; margin-bottom: 18px; font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 22px;">⚠</span>
+                <div>
+                    <strong>Advertencia:</strong> Esta venta contiene uno o más productos con precio en $0.<br>
+                    Verifique los datos antes de continuar.
+                </div>
+            </div>
+        `;
+    }
     const detallesHTML = `
         <div class="venta-resumen">
             ${cliente ? `<p style="margin-bottom: 10px;"><strong>Cliente:</strong> ${cliente}</p>` : ''}
-            
             <div class="venta-items">
                 ${carrito.map(item => {
                     const subtotal = item.cantidad * item.precio;
                     const ivaValor = item.iva ? subtotal * (item.iva / 100) : 0;
                     const totalConIva = subtotal + ivaValor;
+                    // Marcar productos con precio 0 visualmente (se detalla en el siguiente paso)
+                    // Marcar productos con precio 0
+                    const esPrecioCero = Number(item.precio) === 0;
                     return `
                     <div class="venta-item">
                         <div>
-                            <div class="venta-item-nombre">${item.nombre}</div>
+                            <div class="venta-item-nombre">
+                                ${item.nombre}
+                                ${esPrecioCero ? '<span title="Precio 0" style="color: #b26a00; font-size: 18px; margin-left: 6px; vertical-align: middle;">⚠ <span style=\'font-size:12px; color:#b26a00; font-weight:600;\'>Precio 0</span></span>' : ''}
+                            </div>
                             <div class="venta-item-detalle">${item.cantidad} x ${formatoPrecio(item.precio)}${item.iva ? ` (IVA ${item.iva}%)` : ''}</div>
                         </div>
                         <div><strong>${formatoPrecio(totalConIva)}</strong></div>
                     </div>
                 `}).join('')}
             </div>
-            
             <div class="venta-total">
                 <span class="venta-total-label">TOTAL:</span>
                 <span class="venta-total-monto">${formatoPrecio(total)}</span>
             </div>
         </div>
+        ${advertenciaHTML}
         <p style="text-align: center; color: #666;">¿Confirmar esta venta?</p>
     `;
-    
     mostrarModal(
         '📋 Confirmar Venta',
         detallesHTML,

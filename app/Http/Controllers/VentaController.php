@@ -206,7 +206,12 @@ class VentaController extends Controller
     public function confirmarDevolucion(Request $request, Venta $venta)
     {
         $data = $request->validate([
-            'motivo' => 'required|string|min:3|max:255',
+            'motivo' => 'required|string|min:2|max:350',
+        ], [
+            'motivo.required' => 'El motivo de anulación es obligatorio.',
+            'motivo.string'   => 'El motivo de anulación debe ser un texto.',
+            'motivo.min'      => 'El motivo de anulación debe tener al menos 2 caracteres.',
+            'motivo.max'      => 'El motivo de anulación no debe exceder los 350 caracteres.'
         ]);
 
         // Cargar relaciones
@@ -246,6 +251,14 @@ class VentaController extends Controller
                 $venta->fecha_anulacion = Carbon::now();
             }
             $venta->save();
+
+            // Guardar motivo de anulación en cada detalle si la columna existe en ventas_detalle
+            if (Schema::hasColumn('ventas_detalle', 'motivo_anulacion')) {
+                foreach ($venta->detalles as $detalle) {
+                    $detalle->motivo_anulacion = $data['motivo'];
+                    $detalle->save();
+                }
+            }
 
             // Restaurar stock y registrar movimientos (tipo entrada, origen venta_anulada)
             foreach ($venta->detalles as $detalle) {
