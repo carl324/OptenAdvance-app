@@ -3,124 +3,145 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Models\Venta;
-use App\Models\VentaDetalle;
-use App\Models\Producto;
+use App\Models\Reporte;
 use App\Models\Empresa;
-use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class ReporteController extends Controller
 {
+    // Límite máximo de filas permitidas en exportación (protección de rendimiento)
+    private const MAX_EXPORT_ROWS = 10000;
+
+    // Flag informativo: los reportes representan datos históricos
+    // es_dato_historico = true
     public function index(Request $request)
     {
         $tipo = $request->input('tipo', 'ventas');
-        $fecha_inicio = $request->input('fecha_inicio');
-        $fecha_fin = $request->input('fecha_fin');
+
+        // Validación defensiva de inputs: fechas, estado y order
+        $fecha_inicio = $this->sanitizeDate($request->input('fecha_inicio'));
+        $fecha_fin = $this->sanitizeDate($request->input('fecha_fin'));
+        $estado = $this->sanitizeEstado($request->input('estado'));
 
         $empresa = Empresa::first();
 
-        // Build base query with filters but DO NOT execute it here
-        $query = $this->buildReporteQuery($request, $tipo);
+        // Preparar filtros (se pasan sólo valores saneados)
+        $filtros = [
+            'fecha_inicio' => $fecha_inicio,
+            'fecha_fin' => $fecha_fin,
+            'estado' => $estado,
+            'order' => $this->sanitizeOrder($request->input('order', 'desc')),
+        ];
 
-        // For screen display we paginate (keeps UI responsive)
-        $data = $query->paginate(15)->withQueryString();
+        // Usar el modelo Reporte para obtener los datos
+        switch ($tipo) {
+            case 'ventas':
+                // Ahora mostramos ventas (no detalle)
+                $data = Reporte::ventas($filtros)->paginate(15)->withQueryString();
+                break;
+            
+            case 'inventario_movimientos':
+                $data = Reporte::inventarioMovimientos($filtros)->paginate(15)->withQueryString();
+                break;
+            
+            default:
+                $data = collect();
+        }
 
-        return view('reportes.index', compact('empresa', 'tipo', 'fecha_inicio', 'fecha_fin', 'data'));
+        // Añadir campo informativo por fila: origen_reporte (solo para UI)
+        if (isset($data) && method_exists($data, 'getCollection')) {
+            $data->setCollection($data->getCollection()->map(function ($item) use ($tipo) {
+                if (($tipo ?? '') === 'inventario_movimientos') {
+                    $item->origen_reporte = 'inventario';
+                } else {
+                    $item->origen_reporte = 'venta';
+                }
+                return $item;
+            }));
+        }
+
+        // Flag explicito para dejar claro que reportes muestran datos históricos
+        $es_dato_historico = true;
+
+        return view('reportes.index', compact('empresa', 'tipo', 'fecha_inicio', 'fecha_fin', 'data', 'es_dato_historico'));
+    }
+
+    /**
+     * Obtiene los detalles de una venta específica (para el modal)
+     */
+    public function ventaDetalles($id)
+    {
+        $empresa = Empresa::first();
+        
+        $detalles = \App\Models\VentaDetalle::with(['producto', 'venta.factura'])
+            ->where('venta_id', $id)
+            ->get();
+
+        if ($detalles->isEmpty()) {
+            return response()->json(['error' => 'No se encontraron detalles'], 404);
+        }
+
+        return response()->json([
+            'detalles' => $detalles,
+            'cobra_iva' => $empresa && $empresa->cobra_iva
+        ]);
     }
 
     public function export(Request $request)
     {
-        // Keep existing route but return Excel using the new exportExcel method
         return $this->exportExcel($request);
     }
 
-
     /**
-     * Exporta todas las ventas filtradas a un archivo XLSX usando PhpSpreadsheet.
-     * No usa la vista ni HTML; descarga directa.
+     * Exporta el reporte a Excel según el tipo seleccionado
+     * Respeta todos los filtros aplicados: fecha_inicio, fecha_fin, estado
      */
     public function exportExcel(Request $request)
     {
+        $tipo = $request->input('tipo', 'ventas');
         $empresa = Empresa::first();
 
-        // Build query for ventas with filters (but do not paginate)
-        $query = $this->buildReporteQuery($request, 'ventas');
-        $ventas = $query->get();
+        // Preparar filtros - IMPORTANTES: estos se aplican tanto en vista como en exportación
+        // Se aplican saneamientos idénticos a los usados en la vista para mantener consistencia
+        $filtros = [
+            'fecha_inicio' => $this->sanitizeDate($request->input('fecha_inicio')),
+            'fecha_fin' => $this->sanitizeDate($request->input('fecha_fin')),
+            'estado' => $this->sanitizeEstado($request->input('estado')),
+            'order' => $this->sanitizeOrder($request->input('order', 'desc')),
+        ];
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Reporte Ventas');
 
-        // Headers
-        $headers = ['Fecha', 'Número factura', 'Cliente', 'Subtotal', 'IVA', 'Total', 'Forma de pago', 'Estado'];
-        $col = 'A';
-        foreach ($headers as $h) {
-            $sheet->setCellValue($col . '1', $h);
-            $sheet->getStyle($col . '1')->getFont()->setBold(true);
-            $sheet->getStyle($col . '1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $col++;
+        switch ($tipo) {
+            case 'ventas':
+                // Protección: no permitir exportaciones masivas que puedan agotar memoria
+                $count = Reporte::ventasDetalle($filtros)->count();
+                if ($count > self::MAX_EXPORT_ROWS) {
+                    return response('La exportación contiene ' . $count . " filas, excede el límite de exportación (" . self::MAX_EXPORT_ROWS . "). Reduce el rango de fechas o aplica filtros más específicos.", 413);
+                }
+
+                $this->exportVentasCompletas($sheet, $filtros, $empresa);
+                $filename = 'reporte_ventas_completo';
+                break;
+            
+            case 'inventario_movimientos':
+                $count = Reporte::inventarioMovimientos($filtros)->count();
+                if ($count > self::MAX_EXPORT_ROWS) {
+                    return response('La exportación contiene ' . $count . " filas, excede el límite de exportación (" . self::MAX_EXPORT_ROWS . "). Reduce el rango de fechas o aplica filtros más específicos.", 413);
+                }
+
+                $this->exportInventarioMovimientos($sheet, $filtros);
+                $filename = 'reporte_inventario_movimientos';
+                break;
+            
+            default:
+                $filename = 'reporte';
         }
 
-        $row = 2;
-        $totalSubtotal = 0;
-        $totalIva = 0;
-        $totalTotal = 0;
-
-        foreach ($ventas as $v) {
-            $factura = $v->factura ?? null;
-            $fecha = optional($v->fecha)->format('Y-m-d H:i');
-            $numero = $factura->numero ?? '-';
-            $cliente = $factura->cliente_nombre ?? $v->cliente ?? '-';
-            $iva = $factura->impuestos ?? 0;
-            $total = $factura->total ?? $v->total ?? 0;
-            $subtotal = $total - ($iva ?? 0);
-            $forma = $factura->forma_pago ?? '-';
-            $estado = $v->estado ?? '-';
-
-            $sheet->setCellValue('A' . $row, $fecha);
-            $sheet->setCellValue('B' . $row, $numero);
-            $sheet->setCellValue('C' . $row, $cliente);
-
-            // Numeric values as numbers
-            $sheet->setCellValue('D' . $row, (float)$subtotal);
-            $sheet->setCellValue('E' . $row, (float)$iva);
-            $sheet->setCellValue('F' . $row, (float)$total);
-
-            $sheet->setCellValue('G' . $row, $forma);
-            $sheet->setCellValue('H' . $row, $estado);
-
-            $totalSubtotal += (float)$subtotal;
-            $totalIva += (float)$iva;
-            $totalTotal += (float)$total;
-
-            $row++;
-        }
-
-        // Totals row
-        $sheet->setCellValue('C' . $row, 'TOTALES');
-        $sheet->getStyle('C' . $row)->getFont()->setBold(true);
-        $sheet->setCellValue('D' . $row, $totalSubtotal);
-        $sheet->setCellValue('E' . $row, $totalIva);
-        $sheet->setCellValue('F' . $row, $totalTotal);
-        $sheet->getStyle('D' . $row . ':F' . $row)->getFont()->setBold(true);
-
-        // Format numeric columns as currency
-        $currencyFormat = '"$"#,##0';
-        $sheet->getStyle('D2:D' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
-        $sheet->getStyle('E2:E' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
-        $sheet->getStyle('F2:F' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
-
-        // Auto size columns
-        foreach (range('A', 'H') as $columnID) {
-            $sheet->getColumnDimension($columnID)->setAutoSize(true);
-        }
-
-        $filename = 'reporte_ventas_' . now()->format('Ymd_His') . '.xlsx';
+        $filename .= '_' . now()->format('Ymd_His') . '.xlsx';
 
         $writer = new Xlsx($spreadsheet);
 
@@ -131,52 +152,217 @@ class ReporteController extends Controller
         ]);
     }
 
+    /**
+     * Exporta el reporte de ventas completo (ventas + detalle) a Excel
+     */
+    private function exportVentasCompletas($sheet, $filtros, $empresa)
+    {
+        $sheet->setTitle('Ventas Completas');
+        
+        // Headers
+        $headers = ['Fecha', 'Venta ID', 'N° Factura', 'Cliente', 'Producto', 'Cantidad', 'Precio Unit.', 'Subtotal'];
+        
+        if ($empresa && $empresa->cobra_iva) {
+            $headers[] = 'IVA';
+        }
+        
+        $headers[] = 'Total';
+        $headers[] = 'Estado';
+        
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . '1', $h);
+            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $sheet->getStyle($col . '1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $col++;
+        }
+
+        // Obtener datos usando el modelo Reporte
+        $detalles = Reporte::ventasDetalle($filtros)->get();
+
+        $row = 2;
+        $totalCantidad = 0;
+        $totalSubtotal = 0;
+        $totalIva = 0;
+        $totalTotal = 0;
+
+        foreach ($detalles as $d) {
+            // Origen del registro (solo para UI / export)
+            $d->origen_reporte = 'venta_detalle';
+            $fecha = optional($d->venta->fecha)->format('Y-m-d H:i');
+            $facturaNumero = $d->venta->factura->numero ?? '-';
+            $cliente = $d->venta->factura->cliente_nombre ?? $d->venta->cliente ?? '-';
+            $producto = $d->producto->nombre ?? '#' . $d->producto_id;
+            $total = $d->subtotal + ($d->iva ?? 0);
+
+            $sheet->setCellValue('A' . $row, $fecha);
+            $sheet->setCellValue('B' . $row, $d->venta_id);
+            $sheet->setCellValue('C' . $row, $facturaNumero);
+            $sheet->setCellValue('D' . $row, $cliente);
+            $sheet->setCellValue('E' . $row, $producto);
+            $sheet->setCellValue('F' . $row, (float)$d->cantidad);
+            $sheet->setCellValue('G' . $row, (float)$d->precio_unitario);
+            $sheet->setCellValue('H' . $row, (float)$d->subtotal);
+
+            $currentCol = 'I';
+            if ($empresa && $empresa->cobra_iva) {
+                $sheet->setCellValue($currentCol . $row, (float)$d->iva);
+                $currentCol++;
+            }
+
+            $sheet->setCellValue($currentCol . $row, (float)$total);
+            $currentCol++;
+            $sheet->setCellValue($currentCol . $row, $d->venta->estado ?? '-');
+
+            $totalCantidad += (float)$d->cantidad;
+            $totalSubtotal += (float)$d->subtotal;
+            $totalIva += (float)($d->iva ?? 0);
+            $totalTotal += (float)$total;
+
+            $row++;
+        }
+
+        // Totales
+        $sheet->setCellValue('E' . $row, 'TOTALES');
+        $sheet->getStyle('E' . $row)->getFont()->setBold(true);
+        $sheet->setCellValue('F' . $row, $totalCantidad);
+        $sheet->setCellValue('H' . $row, $totalSubtotal);
+
+        $currentCol = 'I';
+        if ($empresa && $empresa->cobra_iva) {
+            $sheet->setCellValue($currentCol . $row, $totalIva);
+            $currentCol++;
+        }
+        $sheet->setCellValue($currentCol . $row, $totalTotal);
+        
+        $sheet->getStyle('F' . $row . ':' . $currentCol . $row)->getFont()->setBold(true);
+
+        // Formato de moneda
+        $currencyFormat = '"$"#,##0';
+        $sheet->getStyle('G2:H' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
+        
+        if ($empresa && $empresa->cobra_iva) {
+            $sheet->getStyle('I2:J' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
+        } else {
+            $sheet->getStyle('I2:I' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
+        }
+
+        // Auto size
+        $lastCol = $empresa && $empresa->cobra_iva ? 'K' : 'J';
+        foreach (range('A', $lastCol) as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+    }
 
     /**
-     * Construye la query base del reporte según filtros y tipo.
-     * NO ejecuta la consulta: devuelve un Eloquent Builder listo para ->paginate() o ->get().
-     *
-     * @param Request $request
-     * @param string $tipo
-     * @return \Illuminate\Database\Eloquent\Builder
+     * Exporta el reporte de movimientos de inventario a Excel
      */
-    private function buildReporteQuery(Request $request, string $tipo)
+    private function exportInventarioMovimientos($sheet, $filtros)
     {
-        $fecha_inicio = $request->input('fecha_inicio');
-        $fecha_fin = $request->input('fecha_fin');
-        $estado = $request->input('estado');
-        $order = strtolower($request->input('order', 'desc')) === 'asc' ? 'asc' : 'desc';
-
-        $start = $fecha_inicio ? Carbon::parse($fecha_inicio)->startOfDay() : null;
-        $end = $fecha_fin ? Carbon::parse($fecha_fin)->endOfDay() : null;
-
-        if ($tipo === 'ventas') {
-            // Eloquent builder with factura eager loaded
-            $q = Venta::with('factura')->select('ventas.*');
-            if ($start) $q->where('fecha', '>=', $start);
-            if ($end) $q->where('fecha', '<=', $end);
-            if ($estado) $q->where('estado', $estado);
-            $q->orderBy('fecha', $order);
-            return $q;
-
-        } elseif ($tipo === 'ventas_detalle') {
-            // Join ventas so we can order by venta.fecha and also eager load relations
-            $q = VentaDetalle::with('producto', 'venta')
-                ->select('ventas_detalle.*')
-                ->join('ventas', 'ventas.id', '=', 'ventas_detalle.venta_id');
-
-            if ($start) $q->where('ventas.fecha', '>=', $start);
-            if ($end) $q->where('ventas.fecha', '<=', $end);
-            if ($estado) $q->where('ventas.estado', $estado);
-
-            $q->orderBy('ventas.fecha', $order);
-            return $q;
-
-        } else {
-            // inventario
-            $q = Producto::query();
-            $q->orderBy('nombre', $order === 'asc' ? 'asc' : 'desc');
-            return $q;
+        $sheet->setTitle('Movimientos Inventario');
+        
+        // Headers
+        $headers = ['ID', 'Fecha', 'Producto', 'Tipo', 'Cantidad', 'Origen', 'Referencia', 'Descripción'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . '1', $h);
+            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $sheet->getStyle($col . '1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $col++;
         }
+
+        // Obtener datos usando el modelo Reporte
+        $movimientos = Reporte::inventarioMovimientos($filtros)->get();
+
+        $row = 2;
+        $totalEntradas = 0;
+        $totalSalidas = 0;
+
+        foreach ($movimientos as $m) {
+            // Origen del registro (solo para UI / export)
+            $m->origen_reporte = 'inventario';
+            $fecha = $m->created_at ? date('Y-m-d H:i', strtotime($m->created_at)) : '-';
+            
+            $sheet->setCellValue('A' . $row, $m->id);
+            $sheet->setCellValue('B' . $row, $fecha);
+            $sheet->setCellValue('C' . $row, $m->producto_nombre ?? '#' . $m->producto_id);
+            $sheet->setCellValue('D' . $row, ucfirst($m->tipo));
+            $sheet->setCellValue('E' . $row, (int)$m->cantidad);
+            $sheet->setCellValue('F' . $row, $m->origen ?? '-');
+            $sheet->setCellValue('G' . $row, $m->referencia_id ?? '-');
+            $sheet->setCellValue('H' . $row, $m->descripcion ?? '-');
+
+            if ($m->tipo === 'entrada') {
+                $totalEntradas += (int)$m->cantidad;
+            } else {
+                $totalSalidas += (int)$m->cantidad;
+            }
+
+            $row++;
+        }
+
+        // Resumen
+        $row++;
+        $sheet->setCellValue('C' . $row, 'Total Entradas:');
+        $sheet->setCellValue('E' . $row, $totalEntradas);
+        $sheet->getStyle('C' . $row . ':E' . $row)->getFont()->setBold(true);
+        
+        $row++;
+        $sheet->setCellValue('C' . $row, 'Total Salidas:');
+        $sheet->setCellValue('E' . $row, $totalSalidas);
+        $sheet->getStyle('C' . $row . ':E' . $row)->getFont()->setBold(true);
+
+        $row++;
+        $sheet->setCellValue('C' . $row, 'Diferencia:');
+        $sheet->setCellValue('E' . $row, $totalEntradas - $totalSalidas);
+        $sheet->getStyle('C' . $row . ':E' . $row)->getFont()->setBold(true);
+
+        // Auto size
+        foreach (range('A', 'H') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+    }
+
+    /**
+     * Sanitiza una fecha recibida por input.
+     * Si la fecha no es válida devuelve null (ignorar silenciosamente).
+     * Acepta formatos legibles por Carbon::parse().
+     */
+    private function sanitizeDate($date)
+    {
+        if (empty($date)) {
+            return null;
+        }
+
+        try {
+            $d = \Carbon\Carbon::parse($date);
+            return $d->toDateString();
+        } catch (\Exception $e) {
+            // Ignorar fecha inválida de forma silenciosa
+            return null;
+        }
+    }
+
+    /**
+     * Normaliza order a 'asc' o 'desc'.
+     */
+    private function sanitizeOrder($order)
+    {
+        $o = strtolower((string)$order);
+        return $o === 'asc' ? 'asc' : 'desc';
+    }
+
+    /**
+     * Sanitiza el filtro estado: acepta solo valores alfanuméricos y guiones bajos.
+     * Si no cumple, devuelve null para que no se aplique filtro.
+     */
+    private function sanitizeEstado($estado)
+    {
+        if (empty($estado)) return null;
+        $s = (string)$estado;
+        if (preg_match('/^[a-zA-Z0-9_\-]+$/', $s)) {
+            return $s;
+        }
+        return null;
     }
 }

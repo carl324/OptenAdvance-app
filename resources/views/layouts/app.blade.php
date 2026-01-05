@@ -33,7 +33,10 @@
             <div class="nav-links">
                 <a href="{{ route('ventas.create') }}">Nueva Venta</a>
                 <a href="{{ route('ventas.index') }}">Listar Ventas</a>
-                <a href="{{ route('productos.index') }}">Productos</a>
+                <a href="{{ route('productos.index') }}">listar Productos</a>
+                <a href="{{ route('productos.create') }}">agregar Productos</a>
+                <a href="{{ route('reportes.index') }}">reportes</a>
+                <a href="{{ route('onboarding') }}">onboarding</a>
                 <a href="{{ route('empresa.index') }}">Empresa</a>
             </div>
         </div>

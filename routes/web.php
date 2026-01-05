@@ -34,6 +34,8 @@ Route::get('/productos', [ProductoController::class, 'index'])->name('productos.
 Route::put('/productos/{id}', [ProductoController::class, 'update']);
 Route::delete('/productos/{id}', [ProductoController::class, 'destroy']);
 
+// En routes/web.php
+Route::get('/reportes/ventas/{id}/detalles', [ReporteController::class, 'ventaDetalles']);
 // Rutas para editar la única fila de 'empresa' (mostrar y guardar cambios)
 // GET  /empresa -> mostrar formulario con datos actuales
 // POST /empresa -> guardar cambios
