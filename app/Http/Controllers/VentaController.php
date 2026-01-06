@@ -31,6 +31,8 @@ class VentaController extends Controller
         }
 
         $empresa = Empresa::first();
+        // Asumir que se cobra IVA por defecto si no existe registro de empresa
+        $cobraIva = $empresa ? (bool) $empresa->cobra_iva : true;
 
         $productos = Producto::activos()
             ->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($query) . '%'])
@@ -40,7 +42,7 @@ class VentaController extends Controller
             ->get();
 
         // Si la empresa no cobra IVA, ocultar/normalizar el campo IVA en el flujo de ventas
-        if ($empresa && !$empresa->cobra_iva) {
+        if (!$cobraIva) {
             $productos->transform(function ($p) {
                 $p->iva = 0;
                 return $p;
@@ -57,13 +59,16 @@ class VentaController extends Controller
             $data = $request->validate([
                 'cliente'        => 'nullable|string|max:100',
                 'cliente_nit'    => 'nullable|string|max:20',
-                'forma_pago'     => 'required|in:efectivo,transferencia,tarjeta',
+                'forma_pago'     => 'sometimes|in:efectivo,transferencia,tarjeta',  // Bug #23: cambio a 'sometimes' para permitir default
                 'productos'      => 'required|array|min:1',
                 'productos.*.id' => 'required|exists:productos,id',
                 'productos.*.cantidad' => 'required|integer|min:1',
                 'productos.*.precio'   => 'required|numeric|min:0',
                 'productos.*.iva'      => 'nullable|numeric|min:0|max:100',
             ]);
+
+            // Bug #23: Forzar forma_pago a 'efectivo' si viene vacio o null
+            $data['forma_pago'] = $data['forma_pago'] ?? 'efectivo';
 
             $empresa = Empresa::first();
             // Determina si actualmente la empresa cobra IVA (por defecto true si no existe registro)
@@ -77,20 +82,39 @@ class VentaController extends Controller
                 if (!$producto || !$producto->activo) {
                     throw new \Exception("El producto no está disponible");
                 }
+                // Bug #21: Validar que cantidad sea <= stock actual (doble validación contra oversell)
                 if ($producto->stock < $item['cantidad']) {
                     throw new \Exception("No hay suficiente stock de '{$producto->nombre}'. Disponible: {$producto->stock}");
                 }
             }
 
-            // Totales
+            // Calcular totales y preparar detalles (un solo loop para evitar inconsistencias)
             $totalNeto = 0;
             $totalIva  = 0;
+            $productosCalculados = [];
+
             foreach ($data['productos'] as $item) {
-                $neto = $item['cantidad'] * $item['precio'];
-                $rate = $cobraIva ? ($item['iva'] ?? 0) : 0;
-                $iva  = $neto * $rate / 100;
+                $producto = Producto::findOrFail($item['id']);
+                $precioBase = $producto->precio;
+                $ivaRate = $cobraIva ? $producto->iva : 0;
+                
+                $neto = $item['cantidad'] * $precioBase;
+                $iva  = round($neto * $ivaRate / 100, 2);
+                $final = $neto + $iva;
+                
                 $totalNeto += $neto;
                 $totalIva  += $iva;
+                
+                // Guardar cálculos para reutilizar sin recalcular
+                $productosCalculados[] = [
+                    'item' => $item,
+                    'producto' => $producto,
+                    'precioBase' => $precioBase,
+                    'ivaRate' => $ivaRate,
+                    'neto' => $neto,
+                    'iva' => $iva,
+                    'final' => $final
+                ];
             }
             $totalFinal = $totalNeto + $totalIva;
 
@@ -126,25 +150,20 @@ class VentaController extends Controller
                 'updated_at'     => now(),
             ]);
 
-            // Detalles y stock
-            foreach ($data['productos'] as $item) {
-                $neto  = $item['cantidad'] * $item['precio'];
-                $rate  = $cobraIva ? ($item['iva'] ?? 0) : 0;
-                $iva   = $neto * $rate / 100;
-                $final = $neto + $iva;
-
+            // Detalles y stock (usando cálculos previamente hechos, SIN recalcular IVA)
+            foreach ($productosCalculados as $calc) {
                 VentaDetalle::create([
                     'venta_id'        => $venta->id,
-                    'producto_id'     => $item['id'],
-                    'cantidad'        => $item['cantidad'],
-                    'precio_unitario' => $item['precio'],
-                    'iva'             => $iva,
-                    'subtotal'        => $final,
+                    'producto_id'     => $calc['item']['id'],
+                    'cantidad'        => $calc['item']['cantidad'],
+                    'precio_unitario' => $calc['precioBase'],
+                    'iva'             => $calc['iva'],
+                    'subtotal'        => $calc['final'],
                 ]);
 
                 InventarioMovimiento::salida(
-                    $item['id'],
-                    $item['cantidad'],
+                    $calc['item']['id'],
+                    $calc['item']['cantidad'],
                     'venta',
                     $venta->id,
                     "Venta #{$venta->id}"
@@ -237,14 +256,14 @@ class VentaController extends Controller
             return redirect()->back()->with('error', 'La venta ya está anulada');
         }
 
-        if (!$venta->factura || !$venta->factura->fecha_emision) {
+        if (!$venta->factura || !optional($venta->factura)->fecha_emision) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'No se encuentra la factura o fecha de emisión'], 400);
             }
             return redirect()->back()->with('error', 'No se encuentra la factura o fecha de emisión');
         }
 
-        $fechaEmision = Carbon::parse($venta->factura->fecha_emision);
+        $fechaEmision = Carbon::parse(optional($venta->factura)->fecha_emision);
         if (!$fechaEmision->isSameDay(Carbon::now())) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Solo se pueden anular ventas emitidas hoy'], 400);
@@ -275,7 +294,13 @@ class VentaController extends Controller
             // Restaurar stock y registrar movimientos (tipo entrada, origen venta_anulada)
             foreach ($venta->detalles as $detalle) {
                 $producto = Producto::find($detalle->producto_id);
-                $stockAnterior = $producto ? (int) $producto->stock : 0;
+                
+                // Validación: el producto DEBE existir para registrar movimiento
+                if (!$producto) {
+                    throw new \Exception("El producto ID {$detalle->producto_id} no existe. No se puede anular la venta sin integridad de inventario.");
+                }
+
+                $stockAnterior = (int) $producto->stock;
                 $cantidad = (int) $detalle->cantidad;
                 $stockNuevo = $stockAnterior + $cantidad;
 

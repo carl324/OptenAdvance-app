@@ -71,16 +71,17 @@ class ProductoController extends Controller
         try {
             $stockInicial = $data['stock'];
 
-            // Crear producto SIEMPRE con stock 0
+            // Crear producto con stock inicial en una única transacción
+            // Esto garantiza que ambas operaciones (crear + registrar movimiento) son atómicas
             $producto = Producto::create([
                 'nombre' => $data['nombre'],
                 'precio' => $data['precio'],
                 'iva' => $data['iva'],
                 'precio_con_iva' => $data['precio_con_iva'],
-                'stock'  => 0,
+                'stock'  => $stockInicial,  // Crear directamente con stock correcto
             ]);
 
-            // Registrar movimiento inicial si aplica
+            // Registrar movimiento inicial si aplica (siempre, para auditoría completa)
             if ($stockInicial > 0) {
                 InventarioMovimiento::entrada(
                     $producto->id,
@@ -149,6 +150,8 @@ class ProductoController extends Controller
 
             DB::beginTransaction();
 
+            // Lock de fila para prevenir race conditions en concurrencia
+            $producto = Producto::where('id', $producto->id)->lockForUpdate()->first();
             $stockAnterior = $producto->stock;
             Log::info('Stock anterior: ' . $stockAnterior);
 
@@ -179,6 +182,11 @@ class ProductoController extends Controller
                 
                 $diferencia = $stockNuevo - $stockAnterior;
                 Log::info('Diferencia: ' . $diferencia);
+
+                // Validar que no vaya a quedar en negativo
+                if ($stockNuevo < 0) {
+                    throw new \Exception("El stock no puede ser negativo");
+                }
 
                 if ($diferencia !== 0) {
                     // ✅ Usar entrada/salida según si aumenta o disminuye

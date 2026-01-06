@@ -85,7 +85,7 @@
           <th class="text-right">Cantidad</th>
           <th class="text-right">Precio unitario</th>
           @if($hasIva)
-            <th class="text-right">IVA{{ $tasaTotales !== null ? ' (' . number_format($tasaTotales, 2, ',', '.') . '%)' : ' (varios)' }}</th>
+            <th class="text-right">IVA{{ $tasaTotales !== null ? ' (' . $tasaTotales . '%)' : ' (varios)' }}</th>
           @endif
           <th class="text-right">Total</th>
         </tr>
@@ -117,7 +117,7 @@
             <td class="text-right">{{ number_format($subtotal, 0, ',', '.') }}</td>
           </tr>
           <tr>
-            <td>IVA{{ $tasaTotales !== null ? ' (' . number_format($tasaTotales, 2, ',', '.') . '%)' : ' (varios)' }}</td>
+            <td>IVA{{ $tasaTotales !== null ? ' (' . $tasaTotales . '%)' : ' (varios)' }}</td>
             <td class="text-right">{{ number_format($impuestos, 0, ',', '.') }}</td>
           </tr>
           <tr>

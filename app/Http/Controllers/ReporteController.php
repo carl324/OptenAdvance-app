@@ -70,11 +70,13 @@ class ReporteController extends Controller
 
     /**
      * Obtiene los detalles de una venta específica (para el modal)
+     * Carga relaciones para evitar N+1 queries
      */
     public function ventaDetalles($id)
     {
         $empresa = Empresa::first();
         
+        // Eager loading de relaciones para evitar N+1
         $detalles = \App\Models\VentaDetalle::with(['producto', 'venta.factura'])
             ->where('venta_id', $id)
             ->get();
@@ -83,8 +85,24 @@ class ReporteController extends Controller
             return response()->json(['error' => 'No se encontraron detalles'], 404);
         }
 
+        // Usar relaciones cargadas, no hacer queries adicionales
         return response()->json([
-            'detalles' => $detalles,
+            'detalles' => $detalles->map(function($d) {
+                return [
+                    'id' => $d->id,
+                    'venta_id' => $d->venta_id,
+                    'producto_id' => $d->producto_id,
+                    'producto' => [
+                        'nombre' => optional($d->producto)->nombre ?? 'Producto #' . $d->producto_id
+                    ],
+                    'cantidad' => $d->cantidad,
+                    'precio_unitario' => $d->precio_unitario,
+                    'iva' => $d->iva,
+                    'subtotal' => $d->subtotal,
+                ];
+            }),
+            'venta_id' => $id,
+            'factura_id' => optional($detalles->first()->venta->factura)->id ?? null,
             'cobra_iva' => $empresa && $empresa->cobra_iva
         ]);
     }
@@ -161,8 +179,17 @@ class ReporteController extends Controller
         
         // Headers
         $headers = ['Fecha', 'Venta ID', 'N° Factura', 'Cliente', 'Producto', 'Cantidad', 'Precio Unit.', 'Subtotal'];
-        
-        if ($empresa && $empresa->cobra_iva) {
+
+        // Verificar si hay datos históricos con IVA > 0
+        $detalles = Reporte::ventasDetalle($filtros)->get();
+        $hayIvaHistorico = $detalles->contains(function($d) {
+            return ($d->iva ?? 0) > 0;
+        });
+
+        // Mostrar columna IVA si la empresa cobra IVA O si hay datos históricos con IVA
+        $mostrarIva = ($empresa && $empresa->cobra_iva) || $hayIvaHistorico;
+
+        if ($mostrarIva) {
             $headers[] = 'IVA';
         }
         
@@ -177,9 +204,6 @@ class ReporteController extends Controller
             $col++;
         }
 
-        // Obtener datos usando el modelo Reporte
-        $detalles = Reporte::ventasDetalle($filtros)->get();
-
         $row = 2;
         $totalCantidad = 0;
         $totalSubtotal = 0;
@@ -190,10 +214,11 @@ class ReporteController extends Controller
             // Origen del registro (solo para UI / export)
             $d->origen_reporte = 'venta_detalle';
             $fecha = optional($d->venta->fecha)->format('Y-m-d H:i');
-            $facturaNumero = $d->venta->factura->numero ?? '-';
-            $cliente = $d->venta->factura->cliente_nombre ?? $d->venta->cliente ?? '-';
-            $producto = $d->producto->nombre ?? '#' . $d->producto_id;
-            $total = $d->subtotal + ($d->iva ?? 0);
+            $facturaNumero = optional($d->venta->factura)->numero ?? '-';
+            $cliente = (optional($d->venta->factura)->cliente_nombre ?? $d->venta->cliente) ?? '-';
+            $producto = optional($d->producto)->nombre ?? '#' . $d->producto_id;
+            // Usar subtotal directamente (ya incluye IVA desde BD)
+            $total = $d->subtotal;
 
             $sheet->setCellValue('A' . $row, $fecha);
             $sheet->setCellValue('B' . $row, $d->venta_id);
@@ -205,7 +230,7 @@ class ReporteController extends Controller
             $sheet->setCellValue('H' . $row, (float)$d->subtotal);
 
             $currentCol = 'I';
-            if ($empresa && $empresa->cobra_iva) {
+            if ($mostrarIva) {
                 $sheet->setCellValue($currentCol . $row, (float)$d->iva);
                 $currentCol++;
             }
@@ -229,7 +254,7 @@ class ReporteController extends Controller
         $sheet->setCellValue('H' . $row, $totalSubtotal);
 
         $currentCol = 'I';
-        if ($empresa && $empresa->cobra_iva) {
+        if ($mostrarIva) {
             $sheet->setCellValue($currentCol . $row, $totalIva);
             $currentCol++;
         }
@@ -241,14 +266,14 @@ class ReporteController extends Controller
         $currencyFormat = '"$"#,##0';
         $sheet->getStyle('G2:H' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
         
-        if ($empresa && $empresa->cobra_iva) {
+        if ($mostrarIva) {
             $sheet->getStyle('I2:J' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
         } else {
             $sheet->getStyle('I2:I' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
         }
 
         // Auto size
-        $lastCol = $empresa && $empresa->cobra_iva ? 'K' : 'J';
+        $lastCol = $mostrarIva ? 'K' : 'J';
         foreach (range('A', $lastCol) as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
@@ -281,11 +306,19 @@ class ReporteController extends Controller
         foreach ($movimientos as $m) {
             // Origen del registro (solo para UI / export)
             $m->origen_reporte = 'inventario';
-            $fecha = $m->created_at ? date('Y-m-d H:i', strtotime($m->created_at)) : '-';
+            // Usar formato consistente con BD (created_at siempre es datetime)
+            if ($m->created_at instanceof \Carbon\Carbon) {
+                $fecha = $m->created_at->format('Y-m-d H:i');
+            } elseif (is_string($m->created_at)) {
+                $fecha = \Carbon\Carbon::parse($m->created_at)->format('Y-m-d H:i');
+            } else {
+                $fecha = '-';
+            }
+            $productoNombre = $m->producto_nombre ?? '#' . $m->producto_id;
             
             $sheet->setCellValue('A' . $row, $m->id);
             $sheet->setCellValue('B' . $row, $fecha);
-            $sheet->setCellValue('C' . $row, $m->producto_nombre ?? '#' . $m->producto_id);
+            $sheet->setCellValue('C' . $row, $productoNombre);
             $sheet->setCellValue('D' . $row, ucfirst($m->tipo));
             $sheet->setCellValue('E' . $row, (int)$m->cantidad);
             $sheet->setCellValue('F' . $row, $m->origen ?? '-');
@@ -353,14 +386,15 @@ class ReporteController extends Controller
     }
 
     /**
-     * Sanitiza el filtro estado: acepta solo valores alfanuméricos y guiones bajos.
-     * Si no cumple, devuelve null para que no se aplique filtro.
+     * Sanitiza el filtro estado: acepta SOLO 'completada' o 'anulada'.
+     * Si no es uno de estos valores, devuelve null para que no se aplique filtro.
      */
     private function sanitizeEstado($estado)
     {
         if (empty($estado)) return null;
-        $s = (string)$estado;
-        if (preg_match('/^[a-zA-Z0-9_\-]+$/', $s)) {
+        $s = strtolower((string)$estado);
+        // Whitelist: solo valores permitidos
+        if (in_array($s, ['completada', 'anulada'], true)) {
             return $s;
         }
         return null;

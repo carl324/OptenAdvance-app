@@ -185,6 +185,18 @@ const totalSpan = document.getElementById('total');
 const btnFinalizar = document.getElementById('btn-finalizar');
 const mensajeDiv = document.getElementById('mensaje');
 
+// Bug #25: Escapar HTML para evitar que comillas rompan atributos
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
 // Formato colombiano sin decimales
 function formatoPrecio(precio) {
     return '$' + Math.round(precio).toLocaleString('es-CO');
@@ -276,7 +288,7 @@ function mostrarResultados(productos) {
         }
         
         return `
-            <div class="search-item" data-index="${index}" data-producto='${JSON.stringify(p)}'>
+            <div class="search-item" data-index="${index}" data-producto="${escapeHtml(JSON.stringify(p))}">
                 <div class="search-item-name">${p.nombre}</div>
                 <div class="search-item-details">
                     Precio: ${formatoPrecio(p.precio)} ${p.iva ? '(+IVA)' : '(sin IVA)'}
@@ -298,7 +310,7 @@ function mostrarResultados(productos) {
         }
         
         return `
-            <div class="search-item" data-index="${index}" data-producto='${JSON.stringify(p)}'>
+            <div class="search-item" data-index="${index}" data-producto="${escapeHtml(JSON.stringify(p))}">
                 <div class="search-item-name">${p.nombre}</div>
                 <div class="search-item-details">
                     Precio: ${formatoPrecio(p.precio)}
@@ -349,13 +361,19 @@ function agregarAlCarrito(producto) {
             return;
         }
     } else {
+        const precioBase = parseFloat(producto.precio);
+        const ivaRate = producto.iva || 0;
+        const ivaValor = ivaRate > 0 ? precioBase * ivaRate / 100 : 0;
+        const subtotalConIva = precioBase + ivaValor;
+        
         carrito.push({
             id: producto.id,
             nombre: producto.nombre,
-            precio: parseFloat(producto.precio),
+            precio: precioBase,
             cantidad: 1,
             stock: producto.stock,
-            iva: producto.iva || 0
+            iva: ivaRate,
+            subtotalConIva: subtotalConIva
         });
     }
 
@@ -388,9 +406,7 @@ function actualizarCarrito() {
             </thead>
             <tbody>
                 ${carrito.map((item, index) => {
-                    const subtotal = item.cantidad * item.precio;
-                    const ivaValor = item.iva ? subtotal * (item.iva / 100) : 0;
-                    const totalConIva = subtotal + ivaValor;
+                    const totalConIva = item.cantidad * item.subtotalConIva;
                     return `
                     <tr>
                         <td>${item.nombre}${item.iva ? `<br><small>IVA ${item.iva}%</small>` : ''}<br><small style="color: #999;">Stock: ${item.stock}</small></td>
@@ -428,8 +444,7 @@ function actualizarCarrito() {
             </thead>
             <tbody>
                 ${carrito.map((item, index) => {
-                    const subtotal = item.cantidad * item.precio;
-                    const totalConIva = subtotal; // IVA not shown or applied in UI
+                    const totalConIva = item.cantidad * item.subtotalConIva;
                     return `
                     <tr>
                         <td>${item.nombre}<br><small style="color: #999;">Stock: ${item.stock}</small></td>
@@ -497,10 +512,9 @@ function eliminarDelCarrito(index) {
 }
 
 function actualizarTotal() {
+    // El total es la suma simple de cada item con su IVA ya calculado
     const total = carrito.reduce((sum, item) => {
-        const subtotal = item.cantidad * item.precio;
-        const ivaValor = item.iva ? subtotal * (item.iva / 100) : 0;
-        return sum + subtotal + ivaValor;
+        return sum + (item.cantidad * item.subtotalConIva);
     }, 0);
     totalSpan.textContent = formatoPrecio(total);
 }
@@ -511,10 +525,9 @@ function confirmarVenta() {
         return;
     }
 
+    // El total es la suma simple de cada item con su IVA ya calculado
     const total = carrito.reduce((sum, item) => {
-        const subtotal = item.cantidad * item.precio;
-        const ivaValor = item.iva ? subtotal * (item.iva / 100) : 0;
-        return sum + subtotal + ivaValor;
+        return sum + (item.cantidad * item.subtotalConIva);
     }, 0);
 
     const cliente = document.getElementById('cliente').value.trim();
@@ -539,9 +552,7 @@ function confirmarVenta() {
             ${cliente ? `<p style="margin-bottom: 10px;"><strong>Cliente:</strong> ${cliente}</p>` : ''}
             <div class="venta-items">
                 ${carrito.map(item => {
-                    const subtotal = item.cantidad * item.precio;
-                    const ivaValor = item.iva ? subtotal * (item.iva / 100) : 0;
-                    const totalConIva = subtotal + ivaValor;
+                    const totalConIva = item.cantidad * item.subtotalConIva;
                     // Marcar productos con precio 0 visualmente (se detalla en el siguiente paso)
                     // Marcar productos con precio 0
                     const esPrecioCero = Number(item.precio) === 0;
@@ -661,9 +672,7 @@ function mostrarModalImpresion(ventaId, total, cliente, items) {
     document.getElementById('ticket-total').textContent = formatoPrecio(total);
     
     const itemsHTML = items.map(item => {
-        const subtotal = item.cantidad * item.precio;
-        const ivaValor = item.iva ? subtotal * (item.iva / 100) : 0;
-        const totalConIva = subtotal + ivaValor;
+        const totalConIva = item.cantidad * item.subtotalConIva;
         return `
             <div class="ticket-item">
                 <span class="ticket-item-desc">${item.nombre}</span>

@@ -59,7 +59,7 @@
 
                     <div class="full field-group">
                         <label for="nombre">Nombre <span style="color:#dc2626">*</span></label>
-                        <input id="nombre" name="nombre" type="text" class="{{ $errors->has('nombre') ? 'error-field' : '' }}" autocomplete="organization" placeholder="Ej: Mi Empresa S.A.S.">
+                        <input required id="nombre" name="nombre" type="text" class="{{ $errors->has('nombre') ? 'error-field' : '' }}" autocomplete="organization" placeholder="Ej: Mi Empresa S.A.S.">
                         @if($errors->has('nombre'))
                         <div class="field-error show">{{ $errors->first('nombre') }}</div>
                         @endif
@@ -67,7 +67,7 @@
 
                     <div class="field-group">
                         <label for="nit">NIT</label>
-                        <input id="nit" name="nit" type="text" class="{{ $errors->has('nit') ? 'error-field' : '' }}" placeholder="Ej: 123456789">
+                        <input required id="nit" name="nit" type="text" class="{{ $errors->has('nit') ? 'error-field' : '' }}" placeholder="Ej: 123456789">
                         @if($errors->has('nit'))
                         <div class="field-error show">{{ $errors->first('nit') }}</div>
                         @endif
@@ -91,7 +91,7 @@
 
                     <div class="field-group">
                         <label for="telefono">Teléfono</label>
-                        <input id="telefono" name="telefono" type="tel" class="{{ $errors->has('telefono') ? 'error-field' : '' }}" placeholder="Ej: 3001234567">
+                        <input required id="telefono" name="telefono" type="tel" class="{{ $errors->has('telefono') ? 'error-field' : '' }}" placeholder="Ej: 3001234567">
                         @if($errors->has('telefono'))
                         <div class="field-error show">{{ $errors->first('telefono') }}</div>
                         @endif
@@ -99,7 +99,7 @@
 
                     <div class="field-group">
                         <label for="email">Email</label>
-                        <input id="email" name="email" type="email" class="{{ $errors->has('email') ? 'error-field' : '' }}" placeholder="contacto@miempresa.com">
+                        <input required id="email" name="email" type="email" class="{{ $errors->has('email') ? 'error-field' : '' }}" placeholder="contacto@miempresa.com">
                         @if($errors->has('email'))
                         <div class="field-error show">{{ $errors->first('email') }}</div>
                         @endif
@@ -108,7 +108,7 @@
                     <div class="full field-group">
                         <label style="font-weight:600">¿La empresa cobra IVA?</label>
                         <label for="cobra_iva" class="checkbox-label">
-                            <input id="cobra_iva" type="checkbox" name="cobra_iva" value="1">
+                            <input required id="cobra_iva" type="checkbox" name="cobra_iva" value="1">
                             <span>Sí, esta empresa cobra IVA</span>
                         </label>
                     </div>

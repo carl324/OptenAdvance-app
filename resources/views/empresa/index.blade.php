@@ -138,16 +138,27 @@
             <div style="display:flex;flex-direction:column;gap:10px">
                 <div class="note">Crear un respaldo local del archivo de base de datos. Se guardará en tu carpeta <strong>Descargas</strong> dentro de <em>opten-backups</em>. No se realizan restauraciones automáticas.</div>
 
-                <form method="POST" action="{{ route('backup.store') }}">
+                <form method="POST" action="{{ route('backup.store') }}" id="backup-form">
                     @csrf
                     <label style="font-size:13px;color:#6b7280;display:flex;align-items:center;gap:8px">
-                        <input type="checkbox" name="confirm_backup" required>
+                        <input type="checkbox" name="confirm_backup" id="confirm_backup_checkbox" required>
                         He leído y acepto que se generará un archivo en mi carpeta de Descargas.
                     </label>
                     <div style="display:flex;justify-content:flex-end;margin-top:6px">
-                        <button type="submit" class="primary">Crear copia de seguridad</button>
+                        <button type="button" id="btn-backup" class="primary" onclick="handleBackupClick(event)" style="position:relative;overflow:hidden">
+                            <span id="btn-backup-text">Crear copia de seguridad</span>
+                            <span id="btn-backup-spinner" style="display:none;margin-left:8px">
+                                <span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite" style="animation:spin 0.6s linear infinite"></span>
+                            </span>
+                        </button>
                     </div>
                 </form>
+
+                <style>
+                    @keyframes spin {
+                        to { transform: rotate(360deg); }
+                    }
+                </style>
             </div>
         </div>
     </div>
@@ -166,6 +177,106 @@ Después de realizar este cambio, los productos que cobran IVA dejarán de cobra
     </div>
 
     <script>
+    function handleBackupClick(e) {
+        e.preventDefault();
+        
+        const checkbox = document.getElementById('confirm_backup_checkbox');
+        const btn = document.getElementById('btn-backup');
+        const btnText = document.getElementById('btn-backup-text');
+        const btnSpinner = document.getElementById('btn-backup-spinner');
+        const form = document.getElementById('backup-form');
+        
+        if (!checkbox.checked) {
+            alert('Debes confirmar que deseas crear el respaldo.');
+            return;
+        }
+        
+        btn.disabled = true;
+        btnText.textContent = 'Creando respaldo...';
+        btnSpinner.style.display = 'inline';
+        
+        const formData = new FormData(form);
+        const csrf = formData.get('_token');
+        
+        // Crear iframe oculto para descarga
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        
+        // Solicitar permisos de notificación
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+        
+        // Detectar cuando la descarga inicia
+        let downloadStarted = false;
+        const downloadDetectionTimer = setTimeout(() => {
+            if (!downloadStarted) {
+                downloadStarted = true;
+            }
+        }, 1000);
+        
+        fetch("{{ route('backup.store') }}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': csrf
+            }
+        })
+        .then(response => {
+            clearTimeout(downloadDetectionTimer);
+            
+            if (response.ok) {
+                // Obtener nombre del archivo del header Content-Disposition
+                const contentDisposition = response.headers.get('content-disposition');
+                let fileName = 'opten_backup.sqlite';
+                if (contentDisposition) {
+                    const matches = contentDisposition.match(/filename="(.+?)"/);
+                    if (matches) fileName = matches[1];
+                }
+                
+                // Convertir a blob y crear descarga
+                return response.blob().then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                    
+                    // Mostrar notificación
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        new Notification('Respaldo completado', {
+                            body: 'Archivo: ' + fileName,
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231f5fbf"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>'
+                        });
+                    }
+                    
+                    downloadStarted = true;
+                });
+            } else if (response.status === 400 || response.status === 429 || response.status === 500) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Error al crear respaldo');
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error: ' + (error.message || 'No se pudo crear el respaldo'));
+        })
+        .finally(() => {
+            clearTimeout(downloadDetectionTimer);
+            setTimeout(() => {
+                btn.disabled = false;
+                btnText.textContent = 'Crear copia de seguridad';
+                btnSpinner.style.display = 'none';
+            }, 3000);
+            document.body.removeChild(iframe);
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function(){
         var form = document.querySelector('form');
         var csrf = document.querySelector('input[name="_token"]').value;

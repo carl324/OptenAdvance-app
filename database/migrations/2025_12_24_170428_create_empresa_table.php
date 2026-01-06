@@ -14,13 +14,14 @@ return new class extends Migration
        Schema::create('empresa', function (Blueprint $table) {
     $table->id();
 
-    $table->string('nombre', 150);
-    $table->string('nit', 50);
+    $table->string('nombre', 150)->unique();  // Bug #24: Agregar unique constraint
+    $table->string('nit', 50)->unique();       // Bug #24: Agregar unique constraint
     $table->string('direccion')->nullable();
     $table->string('telefono', 30)->nullable();
     $table->string('email')->nullable();
 
     $table->string('moneda', 10)->default('COP');
+    $table->boolean('cobra_iva')->default(true);
 
     $table->timestamps();
 });

@@ -219,6 +219,7 @@
         </div>
       </div>
       <div class="modal-footer">
+        <button onclick="verFactura()" id="btnVerFactura" style="background:#2e7d32;margin-right:8px">Ver Factura</button>
         <button onclick="cerrarModal()">Cerrar</button>
       </div>
     </div>
@@ -260,6 +261,10 @@
       const headerIva = document.getElementById('headerIva');
       const cobraIva = data.cobra_iva;
 
+      // Guardar venta_id y factura_id para el botón
+      window.currentVentaId = data.venta_id;
+      window.currentFacturaId = data.factura_id;
+
       tbody.innerHTML = '';
       tfoot.innerHTML = '';
 
@@ -284,7 +289,7 @@
 
         const tr = document.createElement('tr');
         let html = `
-          <td>${d.producto ? d.producto.nombre : '#' + d.producto_id}</td>
+          <td>${d.producto && d.producto.nombre ? d.producto.nombre : 'Producto #' + d.producto_id}</td>
           <td class="text-center">${d.cantidad}</td>
           <td class="text-right">${formatNumber(d.precio_unitario)}</td>
           <td class="text-right">${formatNumber(d.subtotal)}</td>
@@ -321,6 +326,14 @@
     function cerrarModal() {
       const modal = document.getElementById('modalDetalles');
       modal.classList.remove('show');
+    }
+
+    function verFactura() {
+      if (window.currentFacturaId) {
+        window.location.href = '/ventas/' + window.currentVentaId + '/factura';
+      } else {
+        alert('Esta venta no tiene factura asociada');
+      }
     }
 
     function formatNumber(num, decimals = 0) {

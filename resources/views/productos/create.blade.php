@@ -81,7 +81,7 @@
 
         <div class="form-group">
             <label for="stock">Stock inicial *</label>
-            <input type="number" id="stock" name="stock" min="0" required placeholder="0">
+            <input type="number" id="stock" name="stock" min="0" required placeholder="-">
         </div>
 
         <button type="submit" id="btn-guardar">Agregar Producto</button>

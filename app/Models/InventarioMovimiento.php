@@ -22,37 +22,52 @@ class InventarioMovimiento extends Model
 
     public static function entrada($productoId, $cantidad, $origen, $referenciaId = null, $descripcion = null)
     {
-        // Nota: no envolver en transacción aquí para permitir que el caller
-        // (p.ej. VentaController::store) controle la transacción global.
-        self::create([
-            'producto_id'   => $productoId,
-            'tipo'          => 'entrada',
-            'cantidad'      => $cantidad,
-            'origen'        => $origen,
-            'referencia_id' => $referenciaId,
-            'descripcion'   => $descripcion,
-        ]);
+        // Envolver en transacción para garantizar consistencia atómica:
+        // Si create() falla → no se modifica stock
+        // Si increment() falla → se revierte el create()
+        return DB::transaction(function () use ($productoId, $cantidad, $origen, $referenciaId, $descripcion) {
+            self::create([
+                'producto_id'   => $productoId,
+                'tipo'          => 'entrada',
+                'cantidad'      => $cantidad,
+                'origen'        => $origen,
+                'referencia_id' => $referenciaId,
+                'descripcion'   => $descripcion,
+            ]);
 
-        DB::table('productos')
-            ->where('id', $productoId)
-            ->increment('stock', $cantidad);
+            DB::table('productos')
+                ->where('id', $productoId)
+                ->increment('stock', $cantidad);
+        });
     }
 
     public static function salida($productoId, $cantidad, $origen, $referenciaId = null, $descripcion = null)
     {
-        // Nota: no envolver en transacción aquí para permitir que el caller
-        // (p.ej. VentaController::store) controle la transacción global.
-        self::create([
-            'producto_id'   => $productoId,
-            'tipo'          => 'salida',
-            'cantidad'      => $cantidad,
-            'origen'        => $origen,
-            'referencia_id' => $referenciaId,
-            'descripcion'   => $descripcion,
-        ]);
+        // Envolver en transacción para garantizar consistencia atómica:
+        // Validación + decremento + movimiento deben ser indivisibles
+        // Si cualquier paso falla → todo se revierte
+        return DB::transaction(function () use ($productoId, $cantidad, $origen, $referenciaId, $descripcion) {
+            // Validación atómica: verificar stock y decrementar en una operación
+            // La cláusula where+decrement es atómica en la BD
+            $actualizados = DB::table('productos')
+                ->where('id', $productoId)
+                ->where('stock', '>=', $cantidad)  // Asegurar que hay stock suficiente
+                ->decrement('stock', $cantidad);
 
-        DB::table('productos')
-            ->where('id', $productoId)
-            ->decrement('stock', $cantidad);
+            // Si no se actualizó ninguna fila, significa que no hay stock suficiente
+            if ($actualizados === 0) {
+                throw new \Exception("No hay suficiente stock para el producto ID {$productoId}. Intenta realizar una salida de {$cantidad} unidades.");
+            }
+
+            // Solo registrar el movimiento si el decremento fue exitoso
+            self::create([
+                'producto_id'   => $productoId,
+                'tipo'          => 'salida',
+                'cantidad'      => $cantidad,
+                'origen'        => $origen,
+                'referencia_id' => $referenciaId,
+                'descripcion'   => $descripcion,
+            ]);
+        });
     }
 }
