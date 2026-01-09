@@ -8,6 +8,7 @@ use App\Models\Empresa;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use Illuminate\Support\Facades\Log;
 
 class ReporteController extends Controller
 {
@@ -371,7 +372,8 @@ class ReporteController extends Controller
             $d = \Carbon\Carbon::parse($date);
             return $d->toDateString();
         } catch (\Exception $e) {
-            // Ignorar fecha inválida de forma silenciosa
+            // Registrar error en logs para auditoría
+            Log::warning('ReporteController::sanitizeDate - Fecha inválida: ' . $date . ' | Error: ' . $e->getMessage());
             return null;
         }
     }
