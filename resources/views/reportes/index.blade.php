@@ -1,352 +1,485 @@
 @extends('layouts.app')
 
-@section('title', 'Registrar Producto')
+@section('title', 'Reportes')
 
 @section('content')
-  <style>
-    body{font-family:Arial,Helvetica,sans-serif;background:#f7f7f7;padding:20px}
-    .card{background:#fff;padding:16px;border-radius:6px;max-width:1200px;margin:0 auto}
-    .row{display:flex;gap:12px;align-items:end;flex-wrap:wrap}
-    label{font-weight:600;font-size:14px;display:block;margin-bottom:4px}
-    select,input{padding:8px;border:1px solid #ddd;border-radius:4px}
-    button{padding:8px 12px;border-radius:4px;border:0;background:#1976d2;color:#fff;cursor:pointer}
-    button:hover{background:#1565c0}
-    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
-    th,td{padding:8px;border:1px solid #eee;text-align:left}
-    th{background:#fafafa;font-weight:600}
-    .text-right{text-align:right}
-    .text-center{text-align:center}
-    .actions{display:flex;gap:8px;margin-top:12px}
-    .badge{display:inline-block;padding:4px 8px;border-radius:3px;font-size:12px;font-weight:500}
-    .badge-entrada{background:#e8f5e9;color:#2e7d32}
-    .badge-salida{background:#ffebee;color:#c62828}
-    .badge-completada{background:#e3f2fd;color:#1565c0}
-    .badge-anulada{background:#fce4ec;color:#c2185b}
-    .pagination{margin-top:12px;display:flex;align-items:center;gap:8px;justify-content:flex-end}
-    .pagination a{padding:6px 10px;background:#eee;border-radius:4px;color:#333;text-decoration:none}
-    .pagination a:hover{background:#ddd}
-    .pagination .active{background:#1976d2;color:#fff}
-    .btn-link{background:transparent;color:#1976d2;border:1px solid #1976d2;padding:4px 8px;border-radius:3px;cursor:pointer;font-size:12px}
-    .btn-link:hover{background:#e3f2fd}
 
-    /* Modal */
-    .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center}
-    .modal.show{display:flex}
-    .modal-content{background:#fff;padding:20px;border-radius:8px;max-width:800px;width:90%;max-height:80vh;overflow-y:auto;position:relative}
-    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid #eee;padding-bottom:12px}
-    .modal-title{font-size:18px;font-weight:600;margin:0}
-    .modal-close{background:transparent;border:0;font-size:24px;cursor:pointer;color:#666;padding:0;width:30px;height:30px;line-height:30px}
-    .modal-close:hover{color:#333}
-    .modal-body{margin-bottom:16px}
-    .modal-footer{display:flex;justify-content:flex-end;border-top:1px solid #eee;padding-top:12px}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h2>Reportes</h2>
-    @if(isset($es_dato_historico) && $es_dato_historico)
-      <div style="font-size:12px;color:#666;margin-bottom:8px">Nota: es_dato_historico = true — Los reportes muestran datos históricos (no reflejan necesariamente el estado actual en tiempo real).</div>
-    @endif
-
-    <form method="get" action="/reportes">
-      <div class="row">
-        <div>
-          <label for="tipo">Tipo de Reporte</label>
-          <select id="tipo" name="tipo">
-            <option value="ventas" {{ ($tipo ?? '') === 'ventas' ? 'selected' : '' }}>Ventas</option>
-            <option value="inventario_movimientos" {{ ($tipo ?? '') === 'inventario_movimientos' ? 'selected' : '' }}>Movimientos de Inventario</option>
-          </select>
+<section class="section">
+  <div class="container-fluid">
+    <!-- Title -->
+    <div class="title-wrapper pt-30">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <div class="title">
+            <h2>📊 Reportes</h2>
+          </div>
         </div>
-
-        <div>
-          <label for="fecha_inicio">Fecha inicio</label>
-          <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ $fecha_inicio ?? '' }}">
-        </div>
-
-        <div>
-          <label for="fecha_fin">Fecha fin</label>
-          <input type="date" id="fecha_fin" name="fecha_fin" value="{{ $fecha_fin ?? '' }}">
-        </div>
-
-        <div style="margin-left:auto">
-          <button type="submit">Consultar</button>
+        <div class="col-md-6">
+          <div class="breadcrumb-wrapper">
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Reportes</li>
+              </ol>
+            </nav>
+          </div>
         </div>
       </div>
-    </form>
-
-    <div class="actions">
-      <form method="get" action="/reportes/export" style="margin:0">
-        <input type="hidden" name="tipo" value="{{ $tipo ?? 'ventas' }}">
-        <input type="hidden" name="fecha_inicio" value="{{ $fecha_inicio ?? '' }}">
-        <input type="hidden" name="fecha_fin" value="{{ $fecha_fin ?? '' }}">
-        <input type="hidden" name="estado" value="{{ request()->input('estado', '') }}">
-        <input type="hidden" name="order" value="{{ request()->input('order', 'desc') }}">
-        <button type="submit">Exportar Excel</button>
-      </form>
     </div>
 
-    <div style="margin-top:16px">
-      @if(($tipo ?? '') === 'ventas')
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Fecha</th>
-              <th>N° Factura</th>
-              <th>Cliente</th>
-              <th class="text-right">Total</th>
-              <th class="text-center">Estado</th>
-              <th class="text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse($data as $r)
-            <tr data-origen_reporte="{{ $r->origen_reporte ?? '' }}">
-              <td>{{ $r->id }}</td>
-              <td title="Origen: {{ $r->origen_reporte ?? 'n/a' }}">{{ optional($r->fecha)->format('Y-m-d H:i') }}</td>
-              <td>{{ $r->factura->numero ?? '-' }}</td>
-              <td>{{ $r->factura->cliente_nombre ?? $r->cliente ?? '-' }}</td>
-              <td class="text-right">{{ number_format($r->total, 0, ',', '.') }}</td>
-              <td class="text-center">
-                @if($r->estado === 'completada')
-                  <span class="badge badge-completada">Completada</span>
-                @elseif($r->estado === 'anulada')
-                  <span class="badge badge-anulada">Anulada</span>
-                @else
-                  <span class="badge">{{ $r->estado }}</span>
-                @endif
-              </td>
-              <td class="text-center">
-                <button class="btn-link" onclick="verDetalles({{ $r->id }})">Ver Detalles</button>
-              </td>
-            </tr>
-            @empty
-            <tr>
-              <td colspan="7" style="text-align:center;padding:20px;color:#999">No hay datos para el rango seleccionado</td>
-            </tr>
-            @endforelse
-          </tbody>
-        </table>
+    <!-- Stats Cards -->
+    <div class="row" id="statsContainer">
+      <div class="col-xl-3 col-lg-4 col-sm-6">
+        <div class="icon-card mb-30">
+          <div class="icon purple">
+            <i class="lni lni-reload"></i>
+          </div>
+          <div class="content">
+            <h3 class="text-bold mb-10" id="statMovimientos">0</h3>
+            <p class="text-sm text-success">
+              <span class="text-gray">Movimientos</span>
+            </p>
+          </div>
+        </div>
+      </div>
 
-      @elseif(($tipo ?? '') === 'inventario_movimientos')
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Fecha</th>
-              <th>Producto</th>
-              <th class="text-center">Tipo</th>
-              <th class="text-right">Cantidad</th>
-              <th>Origen</th>
-              <th>Referencia</th>
-              <th>Descripción</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse($data as $r)
-            <tr data-origen_reporte="{{ $r->origen_reporte ?? '' }}">
-              <td>{{ $r->id }}</td>
-              <td title="Origen: {{ $r->origen_reporte ?? 'n/a' }}">{{ $r->created_at ? date('Y-m-d H:i', strtotime($r->created_at)) : '-' }}</td>
-              <td title="Producto histórico en el movimiento">{{ $r->producto_nombre ?? ('#' . $r->producto_id) }}</td>
-              <td class="text-center">
-                @if($r->tipo === 'entrada')
-                  <span class="badge badge-entrada">Entrada</span>
-                @elseif($r->tipo === 'salida')
-                  <span class="badge badge-salida">Salida</span>
-                @else
-                  <span class="badge">{{ $r->tipo }}</span>
-                @endif
-              </td>
-              <td class="text-right">{{ number_format($r->cantidad, 0, ',', '.') }}</td>
-              <td>{{ $r->origen ?? '-' }}</td>
-              <td>{{ $r->referencia_id ?? '-' }}</td>
-              <td>{{ $r->descripcion ?? '-' }}</td>
-            </tr>
-            @empty
-            <tr>
-              <td colspan="8" style="text-align:center;padding:20px;color:#999">No hay datos para el rango seleccionado</td>
-            </tr>
-            @endforelse
-          </tbody>
-        </table>
+      <div class="col-xl-3 col-lg-4 col-sm-6">
+        <div class="icon-card mb-30">
+          <div class="icon primary">
+            <i class="lni lni-inbox"></i>
+          </div>
+          <div class="content">
+            <h3 class="text-bold mb-10" id="statEntradas">0</h3>
+            <p class="text-sm text-success">
+              <span class="text-gray">Entradas</span>
+            </p>
+          </div>
+        </div>
+      </div>
 
-      @else
-        <p style="text-align:center;padding:20px;color:#999">Selecciona un tipo de reporte para continuar.</p>
-      @endif
+      <div class="col-xl-3 col-lg-4 col-sm-6">
+        <div class="icon-card mb-30">
+          <div class="icon orange">
+            <i class="lni lni-delivery"></i>
+          </div>
+          <div class="content">
+            <h3 class="text-bold mb-10" id="statSalidas">0</h3>
+            <p class="text-sm text-danger">
+              <span class="text-gray">Salidas</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-lg-4 col-sm-6">
+        <div class="icon-card mb-30">
+          <div class="icon success">
+            <i class="lni lni-dollar"></i>
+          </div>
+          <div class="content">
+            <h3 class="text-bold mb-10" id="statIngresos">0</h3>
+            <p class="text-sm text-danger">
+              <span class="text-gray">Ingresos</span>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    {{-- Paginación --}}
-    @if(isset($data) && method_exists($data, 'links'))
-      <div class="pagination">
-        <div style="font-size:13px;color:#555">
-          Página {{ $data->currentPage() }} de {{ $data->lastPage() }} 
-          ({{ $data->total() }} registros)
-        </div>
-        @if($data->previousPageUrl())
-          <a href="{{ $data->previousPageUrl() }}">« Anterior</a>
-        @endif
-        @if($data->nextPageUrl())
-          <a href="{{ $data->nextPageUrl() }}" class="active">Siguiente »</a>
-        @endif
-      </div>
-    @endif
-  </div>
+    <!-- Filters Card -->
+    <div class="card-style mb-30">
+      <div class="d-flex flex-wrap align-items-start gap-3">
 
-  {{-- Modal de Detalles --}}
-  <div id="modalDetalles" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">Detalles de Venta #<span id="modalVentaId"></span></h3>
-        <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        <!-- Fecha inicio y fin -->
+        <div class="d-flex gap-3">
+          <div class="select-style-1">
+            <label class="text-dark mb-2 d-block">Desde</label>
+            <input type="date" class="form-control" id="dateFrom" value="">
+          </div>
+          <div class="select-style-1">
+            <label class="text-dark mb-2 d-block">Hasta</label>
+            <input type="date" class="form-control" id="dateTo" value="">
+          </div>
+        </div>
+
+        <!-- Tipo -->
+        <div class="select-style-1">
+          <label class="text-dark mb-2 d-block">Tipo de reporte</label>
+          <div class="select-position select-sm">
+            <select class="light-bg" id="reportType">
+              <option value="ventas">Ventas</option>
+              <option value="movimientos">Inventario</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="ms-auto mt-4 pt-2">
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="limpiarFiltros()">
+              Limpiar
+            </button>
+
+            <button class="btn btn-sm btn-outline-success" onclick="exportarDatos()">
+              <i class="lni lni-download me-1"></i>
+              Exportar
+            </button>
+          </div>
+        </div>
+
       </div>
-      <div class="modal-body">
-        <div id="modalLoading" style="text-align:center;padding:20px;color:#999">Cargando detalles...</div>
-        <div id="modalContent" style="display:none">
-          <table style="font-size:12px">
+    </div>
+
+    <!-- Table Card -->
+    <div class="col-lg-12">
+      <div class="card-style mb-30">
+        <div class="title d-flex flex-wrap align-items-center justify-content-between">
+          <div class="left">
+            <h6 class="text-medium mb-30" id="tableTitle">Historial de Ventas</h6>
+          </div>
+          <div class="right">
+            <div class="input-group input-group-sm search-pos">
+              <span class="input-group-text bg-light border-0">
+                <i class="lni lni-search-alt"></i>
+              </span>
+              <input type="text" class="form-control bg-light border-0" id="searchInput" placeholder="Buscar..." />
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table top-selling-table">
             <thead>
               <tr>
-                <th>Producto</th>
-                <th class="text-center">Cantidad</th>
-                <th class="text-right">Precio Unit.</th>
-                <th class="text-right">Subtotal</th>
-                <th class="text-right" id="headerIva" style="display:none">IVA</th>
-                <th class="text-right">Total</th>
+                <th>
+                  <h6 class="text-sm text-medium">ID</h6>
+                </th>
+                <th class="min-width">
+                  <h6 class="text-sm text-medium">Fecha</h6>
+                </th>
+                <th class="min-width" id="colFactura">
+                  <h6 class="text-sm text-medium">N° Factura</h6>
+                </th>
+                <th class="min-width" id="colCliente">
+                  <h6 class="text-sm text-medium">Cliente</h6>
+                </th>
+                <th class="min-width" id="colTotal">
+                  <h6 class="text-sm text-medium">Total</h6>
+                </th>
+                <th class="min-width" id="colEstado" style="display:none">
+                  <h6 class="text-sm text-medium">Estado</h6>
+                </th>
+                <th class="min-width" id="colProducto" style="display:none">
+                  <h6 class="text-sm text-medium">Producto</h6>
+                </th>
+                <th class="min-width" id="colTipo" style="display:none">
+                  <h6 class="text-sm text-medium">Tipo</h6>
+                </th>
+                <th class="min-width" id="colCantidad" style="display:none">
+                  <h6 class="text-sm text-medium">Cantidad</h6>
+                </th>
+                <th>
+                  <h6 class="text-sm text-medium text-end">Acciones</h6>
+                </th>
               </tr>
             </thead>
-            <tbody id="modalTableBody"></tbody>
-            <tfoot id="modalTableFoot"></tfoot>
+            <tbody id="tableBody">
+              <tr>
+                <td colspan="10" style="text-align: center; padding: 40px; color: #999;">
+                  <i class="lni lni-inbox" style="font-size: 32px; margin-bottom: 10px;"></i>
+                  <p>Cargando datos...</p>
+                </td>
+              </tr>
+            </tbody>
           </table>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button onclick="verFactura()" id="btnVerFactura" style="background:#2e7d32;margin-right:8px">Ver Factura</button>
-        <button onclick="cerrarModal()">Cerrar</button>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div>
+            <span class="text-sm text-gray" id="paginationInfo">Página 1 de 1</span>
+          </div>
+          <div id="paginationButtons">
+            <!-- Se generará dinámicamente -->
+          </div>
+        </div>
       </div>
     </div>
+
   </div>
+</section>
 
-  <script>
-    function verDetalles(ventaId) {
-      const modal = document.getElementById('modalDetalles');
-      const loading = document.getElementById('modalLoading');
-      const content = document.getElementById('modalContent');
-      const ventaIdSpan = document.getElementById('modalVentaId');
-      
-      // Mostrar modal
-      modal.classList.add('show');
-      ventaIdSpan.textContent = ventaId;
-      loading.style.display = 'block';
-      content.style.display = 'none';
 
-      // Hacer petición AJAX
-      fetch('/reportes/ventas/' + ventaId + '/detalles')
-        .then(response => {
-          if (!response.ok) throw new Error('Error al cargar detalles');
-          return response.json();
-        })
-        .then(data => {
-          mostrarDetalles(data);
-          loading.style.display = 'none';
-          content.style.display = 'block';
-        })
-        .catch(error => {
-          loading.innerHTML = '<p style="color:#c62828">Error al cargar los detalles</p>';
-          console.error(error);
-        });
-    }
 
-    function mostrarDetalles(data) {
-      const tbody = document.getElementById('modalTableBody');
-      const tfoot = document.getElementById('modalTableFoot');
-      const headerIva = document.getElementById('headerIva');
-      const cobraIva = data.cobra_iva;
+<script>
+const csrf = '{{ csrf_token() }}';
+let currentPage = 1;
+let currentType = 'ventas';
+let allData = [];
 
-      // Guardar venta_id y factura_id para el botón
-      window.currentVentaId = data.venta_id;
-      window.currentFacturaId = data.factura_id;
+document.addEventListener('DOMContentLoaded', function() {
+  // Establecer fechas por defecto (últimos 30 días)
+  const today = new Date();
+  const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
 
-      tbody.innerHTML = '';
-      tfoot.innerHTML = '';
+  document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+  document.getElementById('dateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
 
-      // Mostrar/ocultar columna IVA
-      if (cobraIva) {
-        headerIva.style.display = '';
-      } else {
-        headerIva.style.display = 'none';
+  // Event listeners
+  document.getElementById('dateFrom').addEventListener('change', cargarDatos);
+  document.getElementById('dateTo').addEventListener('change', cargarDatos);
+  document.getElementById('reportType').addEventListener('change', cambiarTipo);
+  document.getElementById('searchInput').addEventListener('input', filtrarTabla);
+
+  // Cargar datos iniciales
+  cargarDatos();
+});
+
+function cambiarTipo() {
+  currentType = document.getElementById('reportType').value;
+  currentPage = 1;
+  actualizarColumnasTabla();
+  cargarDatos();
+}
+
+function actualizarColumnasTabla() {
+  const isVentas = currentType === 'ventas';
+  document.getElementById('tableTitle').textContent = isVentas ? 'Historial de Ventas' : 'Movimientos de Inventario';
+
+  // Mostrar/ocultar columnas según tipo
+  document.getElementById('colFactura').style.display = isVentas ? '' : 'none';
+  document.getElementById('colCliente').style.display = isVentas ? '' : 'none';
+  document.getElementById('colEstado').style.display = isVentas ? '' : 'none';
+  document.getElementById('colProducto').style.display = !isVentas ? '' : 'none';
+  document.getElementById('colTipo').style.display = !isVentas ? '' : 'none';
+  document.getElementById('colCantidad').style.display = !isVentas ? '' : 'none';
+
+  // Cambiar label del total
+  document.getElementById('colTotal').querySelector('h6').textContent = isVentas ? 'Total' : 'Cantidad';
+}
+
+async function cargarDatos() {
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+
+  // Mostrar loading
+  document.getElementById('tableBody').innerHTML = `
+    <tr>
+      <td colspan="10" style="text-align: center; padding: 40px; color: #999;">
+        <i class="lni lni-reload" style="font-size: 32px; animation: spin 1s linear infinite;"></i>
+        <p>Cargando datos...</p>
+      </td>
+    </tr>
+  `;
+
+  try {
+    const params = new URLSearchParams({
+      tipo: currentType,
+      fecha_inicio: dateFrom,
+      fecha_fin: dateTo,
+      page: currentPage
+    });
+
+    const response = await fetch(`/api/reportes?${params}`, {
+      headers: {
+        'X-CSRF-TOKEN': csrf,
+        'Accept': 'application/json'
       }
+    });
 
-      let totalCantidad = 0;
-      let totalSubtotal = 0;
-      let totalIva = 0;
-      let totalTotal = 0;
+    const data = await response.json();
 
-      data.detalles.forEach(d => {
-        const total = parseFloat(d.subtotal) + (parseFloat(d.iva) || 0);
-        totalCantidad += parseFloat(d.cantidad);
-        totalSubtotal += parseFloat(d.subtotal);
-        totalIva += parseFloat(d.iva) || 0;
-        totalTotal += total;
+    if (data.success) {
+      allData = data.data;
+      actualizarEstadisticas(data.stats);
+      actualizarTabla(data.data);
+      actualizarPaginacion(data.pagination);
+    } else {
+      mostrarError('Error al cargar datos');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    mostrarError('Error al conectar con el servidor');
+  }
+}
 
-        const tr = document.createElement('tr');
-        let html = `
-          <td>${d.producto && d.producto.nombre ? d.producto.nombre : 'Producto #' + d.producto_id}</td>
-          <td class="text-center">${d.cantidad}</td>
-          <td class="text-right">${formatNumber(d.precio_unitario)}</td>
-          <td class="text-right">${formatNumber(d.subtotal)}</td>
-        `;
-        
-        if (cobraIva) {
-          html += `<td class="text-right">${formatNumber(d.iva || 0)}</td>`;
-        }
-        
-        html += `<td class="text-right">${formatNumber(total)}</td>`;
-        tr.innerHTML = html;
-        tbody.appendChild(tr);
-      });
+function actualizarEstadisticas(stats) {
+  document.getElementById('statMovimientos').textContent = formatNumber(stats.movimientos, 0);
+  document.getElementById('statEntradas').textContent = formatNumber(stats.entradas, 0);
+  document.getElementById('statSalidas').textContent = formatNumber(stats.salidas, 0);
+  document.getElementById('statIngresos').textContent = formatNumber(stats.ingresos, 0);
+}
 
-      // Agregar totales
-      const trTotal = document.createElement('tr');
-      trTotal.style.fontWeight = 'bold';
-      let htmlTotal = `
-        <td>TOTALES</td>
-        <td class="text-center">${formatNumber(totalCantidad, 0)}</td>
-        <td></td>
-        <td class="text-right">${formatNumber(totalSubtotal)}</td>
+function actualizarTabla(data) {
+  const tbody = document.getElementById('tableBody');
+  const isVentas = currentType === 'ventas';
+
+  if (data.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" style="text-align: center; padding: 40px; color: #999;">
+          <i class="lni lni-inbox" style="font-size: 32px; margin-bottom: 10px;"></i>
+          <p>No hay datos para este período</p>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = data.map(row => {
+    if (isVentas) {
+      return `
+        <tr>
+          <td><p class="text-sm">${row.id}</p></td>
+          <td><p class="text-sm">${formatDate(row.fecha)}</p></td>
+          <td><p class="text-sm">${row.factura_numero || '-'}</p></td>
+          <td><p class="text-sm">${row.cliente_nombre || '-'}</p></td>
+          <td><p class="text-sm">${formatNumber(row.total)}</p></td>
+          <td>
+            <span class="status-btn ${row.estado === 'completada' ? 'success-btn' : 'close-btn'}">
+              ${row.estado === 'completada' ? 'Completada' : 'Anulada'}
+            </span>
+          </td>
+          <td>
+            <div class="action">
+              <button onclick="verDetallesVenta(${row.id})" title="Ver detalles">
+                <i class="lni lni-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
       `;
-      
-      if (cobraIva) {
-        htmlTotal += `<td class="text-right">${formatNumber(totalIva)}</td>`;
-      }
-      
-      htmlTotal += `<td class="text-right">${formatNumber(totalTotal)}</td>`;
-      trTotal.innerHTML = htmlTotal;
-      tfoot.appendChild(trTotal);
+    } else {
+      return `
+        <tr>
+          <td><p class="text-sm">${row.id}</p></td>
+          <td><p class="text-sm">${formatDate(row.created_at)}</p></td>
+          <td><p class="text-sm">${row.producto_nombre || 'Producto #' + row.producto_id}</p></td>
+          <td>
+            <span class="status-btn ${row.tipo === 'entrada' ? 'success-btn' : 'close-btn'}">
+              ${row.tipo === 'entrada' ? 'Entrada' : 'Salida'}
+            </span>
+          </td>
+          <td><p class="text-sm">${formatNumber(row.cantidad, 0)}</p></td>
+          <td>
+            <div class="action">
+              <button onclick="alert('Detalles del movimiento ID: ' + ${row.id})" title="Ver detalles">
+                <i class="lni lni-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
     }
+  }).join('');
+}
 
-    function cerrarModal() {
-      const modal = document.getElementById('modalDetalles');
-      modal.classList.remove('show');
-    }
+function actualizarPaginacion(pagination) {
+  const buttonsDiv = document.getElementById('paginationButtons');
+  const infoDiv = document.getElementById('paginationInfo');
 
-    function verFactura() {
-      if (window.currentFacturaId) {
-        window.location.href = '/ventas/' + window.currentVentaId + '/factura';
-      } else {
-        alert('Esta venta no tiene factura asociada');
-      }
-    }
+  infoDiv.textContent = `Página ${pagination.current_page} de ${pagination.last_page}`;
 
-    function formatNumber(num, decimals = 0) {
-      const n = parseFloat(num) || 0;
-      return n.toLocaleString('es-CO', {minimumFractionDigits: decimals, maximumFractionDigits: decimals});
-    }
+  let html = '';
+  if (pagination.current_page > 1) {
+    html += `<button class="btn btn-outline-secondary me-1" onclick="irAPagina(${pagination.current_page - 1})"><i class="lni lni-chevron-left"></i></button>`;
+  } else {
+    html += `<button class="btn btn-outline-secondary me-1" disabled><i class="lni lni-chevron-left"></i></button>`;
+  }
 
-    // Cerrar modal al hacer clic fuera
-    window.onclick = function(event) {
-      const modal = document.getElementById('modalDetalles');
-      if (event.target === modal) {
-        cerrarModal();
-      }
+  for (let i = 1; i <= pagination.last_page && i <= 5; i++) {
+    if (i === pagination.current_page) {
+      html += `<button class="btn btn-primary me-1">${i}</button>`;
+    } else {
+      html += `<button class="btn btn-outline-secondary me-1" onclick="irAPagina(${i})">${i}</button>`;
     }
-  </script>
+  }
+
+  if (pagination.current_page < pagination.last_page) {
+    html += `<button class="btn btn-outline-secondary" onclick="irAPagina(${pagination.current_page + 1})"><i class="lni lni-chevron-right"></i></button>`;
+  } else {
+    html += `<button class="btn btn-outline-secondary" disabled><i class="lni lni-chevron-right"></i></button>`;
+  }
+
+  buttonsDiv.innerHTML = html;
+}
+
+function irAPagina(page) {
+  currentPage = page;
+  cargarDatos();
+}
+
+function filtrarTabla() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const rows = document.querySelectorAll('#tableBody tr');
+
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(searchTerm) ? '' : 'none';
+  });
+}
+
+function limpiarFiltros() {
+  const today = new Date();
+  const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+
+  document.getElementById('dateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
+  document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+  document.getElementById('reportType').value = 'ventas';
+  document.getElementById('searchInput').value = '';
+  currentType = 'ventas';
+  currentPage = 1;
+  actualizarColumnasTabla();
+  cargarDatos();
+}
+
+function exportarDatos() {
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+
+  const params = new URLSearchParams({
+    tipo: currentType,
+    fecha_inicio: dateFrom,
+    fecha_fin: dateTo
+  });
+
+  window.location.href = `/api/reportes/export?${params}`;
+}
+
+function verDetallesVenta(ventaId) {
+  window.location.href = `/ventas/${ventaId}/factura`;
+}
+
+function mostrarError(mensaje) {
+  document.getElementById('tableBody').innerHTML = `
+    <tr>
+      <td colspan="10" style="text-align: center; padding: 40px; color: #c62828;">
+        <i class="lni lni-close-circle" style="font-size: 32px; margin-bottom: 10px;"></i>
+        <p>${mensaje}</p>
+      </td>
+    </tr>
+  `;
+}
+
+function formatNumber(num, decimals = 0) {
+  const n = parseFloat(num) || 0;
+  return n.toLocaleString('es-CO', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
+}
+
+function formatDate(dateString) {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-CO') + ' ' + date.toLocaleTimeString('es-CO', {hour: '2-digit', minute: '2-digit'});
+}
+</script>
+
+<style>
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+</style>
+
 @endsection

@@ -23,7 +23,22 @@ class ProductoController extends Controller
             return isset($p->iva) && (float)$p->iva > 0;
         });
 
-        return view('productos.index', compact('productos', 'empresa', 'hayProductosConIVA'));
+        // Obtener últimos movimientos de inventario con nombre del producto
+        $movimientos = DB::table('inventario_movimientos')
+            ->leftJoin('productos', 'productos.id', '=', 'inventario_movimientos.producto_id')
+            ->select(
+                'inventario_movimientos.id',
+                'inventario_movimientos.producto_id',
+                'inventario_movimientos.tipo',
+                'inventario_movimientos.cantidad',
+                'inventario_movimientos.origen',
+                'inventario_movimientos.created_at',
+                'productos.nombre as producto_nombre'
+            )
+            ->orderBy('inventario_movimientos.created_at', 'desc')
+            ->get();
+
+        return view('productos.index', compact('productos', 'empresa', 'hayProductosConIVA', 'movimientos'));
     }
 
     // Vista de registro

@@ -401,4 +401,188 @@ class ReporteController extends Controller
         }
         return null;
     }
+
+    /**
+     * API: Obtiene datos de reportes en formato JSON para AJAX
+     */
+    public function apiData(Request $request)
+    {
+        $tipo = $request->input('tipo', 'ventas');
+        $fecha_inicio = $this->sanitizeDate($request->input('fecha_inicio'));
+        $fecha_fin = $this->sanitizeDate($request->input('fecha_fin'));
+        $page = max(1, (int)$request->input('page', 1));
+
+        // Si no hay fechas, usar últimos 30 días
+        if (!$fecha_inicio || !$fecha_fin) {
+            $fecha_fin = date('Y-m-d');
+            $fecha_inicio = date('Y-m-d', strtotime('-30 days'));
+        }
+
+        // Preparar filtros
+        $filtros = [
+            'fecha_inicio' => $fecha_inicio,
+            'fecha_fin' => $fecha_fin,
+            'estado' => null,
+            'order' => 'desc',
+        ];
+
+        // Obtener datos según tipo
+        if ($tipo === 'movimientos') {
+            $query = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
+            $data = $query->paginate(15);
+        } else {
+            // ventas
+            $query = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
+            $data = $query->paginate(15);
+        }
+
+        // Calcular estadísticas
+        $stats = $this->calcularEstadisticas($tipo, $fecha_inicio, $fecha_fin);
+
+        // Formatear datos para JSON
+        $formattedData = $data->map(function($item) use ($tipo) {
+            if ($tipo === 'movimientos') {
+                return [
+                    'id' => $item->id,
+                    'created_at' => $item->created_at,
+                    'producto_id' => $item->producto_id,
+                    'producto_nombre' => $item->producto_nombre,
+                    'cantidad' => $item->cantidad,
+                    'tipo' => $item->tipo,
+                    'origen' => $item->origen,
+                ];
+            } else {
+                return [
+                    'id' => $item->id,
+                    'fecha' => $item->created_at,
+                    'factura_numero' => optional($item->factura)->numero,
+                    'cliente_nombre' => optional($item->factura)->cliente_nombre,
+                    'total' => $item->total,
+                    'estado' => $item->estado,
+                ];
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData,
+            'stats' => $stats,
+            'pagination' => [
+                'current_page' => $data->currentPage(),
+                'last_page' => $data->lastPage(),
+                'total' => $data->total(),
+                'per_page' => $data->perPage(),
+            ]
+        ]);
+    }
+
+    /**
+     * Calcula estadísticas para las tarjetas
+     */
+    private function calcularEstadisticas($tipo, $fecha_inicio, $fecha_fin)
+    {
+        if ($tipo === 'movimientos') {
+            $movimientos = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->count();
+            $entradas = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->where('tipo', 'entrada')->count();
+            $salidas = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->where('tipo', 'salida')->count();
+            $ingresos = 0;
+        } else {
+            $ventas = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
+            $movimientos = $ventas->count();
+            $entradas = 0;
+            $salidas = 0;
+            $ingresos = $ventas->sum('total');
+        }
+
+        return [
+            'movimientos' => $movimientos,
+            'entradas' => $entradas,
+            'salidas' => $salidas,
+            'ingresos' => $ingresos,
+        ];
+    }
+
+    /**
+     * API: Exporta datos en Excel
+     */
+    public function apiExport(Request $request)
+    {
+        $tipo = $request->input('tipo', 'ventas');
+        $fecha_inicio = $this->sanitizeDate($request->input('fecha_inicio'));
+        $fecha_fin = $this->sanitizeDate($request->input('fecha_fin'));
+
+        // Si no hay fechas, usar últimos 30 días
+        if (!$fecha_inicio || !$fecha_fin) {
+            $fecha_fin = date('Y-m-d');
+            $fecha_inicio = date('Y-m-d', strtotime('-30 days'));
+        }
+
+        // Obtener datos sin paginación (con límite de seguridad)
+        if ($tipo === 'movimientos') {
+            $data = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+                ->limit(self::MAX_EXPORT_ROWS)
+                ->get();
+        } else {
+            $data = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+                ->limit(self::MAX_EXPORT_ROWS)
+                ->get();
+        }
+
+        // Crear spreadsheet
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        if ($tipo === 'movimientos') {
+            // Headers para movimientos
+            $sheet->setCellValue('A1', 'ID');
+            $sheet->setCellValue('B1', 'Fecha');
+            $sheet->setCellValue('C1', 'Producto');
+            $sheet->setCellValue('D1', 'Cantidad');
+            $sheet->setCellValue('E1', 'Tipo');
+            $sheet->setCellValue('F1', 'Origen');
+
+            $row = 2;
+            foreach ($data as $item) {
+                $sheet->setCellValue('A' . $row, $item->id);
+                $sheet->setCellValue('B' . $row, $item->created_at ? $item->created_at->format('Y-m-d H:i') : '');
+                $sheet->setCellValue('C' . $row, $item->producto_nombre);
+                $sheet->setCellValue('D' . $row, $item->cantidad);
+                $sheet->setCellValue('E' . $row, $item->tipo);
+                $sheet->setCellValue('F' . $row, $item->origen);
+                $row++;
+            }
+        } else {
+            // Headers para ventas
+            $sheet->setCellValue('A1', 'ID');
+            $sheet->setCellValue('B1', 'Fecha');
+            $sheet->setCellValue('C1', 'N° Factura');
+            $sheet->setCellValue('D1', 'Cliente');
+            $sheet->setCellValue('E1', 'Total');
+            $sheet->setCellValue('F1', 'Estado');
+
+            $row = 2;
+            foreach ($data as $item) {
+                $sheet->setCellValue('A' . $row, $item->id);
+                $sheet->setCellValue('B' . $row, $item->created_at ? $item->created_at->format('Y-m-d H:i') : '');
+                $sheet->setCellValue('C' . $row, optional($item->factura)->numero);
+                $sheet->setCellValue('D' . $row, optional($item->factura)->cliente_nombre);
+                $sheet->setCellValue('E' . $row, $item->total);
+                $sheet->setCellValue('F' . $row, $item->estado);
+                $row++;
+            }
+        }
+
+        // Auto-size columns
+        foreach ($sheet->getColumnDimensions() as $col) {
+            $col->setAutoSize(true);
+        }
+
+        // Crear archivo temporal
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'reporte_' . $tipo . '_' . date('Y-m-d_His') . '.xlsx';
+
+        return response()->streamDownload(function() use ($writer) {
+            $writer->save('php://output');
+        }, $fileName);
+    }
 }

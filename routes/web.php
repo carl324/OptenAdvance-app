@@ -15,11 +15,20 @@ Route::get('/ventas/{venta}', [VentaController::class, 'show'])->name('ventas.sh
 // Ruta para ver la factura en nueva pestaña
 Route::get('/ventas/{venta}/factura', [VentaController::class, 'factura'])->name('ventas.factura');
 
+// Ruta para descargar factura en PDF
+Route::get('/ventas/{venta}/factura/pdf', [VentaController::class, 'descargarPDF'])->name('ventas.factura.pdf');
+
+// Ruta para imprimir factura
+Route::get('/ventas/{venta}/factura/impresion', [VentaController::class, 'impresion'])->name('ventas.factura.impresion');
+
 Route::get('/ventas/{venta}/devolucion', [VentaController::class, 'devolucion'])
     ->name('ventas.devolucion');
 
 Route::post('/ventas/{venta}/devolucion', [VentaController::class, 'confirmarDevolucion'])
     ->name('ventas.devolucion.confirmar');
+
+Route::get('/api/productos', [VentaController::class, 'obtenerTodosProductos'])
+    ->name('productos.todos');
 
 Route::get('/api/productos/buscar', [VentaController::class, 'buscarProductos'])
     ->name('productos.buscar');
@@ -27,6 +36,8 @@ Route::get('/api/productos/buscar', [VentaController::class, 'buscarProductos'])
 // Reportes simple: vista y export
 Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
 Route::get('/reportes/export', [ReporteController::class, 'export'])->name('reportes.export');
+Route::get('/api/reportes', [ReporteController::class, 'apiData'])->name('reportes.api');
+Route::get('/api/reportes/export', [ReporteController::class, 'apiExport'])->name('reportes.api.export');
 
 Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
 Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');

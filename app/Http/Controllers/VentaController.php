@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Models\Venta;
 use App\Models\VentaDetalle;
@@ -14,6 +15,27 @@ use App\Models\Empresa;
 
 class VentaController extends Controller
 {
+    /**
+     * Normalizar productos según configuración de IVA de empresa
+     * Soluciona deuda técnica #5: evitar repetición de lógica IVA
+     * @param mixed $productos Colección o resultado query de productos
+     * @return mixed
+     */
+    private function normalizarIVA($productos)
+    {
+        $empresa = Empresa::first();
+        $cobraIva = $empresa ? (bool) $empresa->cobra_iva : true;
+        
+        if (!$cobraIva) {
+            $productos->transform(function ($p) {
+                $p->iva = 0;
+                return $p;
+            });
+        }
+        
+        return $productos;
+    }
+
     // Vista del formulario
     public function create()
     {
@@ -30,10 +52,6 @@ class VentaController extends Controller
             return response()->json([]);
         }
 
-        $empresa = Empresa::first();
-        // Asumir que se cobra IVA por defecto si no existe registro de empresa
-        $cobraIva = $empresa ? (bool) $empresa->cobra_iva : true;
-
         $productos = Producto::activos()
             ->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($query) . '%'])
             ->select('id', 'nombre', 'precio', 'stock', 'iva')
@@ -41,21 +59,19 @@ class VentaController extends Controller
             ->limit(10)
             ->get();
 
-        // Si la empresa no cobra IVA, ocultar/normalizar el campo IVA en el flujo de ventas
-        if (!$cobraIva) {
-            $productos->transform(function ($p) {
-                $p->iva = 0;
-                return $p;
-            });
-        }
-
-        return response()->json($productos);
+        return response()->json($this->normalizarIVA($productos));
     }
 
     // Registrar venta
     public function store(Request $request)
     {
         try {
+            Log::info('Iniciando creación de venta', [
+                'cliente' => $request->input('cliente'),
+                'forma_pago' => $request->input('forma_pago'),
+                'cantidad_productos' => count($request->input('productos', []))
+            ]);
+
             $data = $request->validate([
                 'cliente'        => 'nullable|string|max:100',
                 'cliente_nit'    => 'nullable|string|max:20',
@@ -80,10 +96,20 @@ class VentaController extends Controller
             foreach ($data['productos'] as $item) {
                 $producto = Producto::find($item['id']);
                 if (!$producto || !$producto->activo) {
+                    Log::warning('Producto no disponible', [
+                        'producto_id' => $item['id'],
+                        'motivo' => !$producto ? 'No existe' : 'Inactivo'
+                    ]);
                     throw new \Exception("El producto no está disponible");
                 }
                 // Bug #21: Validar que cantidad sea <= stock actual (doble validación contra oversell)
                 if ($producto->stock < $item['cantidad']) {
+                    Log::warning('Stock insuficiente', [
+                        'producto_id' => $item['id'],
+                        'producto_nombre' => $producto->nombre,
+                        'stock_disponible' => $producto->stock,
+                        'cantidad_solicitada' => $item['cantidad']
+                    ]);
                     throw new \Exception("No hay suficiente stock de '{$producto->nombre}'. Disponible: {$producto->stock}");
                 }
             }
@@ -172,6 +198,15 @@ class VentaController extends Controller
 
             DB::commit();
 
+            Log::info('Venta registrada exitosamente', [
+                'venta_id' => $venta->id,
+                'cliente' => $data['cliente'] ?? 'Sin especificar',
+                'forma_pago' => $data['forma_pago'],
+                'total' => $totalFinal,
+                'cantidad_productos' => count($productosCalculados),
+                'timestamp' => now()
+            ]);
+
             return response()->json([
                 'success'   => true,
                 'message'   => 'Venta registrada correctamente',
@@ -181,6 +216,10 @@ class VentaController extends Controller
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
+            Log::warning('Error de validación en venta', [
+                'errores' => $e->errors(),
+                'timestamp' => now()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Por favor verifica los datos ingresados',
@@ -189,6 +228,12 @@ class VentaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Error al registrar venta', [
+                'mensaje' => $e->getMessage(),
+                'linea' => $e->getLine(),
+                'archivo' => $e->getFile(),
+                'timestamp' => now()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -196,15 +241,16 @@ class VentaController extends Controller
         }
     }
 
-    // Listado de ventas
+    // Listado de ventas - Soluciona N+1 queries (#1) + Paginación en BD (#2)
     public function index()
     {
-        $ventas = Venta::with('factura')
+        $registrosPorPagina = 10;
+        $ventas = Venta::with('factura', 'detalles.producto')
             ->orderByDesc('fecha')
-            ->get();
+            ->paginate($registrosPorPagina);
 
         $empresa = Empresa::first();
-        return view('ventas.index', compact('ventas', 'empresa'));
+        return view('ventas.index', compact('ventas', 'empresa', 'registrosPorPagina'));
     }
 
     // Mostrar factura (devuelve fragmento HTML para modal)
@@ -329,6 +375,45 @@ class VentaController extends Controller
             }
             return redirect()->back()->with('error', 'Error al anular la venta: ' . $e->getMessage());
         }
+    }
+
+    // Obtener todos los productos
+    public function obtenerTodosProductos()
+    {
+        $productos = Producto::activos()
+            ->select('id', 'nombre', 'precio', 'stock', 'iva')
+            ->orderByDesc('stock')
+            ->get();
+
+        return response()->json($this->normalizarIVA($productos));
+    }
+
+    // Descargar factura en PDF
+    public function descargarPDF(Venta $venta)
+    {
+        $venta->load('detalles.producto', 'factura');
+        $empresa = Empresa::first();
+
+        $pdf = \PDF::loadView('ventas.factura-pdf', [
+            'venta' => $venta,
+            'empresa' => $empresa
+        ]);
+
+        $nombreArchivo = 'factura-' . ($venta->factura->numero ?? $venta->id) . '.pdf';
+
+        return $pdf->download($nombreArchivo);
+    }
+
+    // Vista para impresión (recibo thermal)
+    public function impresion(Venta $venta)
+    {
+        $venta->load('detalles.producto', 'factura');
+        $empresa = Empresa::first();
+
+        return view('ventas.factura-impresion', [
+            'venta' => $venta,
+            'empresa' => $empresa
+        ]);
     }
 
 }
