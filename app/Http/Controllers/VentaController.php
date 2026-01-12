@@ -247,7 +247,7 @@ class VentaController extends Controller
         $registrosPorPagina = 10;
         $ventas = Venta::with('factura', 'detalles.producto')
             ->orderByDesc('fecha')
-            ->paginate($registrosPorPagina);
+            ->get();
 
         $empresa = Empresa::first();
         return view('ventas.index', compact('ventas', 'empresa', 'registrosPorPagina'));

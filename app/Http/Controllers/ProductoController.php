@@ -7,6 +7,7 @@ use App\Models\Producto;
 use App\Models\InventarioMovimiento;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class ProductoController extends Controller
 {
@@ -15,13 +16,9 @@ class ProductoController extends Controller
     {
         $productos = Producto::activos()
             ->orderBy('id', 'desc')
-            ->get();
+            ->paginate(10);
 
         $empresa = \App\Models\Empresa::first();
-        // Indica si existe al menos un producto con IVA > 0 (histórico)
-        $hayProductosConIVA = $productos->contains(function($p) {
-            return isset($p->iva) && (float)$p->iva > 0;
-        });
 
         // Obtener últimos movimientos de inventario con nombre del producto
         $movimientos = DB::table('inventario_movimientos')
@@ -38,7 +35,7 @@ class ProductoController extends Controller
             ->orderBy('inventario_movimientos.created_at', 'desc')
             ->get();
 
-        return view('productos.index', compact('productos', 'empresa', 'hayProductosConIVA', 'movimientos'));
+        return view('productos.index', compact('productos', 'empresa', 'movimientos'));
     }
 
     // Vista de registro
@@ -96,22 +93,39 @@ class ProductoController extends Controller
                 'stock'  => $stockInicial,  // Crear directamente con stock correcto
             ]);
 
-            // Registrar movimiento inicial si aplica (siempre, para auditoría completa)
+            // Registrar movimiento inicial SIEMPRE si hay stock
+            $movimiento = null;
             if ($stockInicial > 0) {
-                InventarioMovimiento::entrada(
-                    $producto->id,
-                    $stockInicial,
-                    'registro_producto',
-                    $producto->id,
-                    'Stock inicial al registrar producto'
-                );
+                $movimiento = InventarioMovimiento::create([
+                    'producto_id' => $producto->id,
+                    'cantidad' => $stockInicial,
+                    'tipo' => 'entrada',
+                    'origen' => 'registro_producto',
+                    'descripcion' => 'Stock inicial al registrar producto'
+                ]);
             }
 
             DB::commit();
 
+            $productoFresh = $producto->fresh();
+            
+            // Devolver movimiento en respuesta si existe
+            $movimientoData = null;
+            if ($movimiento) {
+                $movimientoData = [
+                    'id' => $movimiento->id,
+                    'fecha' => \Carbon\Carbon::parse($movimiento->created_at)->format('d/m/Y H:i'),
+                    'producto_nombre' => $productoFresh->nombre,
+                    'cantidad' => $movimiento->cantidad,
+                    'tipo' => $movimiento->tipo,
+                    'origen' => $movimiento->origen
+                ];
+            }
+
             return response()->json([
                 'success' => true,
-                'producto' => $producto->fresh()
+                'producto' => $productoFresh,
+                'movimiento' => $movimientoData
             ]);
 
         } catch (\Throwable $e) {
@@ -120,7 +134,7 @@ class ProductoController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error al registrar el producto'
+                'message' => 'No se pudo registrar el producto'
             ], 500);
         }
     }
@@ -242,22 +256,19 @@ class ProductoController extends Controller
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Error de validación: ' . json_encode($e->errors()));
+            Log::warning('Error de validación en update: ' . json_encode($e->errors()));
             return response()->json([
                 'success' => false,
-                'message' => 'Error de validación',
-                'errors' => $e->errors()
+                'message' => 'Datos inválidos'
             ], 422);
 
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('ERROR EN UPDATE: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error al actualizar el producto',
-                'error' => $e->getMessage()
+                'message' => 'No se pudo actualizar el producto'
             ], 500);
         }
     }
@@ -276,7 +287,7 @@ class ProductoController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Error al eliminar el producto'
+                'message' => 'No se pudo eliminar el producto'
             ], 500);
         }
     }

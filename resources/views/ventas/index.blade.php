@@ -143,11 +143,11 @@
         </div>
         
         <div class="pagination">
-          <button {{ $ventas->onFirstPage() ? 'disabled' : '' }} onclick="window.location='{{ $ventas->previousPageUrl() ?? '#' }}'">
+          <button>
             <i class="lni lni-chevron-left"></i>
           </button>
-          <span class="page-info">Página {{ $ventas->currentPage() }} de {{ $ventas->lastPage() }}</span>
-          <button {{ !$ventas->hasMorePages() ? 'disabled' : '' }} onclick="window.location='{{ $ventas->nextPageUrl() ?? '#' }}'">
+          <span class="page-info">Página 1 de 1</span>
+          <button>
             <i class="lni lni-chevron-right"></i>
           </button>
         </div>
@@ -462,6 +462,15 @@ tbody tr:hover {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -869,6 +878,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!currentUrl) return;
     
     confirmBtn.disabled = true;
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.innerHTML = '<i class="lni lni-spinner" style="animation: spin 1s linear infinite;"></i> Procesando...';
     messageBox.style.display = 'none';
     messageBox.textContent = '';
     
@@ -924,6 +935,7 @@ document.addEventListener('DOMContentLoaded', function() {
       messageBox.textContent = 'Error de red al intentar anular';
     } finally {
       confirmBtn.disabled = false;
+      confirmBtn.innerHTML = originalText;
     }
   });
   

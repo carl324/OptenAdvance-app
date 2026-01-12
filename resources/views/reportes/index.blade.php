@@ -8,28 +8,12 @@
   <div class="container-fluid">
     <!-- Title -->
     <div class="title-wrapper pt-30">
-      <div class="row align-items-center">
-        <div class="col-md-6">
-          <div class="title">
-            <h2>📊 Reportes</h2>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="breadcrumb-wrapper">
-            <nav aria-label="breadcrumb">
-              <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Reportes</li>
-              </ol>
-            </nav>
-          </div>
-        </div>
-      </div>
+      
     </div>
 
     <!-- Stats Cards -->
     <div class="row" id="statsContainer">
-      <div class="col-xl-3 col-lg-4 col-sm-6">
+      <div class="col-xl-3 col-lg-4 col-sm-6" id="cardMovimientos">
         <div class="icon-card mb-30">
           <div class="icon purple">
             <i class="lni lni-reload"></i>
@@ -43,7 +27,7 @@
         </div>
       </div>
 
-      <div class="col-xl-3 col-lg-4 col-sm-6">
+      <div class="col-xl-3 col-lg-4 col-sm-6" id="cardEntradas">
         <div class="icon-card mb-30">
           <div class="icon primary">
             <i class="lni lni-inbox"></i>
@@ -57,7 +41,7 @@
         </div>
       </div>
 
-      <div class="col-xl-3 col-lg-4 col-sm-6">
+      <div class="col-xl-3 col-lg-4 col-sm-6" id="cardSalidas">
         <div class="icon-card mb-30">
           <div class="icon orange">
             <i class="lni lni-delivery"></i>
@@ -71,7 +55,7 @@
         </div>
       </div>
 
-      <div class="col-xl-3 col-lg-4 col-sm-6">
+      <div class="col-xl-3 col-lg-4 col-sm-6" id="cardIngresos">
         <div class="icon-card mb-30">
           <div class="icon success">
             <i class="lni lni-dollar"></i>
@@ -157,35 +141,35 @@
                 <th class="min-width">
                   <h6 class="text-sm text-medium">Fecha</h6>
                 </th>
+                <!-- Columnas VENTAS -->
                 <th class="min-width" id="colFactura">
                   <h6 class="text-sm text-medium">N° Factura</h6>
                 </th>
                 <th class="min-width" id="colCliente">
                   <h6 class="text-sm text-medium">Cliente</h6>
                 </th>
-                <th class="min-width" id="colTotal">
-                  <h6 class="text-sm text-medium">Total</h6>
-                </th>
-                <th class="min-width" id="colEstado" style="display:none">
+                <th class="min-width" id="colEstado">
                   <h6 class="text-sm text-medium">Estado</h6>
                 </th>
+                <!-- Columnas INVENTARIO -->
                 <th class="min-width" id="colProducto" style="display:none">
                   <h6 class="text-sm text-medium">Producto</h6>
                 </th>
                 <th class="min-width" id="colTipo" style="display:none">
                   <h6 class="text-sm text-medium">Tipo</h6>
                 </th>
-                <th class="min-width" id="colCantidad" style="display:none">
-                  <h6 class="text-sm text-medium">Cantidad</h6>
+                <!-- Total/Cantidad - común pero cambia label -->
+                <th class="min-width" id="colTotal">
+                  <h6 class="text-sm text-medium">Total</h6>
                 </th>
                 <th>
-                  <h6 class="text-sm text-medium text-end">Acciones</h6>
+                  <h6 class="text-sm text-medium text-center">Acciones</h6>
                 </th>
               </tr>
             </thead>
             <tbody id="tableBody">
               <tr>
-                <td colspan="10" style="text-align: center; padding: 40px; color: #999;">
+                <td colspan="9" style="text-align: center; padding: 40px; color: #999;">
                   <i class="lni lni-inbox" style="font-size: 32px; margin-bottom: 10px;"></i>
                   <p>Cargando datos...</p>
                 </td>
@@ -196,10 +180,16 @@
 
         <div class="d-flex justify-content-between align-items-center mt-3">
           <div>
-            <span class="text-sm text-gray" id="paginationInfo">Página 1 de 1</span>
+            <!-- Información vacía para mantener layout -->
           </div>
-          <div id="paginationButtons">
-            <!-- Se generará dinámicamente -->
+          <div class="pagination">
+            <button id="btnPrevPage">
+              <i class="lni lni-chevron-left"></i>
+            </button>
+            <span class="page-info" id="paginationInfo">Página 1 de 1</span>
+            <button id="btnNextPage">
+              <i class="lni lni-chevron-right"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -215,6 +205,12 @@ const csrf = '{{ csrf_token() }}';
 let currentPage = 1;
 let currentType = 'ventas';
 let allData = [];
+let allStats = {
+  movimientos: 0,
+  entradas: 0,
+  salidas: 0,
+  ingresos: 0
+};
 
 document.addEventListener('DOMContentLoaded', function() {
   // Establecer fechas por defecto (últimos 30 días)
@@ -225,13 +221,13 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('dateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
 
   // Event listeners
-  document.getElementById('dateFrom').addEventListener('change', cargarDatos);
-  document.getElementById('dateTo').addEventListener('change', cargarDatos);
+  document.getElementById('dateFrom').addEventListener('change', aplicarFechas);
+  document.getElementById('dateTo').addEventListener('change', aplicarFechas);
   document.getElementById('reportType').addEventListener('change', cambiarTipo);
   document.getElementById('searchInput').addEventListener('input', filtrarTabla);
 
-  // Cargar datos iniciales
-  cargarDatos();
+  // Cargar estadísticas e inicializar datos
+  aplicarFechas();
 });
 
 function cambiarTipo() {
@@ -241,20 +237,74 @@ function cambiarTipo() {
   cargarDatos();
 }
 
+/**
+ * Aplica los cambios de fecha sin recargar nada - AJAX puro
+ * Carga estadísticas y tabla en paralelo
+ */
+function aplicarFechas() {
+  currentPage = 1; // Resetear a página 1 cuando cambian fechas
+  cargarEstadisticas();
+  cargarDatos();
+}
+
 function actualizarColumnasTabla() {
   const isVentas = currentType === 'ventas';
   document.getElementById('tableTitle').textContent = isVentas ? 'Historial de Ventas' : 'Movimientos de Inventario';
 
   // Mostrar/ocultar columnas según tipo
-  document.getElementById('colFactura').style.display = isVentas ? '' : 'none';
-  document.getElementById('colCliente').style.display = isVentas ? '' : 'none';
-  document.getElementById('colEstado').style.display = isVentas ? '' : 'none';
-  document.getElementById('colProducto').style.display = !isVentas ? '' : 'none';
-  document.getElementById('colTipo').style.display = !isVentas ? '' : 'none';
-  document.getElementById('colCantidad').style.display = !isVentas ? '' : 'none';
+  if (isVentas) {
+    // Ventas: mostrar Factura, Cliente, Estado | ocultar Producto, Tipo
+    document.getElementById('colFactura').style.display = '';
+    document.getElementById('colCliente').style.display = '';
+    document.getElementById('colEstado').style.display = '';
+    document.getElementById('colProducto').style.display = 'none';
+    document.getElementById('colTipo').style.display = 'none';
+    document.getElementById('colTotal').querySelector('h6').textContent = 'Total';
+  } else {
+    // Inventario: mostrar Producto, Tipo | ocultar Factura, Cliente, Estado
+    document.getElementById('colFactura').style.display = 'none';
+    document.getElementById('colCliente').style.display = 'none';
+    document.getElementById('colEstado').style.display = 'none';
+    document.getElementById('colProducto').style.display = '';
+    document.getElementById('colTipo').style.display = '';
+    document.getElementById('colTotal').querySelector('h6').textContent = 'Cantidad';
+  }
+}
 
-  // Cambiar label del total
-  document.getElementById('colTotal').querySelector('h6').textContent = isVentas ? 'Total' : 'Cantidad';
+async function cargarEstadisticas() {
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+
+  try {
+    const params = new URLSearchParams({
+      fecha_inicio: dateFrom,
+      fecha_fin: dateTo
+    });
+
+    const response = await fetch(`/api/reportes/stats?${params}`, {
+      headers: {
+        'X-CSRF-TOKEN': csrf,
+        'Accept': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      allStats = data.stats;
+      actualizarValoresStats();
+    }
+  } catch (error) {
+    // Error silencioso - mantener valores anteriores
+    console.log('No se pudieron cargar las estadísticas');
+  }
+}
+
+function actualizarValoresStats() {
+  document.getElementById('statMovimientos').textContent = formatNumber(allStats.movimientos, 0);
+  document.getElementById('statEntradas').textContent = formatNumber(allStats.entradas, 0);
+  document.getElementById('statSalidas').textContent = formatNumber(allStats.salidas, 0);
+  document.getElementById('statIngresos').textContent = formatNumber(allStats.ingresos, 0);
 }
 
 async function cargarDatos() {
@@ -290,23 +340,16 @@ async function cargarDatos() {
 
     if (data.success) {
       allData = data.data;
-      actualizarEstadisticas(data.stats);
       actualizarTabla(data.data);
       actualizarPaginacion(data.pagination);
     } else {
-      mostrarError('Error al cargar datos');
+      mostrarError('No hay datos disponibles');
     }
   } catch (error) {
-    console.error('Error:', error);
-    mostrarError('Error al conectar con el servidor');
+    // Error silencioso - mantener UI consistente
+    console.log('Error cargando datos');
+    mostrarError('Error al cargar los datos');
   }
-}
-
-function actualizarEstadisticas(stats) {
-  document.getElementById('statMovimientos').textContent = formatNumber(stats.movimientos, 0);
-  document.getElementById('statEntradas').textContent = formatNumber(stats.entradas, 0);
-  document.getElementById('statSalidas').textContent = formatNumber(stats.salidas, 0);
-  document.getElementById('statIngresos').textContent = formatNumber(stats.ingresos, 0);
 }
 
 function actualizarTabla(data) {
@@ -316,7 +359,7 @@ function actualizarTabla(data) {
   if (data.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="10" style="text-align: center; padding: 40px; color: #999;">
+        <td colspan="9" style="text-align: center; padding: 40px; color: #999;">
           <i class="lni lni-inbox" style="font-size: 32px; margin-bottom: 10px;"></i>
           <p>No hay datos para este período</p>
         </td>
@@ -333,16 +376,16 @@ function actualizarTabla(data) {
           <td><p class="text-sm">${formatDate(row.fecha)}</p></td>
           <td><p class="text-sm">${row.factura_numero || '-'}</p></td>
           <td><p class="text-sm">${row.cliente_nombre || '-'}</p></td>
-          <td><p class="text-sm">${formatNumber(row.total)}</p></td>
           <td>
             <span class="status-btn ${row.estado === 'completada' ? 'success-btn' : 'close-btn'}">
               ${row.estado === 'completada' ? 'Completada' : 'Anulada'}
             </span>
           </td>
-          <td>
-            <div class="action">
-              <button onclick="verDetallesVenta(${row.id})" title="Ver detalles">
-                <i class="lni lni-eye"></i>
+          <td><p class="text-sm">${formatNumber(row.total)}</p></td>
+          <td style="text-align: center;">
+            <div class="action-buttons">
+              <button class="btn-action btn-print" onclick="verDetallesVenta(${row.id})" title="Ver factura">
+                <i class="lni lni-eye"></i> Ver factura
               </button>
             </div>
           </td>
@@ -360,10 +403,10 @@ function actualizarTabla(data) {
             </span>
           </td>
           <td><p class="text-sm">${formatNumber(row.cantidad, 0)}</p></td>
-          <td>
-            <div class="action">
-              <button onclick="alert('Detalles del movimiento ID: ' + ${row.id})" title="Ver detalles">
-                <i class="lni lni-eye"></i>
+          <td style="text-align: center;">
+            <div class="action-buttons">
+              <button class="btn-action btn-secondary" disabled title="Función disponible próximamente">
+                <i class="lni lni-eye"></i> Ver detalles
               </button>
             </div>
           </td>
@@ -374,33 +417,26 @@ function actualizarTabla(data) {
 }
 
 function actualizarPaginacion(pagination) {
-  const buttonsDiv = document.getElementById('paginationButtons');
   const infoDiv = document.getElementById('paginationInfo');
+  const btnPrev = document.getElementById('btnPrevPage');
+  const btnNext = document.getElementById('btnNextPage');
 
   infoDiv.textContent = `Página ${pagination.current_page} de ${pagination.last_page}`;
 
-  let html = '';
-  if (pagination.current_page > 1) {
-    html += `<button class="btn btn-outline-secondary me-1" onclick="irAPagina(${pagination.current_page - 1})"><i class="lni lni-chevron-left"></i></button>`;
-  } else {
-    html += `<button class="btn btn-outline-secondary me-1" disabled><i class="lni lni-chevron-left"></i></button>`;
-  }
+  btnPrev.disabled = pagination.current_page <= 1;
+  btnNext.disabled = pagination.current_page >= pagination.last_page;
 
-  for (let i = 1; i <= pagination.last_page && i <= 5; i++) {
-    if (i === pagination.current_page) {
-      html += `<button class="btn btn-primary me-1">${i}</button>`;
-    } else {
-      html += `<button class="btn btn-outline-secondary me-1" onclick="irAPagina(${i})">${i}</button>`;
+  btnPrev.onclick = function() {
+    if (pagination.current_page > 1) {
+      irAPagina(pagination.current_page - 1);
     }
-  }
+  };
 
-  if (pagination.current_page < pagination.last_page) {
-    html += `<button class="btn btn-outline-secondary" onclick="irAPagina(${pagination.current_page + 1})"><i class="lni lni-chevron-right"></i></button>`;
-  } else {
-    html += `<button class="btn btn-outline-secondary" disabled><i class="lni lni-chevron-right"></i></button>`;
-  }
-
-  buttonsDiv.innerHTML = html;
+  btnNext.onclick = function() {
+    if (pagination.current_page < pagination.last_page) {
+      irAPagina(pagination.current_page + 1);
+    }
+  };
 }
 
 function irAPagina(page) {
@@ -429,6 +465,7 @@ function limpiarFiltros() {
   currentType = 'ventas';
   currentPage = 1;
   actualizarColumnasTabla();
+  cargarEstadisticas();
   cargarDatos();
 }
 
@@ -442,7 +479,59 @@ function exportarDatos() {
     fecha_fin: dateTo
   });
 
-  window.location.href = `/api/reportes/export?${params}`;
+  // Solicitar permisos de notificación
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
+  // Crear iframe oculto para descarga
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  // Descargar archivo
+  fetch(`/api/reportes/export?${params}`, {
+    headers: {
+      'X-CSRF-TOKEN': csrf,
+      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      // Obtener nombre del archivo
+      const contentDisposition = response.headers.get('content-disposition');
+      let fileName = 'reporte.xlsx';
+      if (contentDisposition) {
+        const matches = contentDisposition.match(/filename="(.+?)"/);
+        if (matches) fileName = matches[1];
+      }
+
+      return response.blob().then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        // Mostrar notificación
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Exportación completada', {
+            body: 'Archivo: ' + fileName,
+            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231f5fbf"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>'
+          });
+        }
+      });
+    } else {
+      throw new Error('Error en la exportación');
+    }
+  })
+  .catch(error => {
+    // Error silencioso - solo mostrar en consola
+    console.log('Export error handled');
+  });
 }
 
 function verDetallesVenta(ventaId) {
@@ -452,7 +541,7 @@ function verDetallesVenta(ventaId) {
 function mostrarError(mensaje) {
   document.getElementById('tableBody').innerHTML = `
     <tr>
-      <td colspan="10" style="text-align: center; padding: 40px; color: #c62828;">
+      <td colspan="9" style="text-align: center; padding: 40px; color: #c62828;">
         <i class="lni lni-close-circle" style="font-size: 32px; margin-bottom: 10px;"></i>
         <p>${mensaje}</p>
       </td>
@@ -476,6 +565,78 @@ function formatDate(dateString) {
 </script>
 
 <style>
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-print {
+    background: #eff6ff;
+    color: #1e40af;
+  }
+
+  .btn-print:hover {
+    background: #dbeafe;
+  }
+
+  .btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  .btn-secondary:hover {
+    background: #e5e7eb;
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 20px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .pagination button {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .pagination button:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+  }
+
+  .pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .page-info {
+    font-size: 14px;
+    color: #6b7280;
+  }
+
   @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }

@@ -132,39 +132,48 @@
       border: 1px solid #e2e8f0;
     }
 
-    .quantity-btn {
-      background: #e2e8f0;
-      border: none;
-      border-radius: 6px;
+        .quantity-btn {
       width: 36px;
       height: 36px;
+      min-width: 36px;
+      border: none;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      transition: background 0.2s;
-      color: #334155;
-      font-size: 16px;
+      font-size: 18px;
+      color: #3b82f6;
+      font-weight: 600;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
     }
 
     .quantity-btn:hover {
-      background: #cbd5e1;
+      background: #3b82f6;
+      color: white;
+      transform: scale(1.05);
+    }
+
+    .quantity-btn:active {
+      transform: scale(0.95);
     }
 
     .quantity-display {
-      font-size: 18px;
-      font-weight: 600;
-      color: #1a202c;
-      min-width: 40px;
+      flex: 1;
       text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a202c;
+      padding: 8px;
+      background: white;
+      border-radius: 6px;
+      min-width: 50px;
     }
 
-    .quantity-label {
-      font-size: 14px;
-      color: #64748b;
-      margin-left: 8px;
-    }
-
+   
     .submit-section {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -389,6 +398,17 @@
       text-overflow: ellipsis;
     }
 
+    /* Centrar contenido de stock */
+    .table td.min-width.text-center {
+      text-align: center !important;
+      text-overflow: clip;
+    }
+
+    .table td.min-width.text-center .view,
+    .table td.min-width.text-center .truncate {
+      text-align: center !important;
+    }
+
     .table tbody tr:hover {
       background: #f8fafc;
     }
@@ -416,7 +436,16 @@
     .table .text-primary {
       color: #3b82f6;
     }
-
+    .icon-yelow {
+      color: #f59e0b;
+    }
+    .icon-red {
+      color: #ef4444;
+    }
+    .icon-green {
+      color: #10b981;
+    }
+    
     .table .text-primary:hover {
       background: #eff6ff;
     }
@@ -460,7 +489,178 @@
       margin-top: 4px;
     }
 
-    /* Responsive */
+    /* Paginación */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pagination button:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .page-info {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      gap: 16px;
+      padding: 24px 24px 16px;
+      border-bottom: 1px solid #f3f4f6;
+      align-items: flex-start;
+    }
+
+    .modal-header-text {
+      flex: 1;
+    }
+
+    .modal-header-text h3 {
+      margin: 0 0 4px 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .modal-header-text p {
+      margin: 0;
+      font-size: 14px;
+      color: #6b7280;
+      font-family: 'Courier New', monospace;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+       .icon-warning {
+  width: 48px;
+  height: 48px;
+  background: #fef2f2;          /* rojo claro */
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-warning i {
+  font-size: 24px;
+  color: #dc2626;               /* rojo crítico */
+}
+    .warning-message {
+  padding: 12px 16px;
+  background: #fef2f2;          /* rojo muy claro */
+  border-left: 3px solid #dc2626; /* rojo crítico */
+  border-radius: 6px;
+  font-size: 14px;
+  color: #7f1d1d;               /* texto rojo oscuro */
+  margin-bottom: 20px;
+}
+
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      padding: 16px 24px 24px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .modal-btn-cancel {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .modal-btn-cancel:hover {
+      background: #e5e7eb;
+    }
+
+    .modal-btn-confirm {
+      background: #ef4444;
+      color: white;
+    }
+
+    .modal-btn-confirm:hover {
+      background: #dc2626;
+    }
+
+    .modal-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
     @media (max-width: 992px) {
       .product-form {
         grid-template-columns: 1fr;
@@ -484,6 +684,71 @@
         padding: 8px;
       }
     }
+
+    /* ========== TRUNCADO DE TEXTO GLOBAL ========== */
+    .truncate {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .truncate-long {
+      max-width: 180px;
+    }
+
+    .truncate-medium {
+      max-width: 120px;
+    }
+
+    .truncate-short {
+      max-width: 80px;
+    }
+
+    /* Variantes más pequeñas para tabla de movimientos */
+    .truncate-xs {
+      max-width: 50px;
+    }
+
+    .truncate-sm {
+      max-width: 100px;
+    }
+
+    /* Tooltip personalizado (si es necesario) */
+    .bs-tooltip-auto[data-popper-placement^="top"] > .tooltip-arrow,
+    .bs-tooltip-top > .tooltip-arrow {
+      bottom: calc(-1 * var(--bs-tooltip-arrow-height));
+    }
+
+    .tooltip-inner {
+      max-width: 300px;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+    /* Centrar contenido en columnas específicas */
+    td.text-center,
+    .text-center {
+      text-align: center !important;
+    }
+
+    /* Para la tabla de productos - centrar stock */
+    .table td.text-center .view,
+    .table td.text-center .truncate {
+      display: block;
+      width: 100%;
+      text-align: center !important;
+    }
+
+    .table td.text-center input.edit {
+      text-align: center !important;
+    }
+
+    /* Para la tabla de movimientos - centrar cantidad */
+    .striped-table td.text-center,
+    .striped-table td.text-center span {
+      text-align: center !important;
+    }
 </style>
 
 <section class="main-content">
@@ -502,7 +767,7 @@
                             <div class="col-lg-6">
                                 <div class="product-form-card">
                                     <div class="form-header">
-                                        <h6><i class="lni lni-package"></i> Agregar Nuevo Producto</h6>
+                                        <h6> Agregar Nuevo Producto </h6>
                                         <p>Complete los datos del producto para registrarlo en el inventario</p>
                                     </div>
 
@@ -523,11 +788,11 @@
                                             <div class="form-field">
                                                 <label>
                                                     <i class="lni lni-money-protection"></i>
-                                                    Precio Base (sin IVA)
+                                                    Precio del Producto
                                                 </label>
                                                 <div class="input-with-symbol">
                                                     <span class="input-symbol">$</span>
-                                                    <input type="number" placeholder="0" step="1" id="basePrice" required>
+                                                    <input type="text" placeholder="0" inputmode="numeric" id="basePrice" required>
                                                 </div>
                                             </div>
 
@@ -539,7 +804,7 @@
                                                         IVA (%)
                                                     </label>
                                                     <div class="input-with-symbol input-with-suffix">
-                                                        <input type="number" placeholder="19" step="0.01" id="ivaPercent" value="19" min="0" max="100">
+                                                        <input type="number" placeholder="19" step="1" id="ivaPercent" value="19" min="0" max="100">
                                                         <span class="input-suffix">%</span>
                                                     </div>
                                                 </div>
@@ -592,15 +857,31 @@
                                                     <th>Producto</th>
                                                     <th>Cantidad</th>
                                                     <th>Tipo</th>
-                                                    <th>Origen</th>
+                                                    <th>Motivo</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @forelse($movimientos->take(5) as $m)
                                                     <tr>
-                                                        <td>{{ $m->created_at ? \Carbon\Carbon::parse($m->created_at)->format('d/m/Y H:i') : '-' }}</td>
-                                                        <td>{{ $m->producto_nombre ?? 'Producto #' . $m->producto_id }}</td>
-                                                        <td>{{ $m->cantidad }}</td>
+                                                        <td>
+                                                            <span class="truncate truncate-xs" 
+                                                                  data-bs-toggle="tooltip" 
+                                                                  data-bs-title="{{ $m->created_at ? \Carbon\Carbon::parse($m->created_at)->format('d/m/Y H:i') : '-' }}">
+                                                                {{ $m->created_at ? \Carbon\Carbon::parse($m->created_at)->format('d/m/Y H:i') : '-' }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="truncate truncate-sm" 
+                                                                  data-bs-toggle="tooltip" 
+                                                                  data-bs-title="{{ $m->producto_nombre ?? 'Producto #' . $m->producto_id }}">
+                                                                {{ $m->producto_nombre ?? 'Producto #' . $m->producto_id }}
+                                                            </span>
+                                                        </td>
+                                                            <td class="text-center">
+                                                              <span class="truncate truncate-xs" data-bs-toggle="tooltip" data-bs-title="{{ $m->cantidad }}">
+                                                                {{ $m->cantidad }}
+                                                              </span>
+                                                            </td>
                                                         <td>
                                                             @if($m->tipo === 'entrada')
                                                                 <span class="badge-entrada">Entrada</span>
@@ -611,14 +892,19 @@
                                                         <td>
                                                             @php
                                                                 $origenLower = strtolower($m->origen ?? '');
+                                                                if($origenLower === 'registro_producto') {
+                                                                    $origenText = 'Registro';
+                                                                } elseif($origenLower === 'venta_anulada') {
+                                                                    $origenText = 'Anulada';
+                                                                } else {
+                                                                    $origenText = ucfirst($m->origen ?? '-');
+                                                                }
                                                             @endphp
-                                                            @if($origenLower === 'registro_producto')
-                                                                Registro
-                                                            @elseif($origenLower === 'venta_anulada')
-                                                                Anulada
-                                                            @else
-                                                                {{ ucfirst($m->origen ?? '-') }}
-                                                            @endif
+                                                            <span class="truncate truncate-sm" 
+                                                                  data-bs-toggle="tooltip" 
+                                                                  data-bs-title="{{ $origenText }}">
+                                                                {{ $origenText }}
+                                                            </span>
                                                         </td>
                                                     </tr>
                                                 @empty
@@ -640,65 +926,118 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="card-style mb-30">
-                        <h6>Tabla de Productos</h6>
-                        <p style="font-size: 14px; color: #64748b; margin-bottom: 20px;">
-                            Lista de productos registrados con información de precios y stock.
-                        </p>
+                        <div class="title d-flex align-items-center justify-content-between">
+  
+  <!-- IZQUIERDA -->
+  <div>
+    <h6>Tabla de Productos</h6>
+    <p style="font-size:14px; color:#64748b; margin-bottom:0;">
+      Lista de productos registrados con información de precios y stock.
+    </p>
+  </div>
+
+  <!-- DERECHA -->
+  <div class="ms-auto">
+    <div class="input-group input-group-sm search-pos" style="width:240px;">
+      <span class="input-group-text bg-light border-0">
+        <i class="lni lni-search-alt"></i>
+      </span>
+      <input
+        type="text"
+        id="buscar-producto"
+        class="form-control bg-light border-0"
+        placeholder="Buscar producto..."
+        autocomplete="off"
+      />
+    </div>
+  </div>
+
+</div>
+ <br
                         <div class="table-wrapper table-responsive">
                             <table class="table">
                                 <thead>
                                     <tr>
                                         <th><h6 style="margin: 0;">ID</h6></th>
                                         <th><h6 style="margin: 0;">Nombre</h6></th>
-                                        <th><h6 style="margin: 0;">Precio s/IVA</h6></th>
+                                        <th><h6 style="margin: 0;">Precio</h6></th>
                                         @if($empresa && $empresa->cobra_iva)
                                             <th><h6 style="margin: 0;">IVA %</h6></th>
-                                            <th><h6 style="margin: 0;">Precio c/IVA</h6></th>
+                                            <th><h6 style="margin: 0;">Precio final</h6></th>
                                         @endif
                                         <th><h6 style="margin: 0;">Stock</h6></th>
                                         <th><h6 style="margin: 0;">Acciones</h6></th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="productos-tbody">
                                     @forelse($productos as $producto)
                                         <tr id="producto-{{ $producto->id }}">
                                             <td class="min-width">
                                                 <p>{{ $producto->id }}</p>
                                             </td>
                                             <td class="min-width">
-                                                <span class="view" data-field="nombre">{{ $producto->nombre }}</span>
+                                                <span class="view truncate truncate-long" 
+                                                      data-field="nombre" 
+                                                      data-bs-toggle="tooltip" 
+                                                      data-bs-title="{{ $producto->nombre }}">
+                                                    {{ $producto->nombre }}
+                                                </span>
                                                 <input class="edit" data-field="nombre" type="text" value="{{ $producto->nombre }}" hidden>
                                             </td>
                                             <td class="min-width">
-                                                <span class="view" data-field="precio">${{ number_format($producto->precio, 0, ',', '.') }}</span>
+                                                <span class="view truncate" 
+                                                      data-field="precio" 
+                                                      data-bs-toggle="tooltip" 
+                                                      data-bs-title="${{ number_format($producto->precio, 0, ',', '.') }}">
+                                                    ${{ number_format($producto->precio, 0, ',', '.') }}
+                                                </span>
                                                 <input class="edit precio_input" data-field="precio" type="text" inputmode="numeric" value="{{ number_format($producto->precio, 0, ',', '.') }}" hidden>
                                             </td>
                                             @if($empresa && $empresa->cobra_iva)
                                                 <td class="min-width">
-                                                    <span class="view" data-field="iva">{{ $producto->iva > 0 ? $producto->iva . '%' : '-' }}</span>
-                                                    <input class="edit iva_input" data-field="iva" type="number" step="0.01" value="{{ $producto->iva }}" hidden>
+                                                  <span class="view truncate" 
+                                                      data-field="iva" 
+                                                      data-bs-toggle="tooltip" 
+                                                      data-bs-title="{{ $producto->iva > 0 ? $producto->iva . '%' : '-' }}">
+                                                    {{ $producto->iva > 0 ? $producto->iva . '%' : '-' }}
+                                                  </span>
+                                                  <input class="edit iva_input" data-field="iva" type="number" step="1" value="{{ $producto->iva }}" hidden>
                                                 </td>
                                                 <td class="min-width">
-                                                    <span class="view precio_con_iva_span" data-field="precio_con_iva">${{ number_format($producto->precio_con_iva, 0, ',', '.') }}</span>
+                                                    <span class="view truncate precio_con_iva_span" 
+                                                          data-field="precio_con_iva" 
+                                                          data-bs-toggle="tooltip" 
+                                                          data-bs-title="${{ number_format($producto->precio_con_iva, 0, ',', '.') }}">
+                                                        ${{ number_format($producto->precio_con_iva, 0, ',', '.') }}
+                                                    </span>
                                                     <input class="edit" data-field="precio_con_iva" type="text" value="{{ number_format($producto->precio_con_iva, 0, ',', '.') }}" hidden readonly>
                                                 </td>
                                             @endif
-                                            <td class="min-width">
-                                                <span class="view stock_view" data-field="stock">{{ $producto->stock }}</span>
-                                                <input class="edit stock_input" data-field="stock" type="text" value="{{ $producto->stock }}" hidden>
+                                            <td class="min-width text-center">
+                                              <span class="view stock_view" 
+                                                  data-field="stock" 
+                                                  data-bs-toggle="tooltip" 
+                                                  data-bs-title="{{ $producto->stock }}">
+                                                {{ $producto->stock }}
+                                              </span>
+                                              <input class="edit stock_input" data-field="stock" type="text" value="{{ $producto->stock }}" hidden>
                                             </td>
                                             <td>
                                                 <div class="action">
-                                                    <button type="button" class="text-primary" onclick="editarProducto({{ $producto->id }})" title="Editar">
+                                                    <button type="button" class="icon-yelow" onclick="editarProducto({{ $producto->id }})" data-bs-toggle="tooltip" 
+        data-bs-title="Editar">
                                                         <i class="lni lni-pencil"></i>
                                                     </button>
-                                                    <button type="button" class="text-danger" onclick="eliminarProducto({{ $producto->id }})" title="Eliminar">
+                                                    <button type="button" class="icon-red" onclick="eliminarProducto({{ $producto->id }})" data-bs-toggle="tooltip" 
+        data-bs-title="Eliminar">
                                                         <i class="lni lni-trash-can"></i>
                                                     </button>
-                                                    <button type="button" class="text-primary" onclick="guardarProducto({{ $producto->id }})" hidden title="Guardar">
+                                                    <button type="button" class="icon-green" onclick="guardarProducto({{ $producto->id }})" hidden data-bs-toggle="tooltip" 
+        data-bs-title="Guardar">
                                                         <i class="lni lni-checkmark-circle"></i>
                                                     </button>
-                                                    <button type="button" class="text-danger" onclick="cancelarEdicion({{ $producto->id }})" hidden title="Cancelar">
+                                                    <button type="button" class="icon-red" onclick="cancelarEdicion({{ $producto->id }})" hidden data-bs-toggle="tooltip" 
+        data-bs-title="Cancelar">
                                                         <i class="lni lni-close"></i>
                                                     </button>
                                                 </div>
@@ -716,6 +1055,19 @@
                                 </tbody>
                             </table>
                         </div>
+                        
+                        <!-- Paginación Minimalista AJAX -->
+                        @if($productos->count() > 0)
+                            <div class="pagination">
+                                <button id="btn-prev" onclick="cargarPagina({{ $productos->currentPage() - 1 }})" @if($productos->onFirstPage()) disabled @endif>
+                                    <i class="lni lni-chevron-left"></i>
+                                </button>
+                                <span class="page-info">Página <strong id="current-page">{{ $productos->currentPage() }}</strong> de <strong>{{ $productos->lastPage() }}</strong></span>
+                                <button id="btn-next" onclick="cargarPagina({{ $productos->currentPage() + 1 }})" @if($productos->currentPage() == $productos->lastPage()) disabled @endif>
+                                    <i class="lni lni-chevron-right"></i>
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -724,9 +1076,41 @@
     </div>
 </section>
 
+<!-- Modal Eliminar Producto -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="icon-warning">
+        <i class="lni lni-warning"></i>
+      </div>
+      <div class="modal-header-text">
+        <h3>¿Desea eliminar este producto?</h3>
+        <p id="modalProductName"></p>
+      </div>
+    </div>
+    
+    <div class="modal-body">
+      <div class="warning-message">
+        Esta acción eliminará el producto. No se puede deshacer.
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-cancel" id="cancelDelete" type="button">
+        Cancelar
+      </button>
+      <button class="modal-btn modal-btn-confirm" id="confirmDelete" type="button">
+        <i class="lni lni-checkmark"></i> Eliminar
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 const csrf = '{{ csrf_token() }}';
 let currentStock = 0;
+
+const COBRA_IVA = @json((bool)($empresa && $empresa->cobra_iva));
 
 // ========== FUNCIONES DEL FORMULARIO AGREGAR PRODUCTO ==========
 
@@ -744,21 +1128,170 @@ function decreaseStock(e) {
     }
 }
 
-function resetForm(e) {
-    e.preventDefault();
-    document.getElementById('productForm').reset();
-    document.getElementById('basePrice').value = '';
-    document.getElementById('ivaPercent').value = @if($empresa && $empresa->cobra_iva)'19'@else'0'@endif;
-    currentStock = 0;
-    document.getElementById('stockValue').textContent = '0';
+function resetForm(e, clearAlert = true) {
+  e.preventDefault();
+  document.getElementById('productForm').reset();
+  document.getElementById('basePrice').value = '';
+  document.getElementById('ivaPercent').value = @if($empresa && $empresa->cobra_iva)'19'@else'0'@endif;
+  currentStock = 0;
+  document.getElementById('stockValue').textContent = '0';
+  if (clearAlert) {
     document.getElementById('alertContainer').innerHTML = '';
+  }
 }
+
+// Formatear precio en tiempo real
+document.getElementById('basePrice').addEventListener('input', function() {
+  const onlyDigits = this.value.replace(/\D/g, '');
+  const intVal = parseInt(onlyDigits || '0', 10);
+  this.value = formatCOP(intVal);
+});
+
+function insertProductoFila(p) {
+  const tbody = document.querySelector('.card-style .table tbody');
+  if (!tbody) return;
+
+  // Si existía fila de “No hay productos registrados”, eliminarla
+  tbody.querySelectorAll('tr').forEach(tr => {
+    const td = tr.querySelector('td[colspan]');
+    if (td && td.textContent && td.textContent.toLowerCase().includes('no hay productos')) {
+      tr.remove();
+    }
+  });
+
+  // Evitar duplicados: si ya existe, solo resaltar
+  const existing = document.getElementById(`producto-${p.id}`);
+  if (existing) {
+    existing.style.background = '#ecfdf5';
+    setTimeout(() => { existing.style.background = ''; }, 1600);
+    return;
+  }
+
+  const precioInt = Math.round(Number(p.precio) || 0);
+  const precioConIvaInt = Math.round(Number(p.precio_con_iva) || 0);
+  const ivaFloat = Number(p.iva) || 0;
+
+  const rowHtml = `
+    <tr id="producto-${p.id}">
+      <td class="min-width"><p>${p.id}</p></td>
+      <td class="min-width">
+        <span class="view truncate truncate-long" data-field="nombre" data-bs-toggle="tooltip" data-bs-title="${escapeHtml(p.nombre)}">${escapeHtml(p.nombre)}</span>
+        <input class="edit" data-field="nombre" type="text" value="${escapeHtml(p.nombre)}" hidden>
+      </td>
+      <td class="min-width">
+        <span class="view truncate" data-field="precio" data-bs-toggle="tooltip" data-bs-title="$${formatCOP(precioInt)}">$${formatCOP(precioInt)}</span>
+        <input class="edit precio_input" data-field="precio" type="text" inputmode="numeric" value="${formatCOP(precioInt)}" hidden>
+      </td>
+      ${COBRA_IVA ? `
+      <td class="min-width">
+        <span class="view truncate" data-field="iva" data-bs-toggle="tooltip" data-bs-title="${ivaFloat > 0 ? ivaFloat + '%' : '-'}">${ivaFloat > 0 ? ivaFloat + '%' : '-'}</span>
+        <input class="edit iva_input" data-field="iva" type="number" step="1" value="${ivaFloat}" hidden>
+      </td>
+      <td class="min-width">
+        <span class="view truncate precio_con_iva_span" data-field="precio_con_iva" data-bs-toggle="tooltip" data-bs-title="$${formatCOP(precioConIvaInt)}">$${formatCOP(precioConIvaInt)}</span>
+        <input class="edit" data-field="precio_con_iva" type="text" value="${formatCOP(precioConIvaInt)}" hidden readonly>
+      </td>
+      ` : ''}
+      <td class="min-width text-center">
+        <span class="view stock_view" data-field="stock" data-bs-toggle="tooltip" data-bs-title="${p.stock}">${p.stock}</span>
+        <input class="edit stock_input" data-field="stock" type="text" value="${p.stock}" hidden data-original-stock="${p.stock}">
+      </td>
+      <td>
+        <div class="action">
+          <button type="button" class="text-primary" onclick="editarProducto(${p.id})"data-bs-toggle="tooltip" 
+        data-bs-title="Editar">
+            <i class="lni lni-pencil"></i>
+          </button>
+          <button type="button" class="text-danger" onclick="eliminarProducto(${p.id})"data-bs-toggle="tooltip" 
+        data-bs-title="Eliminar">
+            <i class="lni lni-trash-can"></i>
+          </button>
+          <button type="button" class="text-primary" onclick="guardarProducto(${p.id})" hiddendata-bs-toggle="tooltip" 
+        data-bs-title="Guardar">
+            <i class="lni lni-checkmark-circle"></i>
+          </button>
+          <button type="button" class="text-danger" onclick="cancelarEdicion(${p.id})" hiddendata-bs-toggle="tooltip" 
+        data-bs-title="Cancelar">
+            <i class="lni lni-close"></i>
+          </button>
+        </div>
+        <span class="msg"></span>
+      </td>
+    </tr>
+  `;
+
+  tbody.insertAdjacentHTML('afterbegin', rowHtml);
+  const newTr = document.getElementById(`producto-${p.id}`);
+  if (newTr) {
+    newTr.style.background = '#ecfdf5';
+    setTimeout(() => { newTr.style.background = ''; }, 1600);
+  }
+  
+  // Inicializar tooltips en la nueva fila
+  initializeTooltipsInRow(newTr);
+}
+
+  function formatOrigenLabel(origen) {
+    const o = String(origen || '').toLowerCase();
+    if (o === 'registro_producto') return 'Registro';
+    if (o === 'venta_anulada') return 'Anulada';
+    if (!o) return '-';
+    return o.charAt(0).toUpperCase() + o.slice(1);
+  }
+
+  function insertMovimientoRow(m) {
+    if (!m) return;
+    const tbody = document.querySelector('.striped-table tbody');
+    if (!tbody) return;
+
+    // Si existía fila de “Sin movimientos”, eliminarla
+    tbody.querySelectorAll('tr').forEach(tr => {
+      const td = tr.querySelector('td[colspan]');
+      if (td && td.textContent && td.textContent.toLowerCase().includes('sin movimientos')) {
+        tr.remove();
+      }
+    });
+
+    const tipoLower = String(m.tipo || '').toLowerCase();
+    const tipoBadge = tipoLower === 'entrada'
+      ? '<span class="badge-entrada">Entrada</span>'
+      : '<span class="badge-salida">Salida</span>';
+
+    const rowHtml = `
+      <tr>
+        <td><span class="truncate truncate-xs" data-bs-toggle="tooltip" data-bs-title="${escapeHtml(m.fecha || '-')}">${escapeHtml(m.fecha || '-')}</span></td>
+        <td><span class="truncate truncate-sm" data-bs-toggle="tooltip" data-bs-title="${escapeHtml(m.producto_nombre || '-')}">${escapeHtml(m.producto_nombre || '-')}</span></td>
+        <td class="text-center"><span class="truncate truncate-xs" data-bs-toggle="tooltip" data-bs-title="${escapeHtml(m.cantidad)}">${escapeHtml(m.cantidad)}</span></td>
+        <td>${tipoBadge}</td>
+        <td><span class="truncate truncate-sm" data-bs-toggle="tooltip" data-bs-title="${escapeHtml(formatOrigenLabel(m.origen))}">${escapeHtml(formatOrigenLabel(m.origen))}</span></td>
+      </tr>
+    `;
+
+    tbody.insertAdjacentHTML('afterbegin', rowHtml);
+
+    // Resaltar el movimiento insertado
+    const firstRow = tbody.querySelector('tr');
+    if (firstRow) {
+      firstRow.style.background = '#ecfdf5';
+      setTimeout(() => { firstRow.style.background = ''; }, 1600);
+      
+      // Inicializar tooltips en la nueva fila
+      initializeTooltipsInRow(firstRow);
+    }
+
+    // Mantener máximo 5 filas (como la vista)
+    const rows = tbody.querySelectorAll('tr');
+    if (rows.length > 5) {
+      for (let i = 5; i < rows.length; i++) rows[i].remove();
+    }
+  }
 
 async function addProduct(e) {
     e.preventDefault();
     
     const nombre = document.getElementById('productName').value.trim();
-    const precio = parseInt(document.getElementById('basePrice').value) || 0;
+    const precioFormateado = document.getElementById('basePrice').value;
+    const precio = parseCOP(precioFormateado);
     const iva = parseFloat(document.getElementById('ivaPercent').value) || 0;
     const stock = currentStock;
 
@@ -786,21 +1319,29 @@ async function addProduct(e) {
             body: JSON.stringify({ nombre, precio, iva, stock })
         });
 
-        const result = await res.json();
+        const contentType = (res.headers.get('content-type') || '').toLowerCase();
 
-        if (!res.ok) throw result;
+        // Si el servidor devuelve JSON, parsearlo y usarlo
+        let result = null;
+        if (contentType.includes('application/json')) {
+            result = await res.json();
+            if (!res.ok) throw result;
 
-        showAlert('✅ Producto agregado correctamente', 'success');
-        resetForm(e);
+            showAlert('Producto agregado correctamente', 'success');
+            resetForm(e, false);
 
-        // Recargar tabla después de 1.5s
-        setTimeout(() => {
-            location.reload();
-        }, 1500);
+            if (result.producto) insertProductoFila(result.producto);
+            if (result.movimiento) {
+              insertMovimientoRow(result.movimiento);
+            }
+
+        } else {
+            // Respuesta inesperada
+            throw { message: 'Error al procesar la solicitud' };
+        }
 
     } catch (error) {
-        console.error('Error:', error);
-        const mensaje = error.message || error.errors?.[Object.keys(error.errors)[0]]?.[0] || 'Error al agregar el producto';
+        const mensaje = error.message === 'El producto ya existe' ? 'El producto ya existe' : 'No se pudo agregar el producto';
         showAlert(mensaje, 'error');
     } finally {
         btn.disabled = false;
@@ -815,11 +1356,79 @@ function showAlert(mensaje, tipo) {
     }, 4000);
 }
 
+async function cargarPagina(pagina) {
+    try {
+        const respuesta = await fetch(`/productos?page=${pagina}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'text/html',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!respuesta.ok) throw new Error('Error al cargar página');
+        
+        const html = await respuesta.text();
+        const parser = new DOMParser();
+        const nuevoDoc = parser.parseFromString(html, 'text/html');
+        
+        // Reemplazar tbody
+        const nuevoTbody = nuevoDoc.querySelector('#productos-tbody');
+        const tbodyActual = document.querySelector('#productos-tbody');
+        if (nuevoTbody && tbodyActual) {
+            tbodyActual.innerHTML = nuevoTbody.innerHTML;
+        }
+        
+        // Actualizar página actual
+        const paginaActual = nuevoDoc.querySelector('#current-page');
+        const paginaActualElement = document.querySelector('#current-page');
+        if (paginaActual && paginaActualElement) {
+            paginaActualElement.textContent = paginaActual.textContent;
+        }
+        
+        // Actualizar botones
+        const btnPrev = document.querySelector('#btn-prev');
+        const btnNext = document.querySelector('#btn-next');
+        const nuevoBtnPrev = nuevoDoc.querySelector('#btn-prev');
+        const nuevoBtnNext = nuevoDoc.querySelector('#btn-next');
+        
+        if (nuevoBtnPrev && btnPrev) {
+            btnPrev.disabled = nuevoBtnPrev.disabled;
+            btnPrev.style.opacity = nuevoBtnPrev.disabled ? '0.5' : '1';
+            btnPrev.style.cursor = nuevoBtnPrev.disabled ? 'not-allowed' : 'pointer';
+        }
+        
+        if (nuevoBtnNext && btnNext) {
+            btnNext.disabled = nuevoBtnNext.disabled;
+            btnNext.style.opacity = nuevoBtnNext.disabled ? '0.5' : '1';
+            btnNext.style.cursor = nuevoBtnNext.disabled ? 'not-allowed' : 'pointer';
+        }
+        
+        // Scroll suave al inicio de la tabla
+        const tableWrapper = document.querySelector('.card-style');
+        if (tableWrapper) {
+          tableWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    } catch (error) {
+        showAlert('No se pudo cargar la página. Intenta de nuevo.', 'error');
+    }
+}
+
 // ========== FUNCIONES DE LA TABLA (EDICIÓN INLINE) ==========
 
 function formatCOP(valueInt) {
     const n = parseInt(valueInt, 10) || 0;
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function parseCOP(formatted) {
@@ -1018,7 +1627,7 @@ async function guardarProducto(id) {
         }
 
         msg.style.color = 'green';
-        msg.innerText = '✅ Guardado';
+        msg.innerText = 'Guardado';
         
         setTimeout(() => {
             cancelarEdicion(id);
@@ -1026,9 +1635,8 @@ async function guardarProducto(id) {
         }, 1500);
 
     } catch (e) {
-        console.error('Error:', e);
         msg.style.color = 'red';
-        msg.innerText = e.message || 'Error al actualizar';
+        msg.innerText = 'Error al actualizar. Intenta de nuevo.';
     } finally {
         disableRow(tr, false);
         tr.dataset.saving = '0';
@@ -1036,12 +1644,40 @@ async function guardarProducto(id) {
 }
 
 async function eliminarProducto(id) {
-    if (!confirm('¿Eliminar este producto?')) return;
+    const tr = document.getElementById(`producto-${id}`);
+    const nombreSpan = tr.querySelector('span.view[data-field="nombre"]');
+    const nombreProducto = nombreSpan ? nombreSpan.innerText : 'Producto #' + id;
     
+    // Mostrar modal
+    const modal = document.getElementById('deleteModal');
+    document.getElementById('modalProductName').textContent = 'Producto: ' + nombreProducto;
+    modal.classList.add('active');
+    
+    // Guardar ID para usar en confirmar
+    modal.dataset.productId = id;
+}
+
+// Cerrar modal de eliminar
+document.getElementById('cancelDelete').addEventListener('click', function() {
+    document.getElementById('deleteModal').classList.remove('active');
+});
+
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.classList.remove('active');
+    }
+});
+
+// Confirmar eliminación
+document.getElementById('confirmDelete').addEventListener('click', async function() {
+    const modal = document.getElementById('deleteModal');
+    const id = modal.dataset.productId;
     const tr = document.getElementById(`producto-${id}`);
     const msg = tr.querySelector('.msg');
+    
+    this.disabled = true;
     msg.innerText = 'Eliminando...';
-
+    
     try {
         const res = await fetch(`/productos/${id}`, {
             method: 'DELETE',
@@ -1055,16 +1691,198 @@ async function eliminarProducto(id) {
         if (!res.ok) throw result;
 
         tr.remove();
+        modal.classList.remove('active');
 
     } catch (error) {
-        console.error('Error:', error);
-        msg.innerText = 'No se pudo eliminar';
+        msg.innerText = 'Error al eliminar. Intenta de nuevo.';
+    } finally {
+        this.disabled = false;
     }
-}
+});
 
 function disableRow(tr, state) {
     tr.querySelectorAll('button, input, select').forEach(e => e.disabled = state);
 }
+
+// ========== INICIALIZACIÓN DE TOOLTIPS ==========
+
+/**
+ * Inicializa tooltips de Bootstrap en un elemento específico
+ * @param {HTMLElement} element - Elemento donde inicializar los tooltips
+ */
+function initializeTooltipsInRow(element) {
+    if (!element) return;
+    
+    const tooltipElements = element.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipElements.forEach(el => {
+        // Si ya tiene tooltip inicializado, no hacer nada
+        if (el._bsTooltip) return;
+        
+        // Si tiene clase truncate, solo mostrar tooltip si está truncado
+        if (el.classList.contains('truncate')) {
+            // Verificar si el texto está siendo truncado
+            if (el.scrollWidth <= el.clientWidth) {
+                // No está truncado, no necesita tooltip
+                return;
+            }
+        }
+        
+        try {
+            // Inicializar Bootstrap tooltip
+            new bootstrap.Tooltip(el, {
+                placement: 'top',
+                trigger: 'hover focus',
+                boundary: 'viewport'
+            });
+        } catch (e) {
+            // Bootstrap no disponible, silenciar
+        }
+    });
+}
+
+/**
+ * Inicializa todos los tooltips en la página
+ */
+function initializeAllTooltips() {
+    const tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipElements.forEach(el => {
+        // Si ya tiene tooltip inicializado, no hacer nada
+        if (el._bsTooltip) return;
+        
+        // Si tiene clase truncate, solo mostrar tooltip si está truncado
+        if (el.classList.contains('truncate')) {
+            // Verificar si el texto está siendo truncado
+            if (el.scrollWidth <= el.clientWidth) {
+                // No está truncado, no necesita tooltip
+                return;
+            }
+        }
+        
+        try {
+            new bootstrap.Tooltip(el, {
+                placement: 'top',
+                trigger: 'hover focus',
+                boundary: 'viewport'
+            });
+        } catch (e) {
+            // Bootstrap no disponible, silenciar
+        }
+    });
+}
+
+// Inicializar tooltips cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAllTooltips();
+    initSearchFunctionality();
+});
+
+// ========== FUNCIONALIDAD DE BÚSQUEDA ==========
+
+/**
+ * Debounce para evitar búsquedas frecuentes
+ */
+function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+/**
+ * Filtra las filas de la tabla según el término de búsqueda
+ */
+function filtrarProductos(termino) {
+    const tbody = document.querySelector('#productos-tbody');
+    if (!tbody) return;
+
+    const filas = tbody.querySelectorAll('tr');
+    const terminoLower = termino.toLowerCase().trim();
+    let filasVisibles = 0;
+
+    filas.forEach(fila => {
+        // Si la fila tiene colspan (mensaje "No hay productos"), no la procesar
+        const colspanTd = fila.querySelector('td[colspan]');
+        if (colspanTd) return;
+
+        // Obtener el nombre del producto (segunda columna)
+        const nombreCell = fila.querySelector('td:nth-child(2)');
+        const nombreText = nombreCell ? nombreCell.textContent.toLowerCase() : '';
+
+        // Obtener el ID (primera columna)
+        const idCell = fila.querySelector('td:nth-child(1)');
+        const idText = idCell ? idCell.textContent.toLowerCase() : '';
+
+        // Mostrar/ocultar según coincidencia
+        if (terminoLower === '' || nombreText.includes(terminoLower) || idText.includes(terminoLower)) {
+            fila.style.display = '';
+            filasVisibles++;
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+
+    // Mostrar mensaje si no hay resultados
+    mostrarMensajeVacio(filasVisibles, tbody, terminoLower);
+}
+
+/**
+ * Muestra un mensaje si no hay resultados de búsqueda
+ */
+function mostrarMensajeVacio(filasVisibles, tbody, termino) {
+    // Remover mensaje anterior si existe
+    const mensajeAnterior = tbody.querySelector('tr.busqueda-sin-resultados');
+    if (mensajeAnterior) mensajeAnterior.remove();
+
+    if (filasVisibles === 0 && termino !== '') {
+        const fila = document.createElement('tr');
+        fila.classList.add('busqueda-sin-resultados');
+        fila.innerHTML = `
+            <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
+                <i class="lni lni-search" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                <p style="margin: 0;">No se encontraron productos que contengan "<strong>${escapeHtml(termino)}</strong>"</p>
+            </td>
+        `;
+        tbody.appendChild(fila);
+    }
+}
+
+/**
+ * Inicializa la funcionalidad de búsqueda
+ */
+function initSearchFunctionality() {
+    const inputBusqueda = document.querySelector('#buscar-producto');
+    if (!inputBusqueda) return;
+
+    // Crear función con debounce
+    const busquedaDebounced = debounce(function(e) {
+        const termino = e.target.value;
+        filtrarProductos(termino);
+    }, 300);
+
+    // Event listener con debounce
+    inputBusqueda.addEventListener('input', busquedaDebounced);
+
+    // Limpiar búsqueda al presionar ESC
+    inputBusqueda.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            filtrarProductos('');
+            this.blur();
+        }
+    });
+}
+
+// Reinicializar búsqueda después de cargar página (paginación)
+const originalCargarPagina = window.cargarPagina;
+window.cargarPagina = async function(pagina) {
+    await originalCargarPagina(pagina);
+    // Limpiar búsqueda al cambiar de página
+    const inputBusqueda = document.querySelector('#buscar-producto');
+    if (inputBusqueda) inputBusqueda.value = '';
+    // Inicializar tooltips en la nueva página
+    setTimeout(() => initializeAllTooltips(), 100);
+};
 </script>
 
 @endsection

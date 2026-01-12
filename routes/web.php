@@ -37,6 +37,7 @@ Route::get('/api/productos/buscar', [VentaController::class, 'buscarProductos'])
 Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
 Route::get('/reportes/export', [ReporteController::class, 'export'])->name('reportes.export');
 Route::get('/api/reportes', [ReporteController::class, 'apiData'])->name('reportes.api');
+Route::get('/api/reportes/stats', [ReporteController::class, 'apiStats'])->name('reportes.api.stats');
 Route::get('/api/reportes/export', [ReporteController::class, 'apiExport'])->name('reportes.api.export');
 
 Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');

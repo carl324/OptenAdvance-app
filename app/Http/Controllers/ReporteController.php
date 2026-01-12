@@ -8,7 +8,6 @@ use App\Models\Empresa;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use Illuminate\Support\Facades\Log;
 
 class ReporteController extends Controller
 {
@@ -428,11 +427,14 @@ class ReporteController extends Controller
 
         // Obtener datos según tipo
         if ($tipo === 'movimientos') {
-            $query = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
+            $query = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+                ->orderBy('created_at', 'desc');
             $data = $query->paginate(15);
         } else {
-            // ventas
-            $query = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
+            // ventas con eager loading para evitar N+1
+            $query = \App\Models\Venta::with('factura')
+                ->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+                ->orderBy('created_at', 'desc');
             $data = $query->paginate(15);
         }
 
@@ -474,6 +476,55 @@ class ReporteController extends Controller
                 'per_page' => $data->perPage(),
             ]
         ]);
+    }
+
+    /**
+     * API: Obtiene estadísticas independientes de forma global
+     * Las estadísticas se calculan SIEMPRE considerando TODOS los tipos
+     * Sin depender del filtro de tipo en la vista
+     * Optimizado con query agregada (menos queries a BD)
+     */
+    public function apiStats(Request $request)
+    {
+        try {
+            $fecha_inicio = $this->sanitizeDate($request->input('fecha_inicio'));
+            $fecha_fin = $this->sanitizeDate($request->input('fecha_fin'));
+
+            // Si no hay fechas, usar últimos 30 días
+            if (!$fecha_inicio || !$fecha_fin) {
+                $fecha_fin = date('Y-m-d');
+                $fecha_inicio = date('Y-m-d', strtotime('-30 days'));
+            }
+
+            // Optimización: query única con agregación (1 query en lugar de 4)
+            $inventarioStats = \DB::table('inventario_movimientos')
+                ->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+                ->selectRaw('COUNT(*) as total, SUM(CASE WHEN tipo = ? THEN 1 ELSE 0 END) as entradas, SUM(CASE WHEN tipo = ? THEN 1 ELSE 0 END) as salidas', ['entrada', 'salida'])
+                ->first();
+
+            $ingresos = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->sum('total');
+
+            return response()->json([
+                'success' => true,
+                'stats' => [
+                    'movimientos' => (int)($inventarioStats->total ?? 0),
+                    'entradas' => (int)($inventarioStats->entradas ?? 0),
+                    'salidas' => (int)($inventarioStats->salidas ?? 0),
+                    'ingresos' => (float)($ingresos ?? 0),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            // En caso de error, retornar ceros sin exponer el error
+            return response()->json([
+                'success' => false,
+                'stats' => [
+                    'movimientos' => 0,
+                    'entradas' => 0,
+                    'salidas' => 0,
+                    'ingresos' => 0,
+                ]
+            ], 200);
+        }
     }
 
     /**
@@ -520,10 +571,13 @@ class ReporteController extends Controller
         // Obtener datos sin paginación (con límite de seguridad)
         if ($tipo === 'movimientos') {
             $data = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+                ->orderBy('created_at', 'desc')
                 ->limit(self::MAX_EXPORT_ROWS)
                 ->get();
         } else {
-            $data = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+            $data = \App\Models\Venta::with('detalles.producto', 'factura')
+                ->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+                ->orderBy('created_at', 'desc')
                 ->limit(self::MAX_EXPORT_ROWS)
                 ->get();
         }
@@ -541,6 +595,9 @@ class ReporteController extends Controller
             $sheet->setCellValue('E1', 'Tipo');
             $sheet->setCellValue('F1', 'Origen');
 
+            // Aplicar estilos al header
+            $this->aplicarEstilosHeader($sheet, ['A1', 'B1', 'C1', 'D1', 'E1', 'F1']);
+
             $row = 2;
             foreach ($data as $item) {
                 $sheet->setCellValue('A' . $row, $item->id);
@@ -552,24 +609,102 @@ class ReporteController extends Controller
                 $row++;
             }
         } else {
-            // Headers para ventas
-            $sheet->setCellValue('A1', 'ID');
+            // Headers para ventas con detalles
+            $sheet->setCellValue('A1', 'Venta ID');
             $sheet->setCellValue('B1', 'Fecha');
             $sheet->setCellValue('C1', 'N° Factura');
             $sheet->setCellValue('D1', 'Cliente');
-            $sheet->setCellValue('E1', 'Total');
-            $sheet->setCellValue('F1', 'Estado');
+            $sheet->setCellValue('E1', 'Producto');
+            $sheet->setCellValue('F1', 'Cantidad');
+            $sheet->setCellValue('G1', 'Precio Unitario');
+            $sheet->setCellValue('H1', 'Subtotal');
+            $sheet->setCellValue('I1', 'IVA');
+            $sheet->setCellValue('J1', 'Total');
+            $sheet->setCellValue('K1', 'Estado');
+
+            // Aplicar estilos al header
+            $this->aplicarEstilosHeader($sheet, ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1', 'J1', 'K1']);
 
             $row = 2;
-            foreach ($data as $item) {
-                $sheet->setCellValue('A' . $row, $item->id);
-                $sheet->setCellValue('B' . $row, $item->created_at ? $item->created_at->format('Y-m-d H:i') : '');
-                $sheet->setCellValue('C' . $row, optional($item->factura)->numero);
-                $sheet->setCellValue('D' . $row, optional($item->factura)->cliente_nombre);
-                $sheet->setCellValue('E' . $row, $item->total);
-                $sheet->setCellValue('F' . $row, $item->estado);
-                $row++;
+            $totalVentas = 0;
+            $totalIva = 0;
+            $ventasCompletadas = 0;
+            
+            foreach ($data as $venta) {
+                $detalles = $venta->detalles ?? collect();
+                
+                if ($detalles->isEmpty()) {
+                    // Si no hay detalles, mostrar solo la venta
+                    $sheet->setCellValue('A' . $row, $venta->id);
+                    $sheet->setCellValue('B' . $row, $venta->created_at ? $venta->created_at->format('Y-m-d H:i') : '');
+                    $sheet->setCellValue('C' . $row, optional($venta->factura)->numero);
+                    $sheet->setCellValue('D' . $row, optional($venta->factura)->cliente_nombre);
+                    $sheet->setCellValue('J' . $row, $venta->total);
+                    $sheet->setCellValue('K' . $row, $venta->estado);
+                    $row++;
+                    
+                    if ($venta->estado === 'completada') {
+                        $totalVentas += $venta->total;
+                        $ventasCompletadas++;
+                    }
+                } else {
+                    // Mostrar cada detalle en una fila
+                    $ivaVenta = 0;
+                    foreach ($detalles as $detalle) {
+                        $sheet->setCellValue('A' . $row, $venta->id);
+                        $sheet->setCellValue('B' . $row, $venta->created_at ? $venta->created_at->format('Y-m-d H:i') : '');
+                        $sheet->setCellValue('C' . $row, optional($venta->factura)->numero);
+                        $sheet->setCellValue('D' . $row, optional($venta->factura)->cliente_nombre);
+                        $sheet->setCellValue('E' . $row, optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id);
+                        $sheet->setCellValue('F' . $row, $detalle->cantidad);
+                        $sheet->setCellValue('G' . $row, $detalle->precio_unitario);
+                        $sheet->setCellValue('H' . $row, $detalle->subtotal);
+                        $sheet->setCellValue('I' . $row, $detalle->iva ?? 0);
+                        $sheet->setCellValue('J' . $row, $venta->total);
+                        $sheet->setCellValue('K' . $row, $venta->estado);
+                        
+                        $ivaVenta += ($detalle->iva ?? 0);
+                        $row++;
+                    }
+                    
+                    if ($venta->estado === 'completada') {
+                        $totalVentas += $venta->total;
+                        $totalIva += $ivaVenta;
+                        $ventasCompletadas++;
+                    }
+                }
             }
+
+            // Agregar fila de resumen
+            $row += 1;
+            $sheet->setCellValue('A' . $row, 'RESUMEN');
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('A' . $row)->getFill()->setFillType('solid')->getStartColor()->setRGB('E8E8E8');
+
+            $row += 1;
+            $sheet->setCellValue('A' . $row, 'Total Ventas Completadas:');
+            $sheet->setCellValue('B' . $row, $ventasCompletadas);
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+
+            $row += 1;
+            $sheet->setCellValue('A' . $row, 'Total Ingresos:');
+            $sheet->setCellValue('B' . $row, $totalVentas);
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+
+            $row += 1;
+            $sheet->setCellValue('A' . $row, 'Total IVA Recolectado:');
+            $sheet->setCellValue('B' . $row, $totalIva);
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+
+            $row += 1;
+            $baseImponible = $totalVentas - $totalIva;
+            $sheet->setCellValue('A' . $row, 'Base Imponible:');
+            $sheet->setCellValue('B' . $row, $baseImponible);
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+
         }
 
         // Auto-size columns
@@ -579,10 +714,27 @@ class ReporteController extends Controller
 
         // Crear archivo temporal
         $writer = new Xlsx($spreadsheet);
-        $fileName = 'reporte_' . $tipo . '_' . date('Y-m-d_His') . '.xlsx';
+        $nombreTipo = ($tipo === 'movimientos') ? 'inventario' : 'venta';
+        $fileName = 'reporte_' . $nombreTipo . '.xlsx';
 
-        return response()->streamDownload(function() use ($writer) {
+        return response()->stream(function() use ($writer) {
             $writer->save('php://output');
-        }, $fileName);
+        }, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"'
+        ]);
+    }
+
+    /**
+     * Helper: Aplica estilos a headers
+     */
+    private function aplicarEstilosHeader($sheet, $cells)
+    {
+        foreach ($cells as $cell) {
+            $sheet->getStyle($cell)->getFont()->setBold(true);
+            $sheet->getStyle($cell)->getFill()->setFillType('solid')->getStartColor()->setRGB('4472C4');
+            $sheet->getStyle($cell)->getFont()->getColor()->setRGB('FFFFFF');
+            $sheet->getStyle($cell)->getAlignment()->setHorizontal('center');
+        }
     }
 }
