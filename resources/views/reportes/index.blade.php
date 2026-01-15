@@ -135,9 +135,6 @@
           <table class="table top-selling-table">
             <thead>
               <tr>
-                <th>
-                  <h6 class="text-sm text-medium">ID</h6>
-                </th>
                 <th class="min-width">
                   <h6 class="text-sm text-medium">Fecha</h6>
                 </th>
@@ -169,7 +166,7 @@
             </thead>
             <tbody id="tableBody">
               <tr>
-                <td colspan="9" style="text-align: center; padding: 40px; color: #999;">
+                <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
                   <i class="lni lni-inbox" style="font-size: 32px; margin-bottom: 10px;"></i>
                   <p>Cargando datos...</p>
                 </td>
@@ -224,7 +221,17 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('dateFrom').addEventListener('change', aplicarFechas);
   document.getElementById('dateTo').addEventListener('change', aplicarFechas);
   document.getElementById('reportType').addEventListener('change', cambiarTipo);
-  document.getElementById('searchInput').addEventListener('input', filtrarTabla);
+  
+  // Búsqueda con debounce de 300ms
+  const searchInput = document.getElementById('searchInput');
+  let searchTimeout;
+  searchInput.addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    const searchTerm = this.value.trim();
+    searchTimeout = setTimeout(() => {
+      buscarEnTabla(searchTerm);
+    }, 300);
+  });
 
   // Cargar estadísticas e inicializar datos
   aplicarFechas();
@@ -314,7 +321,7 @@ async function cargarDatos() {
   // Mostrar loading
   document.getElementById('tableBody').innerHTML = `
     <tr>
-      <td colspan="10" style="text-align: center; padding: 40px; color: #999;">
+      <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
         <i class="lni lni-reload" style="font-size: 32px; animation: spin 1s linear infinite;"></i>
         <p>Cargando datos...</p>
       </td>
@@ -359,7 +366,7 @@ function actualizarTabla(data) {
   if (data.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" style="text-align: center; padding: 40px; color: #999;">
+        <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
           <i class="lni lni-inbox" style="font-size: 32px; margin-bottom: 10px;"></i>
           <p>No hay datos para este período</p>
         </td>
@@ -372,10 +379,15 @@ function actualizarTabla(data) {
     if (isVentas) {
       return `
         <tr>
-          <td><p class="text-sm">${row.id}</p></td>
           <td><p class="text-sm">${formatDate(row.fecha)}</p></td>
           <td><p class="text-sm">${row.factura_numero || '-'}</p></td>
-          <td><p class="text-sm">${row.cliente_nombre || '-'}</p></td>
+          <td>
+            <span class="truncate truncate-long" 
+                  data-bs-toggle="tooltip" 
+                  data-bs-title="${row.cliente_nombre || 'Consumidor final'}">
+              ${row.cliente_nombre || 'Consumidor final'}
+            </span>
+          </td>
           <td>
             <span class="status-btn ${row.estado === 'completada' ? 'success-btn' : 'close-btn'}">
               ${row.estado === 'completada' ? 'Completada' : 'Anulada'}
@@ -394,9 +406,11 @@ function actualizarTabla(data) {
     } else {
       return `
         <tr>
-          <td><p class="text-sm">${row.id}</p></td>
           <td><p class="text-sm">${formatDate(row.created_at)}</p></td>
-          <td><p class="text-sm">${row.producto_nombre || 'Producto #' + row.producto_id}</p></td>
+          <td>
+            <p class="text-sm">${row.producto_nombre || 'Producto #' + row.producto_id}</p>
+          </td>
+          </td>
           <td>
             <span class="status-btn ${row.tipo === 'entrada' ? 'success-btn' : 'close-btn'}">
               ${row.tipo === 'entrada' ? 'Entrada' : 'Salida'}
@@ -414,6 +428,9 @@ function actualizarTabla(data) {
       `;
     }
   }).join('');
+
+  // Inicializar tooltips de Bootstrap
+  initializeTooltips();
 }
 
 function actualizarPaginacion(pagination) {
@@ -444,14 +461,53 @@ function irAPagina(page) {
   cargarDatos();
 }
 
-function filtrarTabla() {
-  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-  const rows = document.querySelectorAll('#tableBody tr');
+/**
+ * Realiza búsqueda server-side con debounce
+ * Resetea a página 1 cuando busca
+ */
+async function buscarEnTabla(searchTerm) {
+  try {
+    currentPage = 1;  // Resetear a página 1
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
 
-  rows.forEach(row => {
-    const text = row.textContent.toLowerCase();
-    row.style.display = text.includes(searchTerm) ? '' : 'none';
-  });
+    const params = new URLSearchParams({
+      tipo: currentType,
+      fecha_inicio: dateFrom,
+      fecha_fin: dateTo,
+      page: currentPage,
+      search: searchTerm  // ← Búsqueda server-side
+    });
+
+    const response = await fetch(`/api/reportes?${params}`, {
+      headers: {
+        'X-CSRF-TOKEN': csrf,
+        'Accept': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      allData = data.data;
+      actualizarTabla(data.data);
+      actualizarPaginacion(data.pagination);
+    } else {
+      mostrarError('No hay datos disponibles');
+    }
+  } catch (error) {
+    console.log('Error en búsqueda:', error);
+    mostrarError('Error al buscar los datos');
+  }
+}
+
+/**
+ * Versión anterior - mantener para compatibilidad pero ya no se usa
+ * DEPRECATED: Usar buscarEnTabla() para búsqueda server-side
+ */
+function filtrarTabla() {
+  // Esta función ya no se utiliza
+  // La búsqueda ahora es server-side mediante buscarEnTabla()
 }
 
 function limpiarFiltros() {
@@ -541,7 +597,7 @@ function verDetallesVenta(ventaId) {
 function mostrarError(mensaje) {
   document.getElementById('tableBody').innerHTML = `
     <tr>
-      <td colspan="9" style="text-align: center; padding: 40px; color: #c62828;">
+      <td colspan="8" style="text-align: center; padding: 40px; color: #c62828;">
         <i class="lni lni-close-circle" style="font-size: 32px; margin-bottom: 10px;"></i>
         <p>${mensaje}</p>
       </td>
@@ -561,6 +617,48 @@ function formatDate(dateString) {
   if (!dateString) return '-';
   const date = new Date(dateString);
   return date.toLocaleDateString('es-CO') + ' ' + date.toLocaleTimeString('es-CO', {hour: '2-digit', minute: '2-digit'});
+}
+
+/**
+ * Inicializa tooltips de Bootstrap solo para elementos truncados
+ */
+function initializeTooltips() {
+  // Destruir tooltips anteriores si existen
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+    try {
+      const tooltip = bootstrap.Tooltip.getInstance(el);
+      if (tooltip) {
+        tooltip.dispose();
+      }
+    } catch (e) {
+      // Ignorar errores de dispose
+    }
+  });
+
+  // Crear nuevos tooltips solo para elementos truncados
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+    // Si tiene clase truncate, solo mostrar tooltip si está truncado
+    if (el.classList.contains('truncate')) {
+      // Verificar si el texto está siendo truncado
+      if (el.scrollWidth <= el.clientWidth) {
+        // No está truncado, no necesita tooltip
+        return;
+      }
+    }
+
+    try {
+      // Verificar que Bootstrap está disponible
+      if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        new bootstrap.Tooltip(el, {
+          placement: 'top',
+          trigger: 'hover focus',
+          boundary: 'viewport'
+        });
+      }
+    } catch (e) {
+      // Bootstrap no disponible, silenciar
+    }
+  });
 }
 </script>
 
@@ -635,6 +733,27 @@ function formatDate(dateString) {
   .page-info {
     font-size: 14px;
     color: #6b7280;
+  }
+
+  /* Estilos para truncate y tooltips */
+  .truncate {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .truncate-long {
+    max-width: 200px;
+  }
+
+  .truncate-medium {
+    max-width: 150px;
+  }
+
+  .truncate-short {
+    max-width: 100px;
   }
 
   @keyframes spin {

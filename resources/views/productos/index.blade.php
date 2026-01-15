@@ -953,7 +953,7 @@
   </div>
 
 </div>
- <br
+
                         <div class="table-wrapper table-responsive">
                             <table class="table">
                                 <thead>
@@ -970,104 +970,13 @@
                                     </tr>
                                 </thead>
                                 <tbody id="productos-tbody">
-                                    @forelse($productos as $producto)
-                                        <tr id="producto-{{ $producto->id }}">
-                                            <td class="min-width">
-                                                <p>{{ $producto->id }}</p>
-                                            </td>
-                                            <td class="min-width">
-                                                <span class="view truncate truncate-long" 
-                                                      data-field="nombre" 
-                                                      data-bs-toggle="tooltip" 
-                                                      data-bs-title="{{ $producto->nombre }}">
-                                                    {{ $producto->nombre }}
-                                                </span>
-                                                <input class="edit" data-field="nombre" type="text" value="{{ $producto->nombre }}" hidden>
-                                            </td>
-                                            <td class="min-width">
-                                                <span class="view truncate" 
-                                                      data-field="precio" 
-                                                      data-bs-toggle="tooltip" 
-                                                      data-bs-title="${{ number_format($producto->precio, 0, ',', '.') }}">
-                                                    ${{ number_format($producto->precio, 0, ',', '.') }}
-                                                </span>
-                                                <input class="edit precio_input" data-field="precio" type="text" inputmode="numeric" value="{{ number_format($producto->precio, 0, ',', '.') }}" hidden>
-                                            </td>
-                                            @if($empresa && $empresa->cobra_iva)
-                                                <td class="min-width">
-                                                  <span class="view truncate" 
-                                                      data-field="iva" 
-                                                      data-bs-toggle="tooltip" 
-                                                      data-bs-title="{{ $producto->iva > 0 ? $producto->iva . '%' : '-' }}">
-                                                    {{ $producto->iva > 0 ? $producto->iva . '%' : '-' }}
-                                                  </span>
-                                                  <input class="edit iva_input" data-field="iva" type="number" step="1" value="{{ $producto->iva }}" hidden>
-                                                </td>
-                                                <td class="min-width">
-                                                    <span class="view truncate precio_con_iva_span" 
-                                                          data-field="precio_con_iva" 
-                                                          data-bs-toggle="tooltip" 
-                                                          data-bs-title="${{ number_format($producto->precio_con_iva, 0, ',', '.') }}">
-                                                        ${{ number_format($producto->precio_con_iva, 0, ',', '.') }}
-                                                    </span>
-                                                    <input class="edit" data-field="precio_con_iva" type="text" value="{{ number_format($producto->precio_con_iva, 0, ',', '.') }}" hidden readonly>
-                                                </td>
-                                            @endif
-                                            <td class="min-width text-center">
-                                              <span class="view stock_view" 
-                                                  data-field="stock" 
-                                                  data-bs-toggle="tooltip" 
-                                                  data-bs-title="{{ $producto->stock }}">
-                                                {{ $producto->stock }}
-                                              </span>
-                                              <input class="edit stock_input" data-field="stock" type="text" value="{{ $producto->stock }}" hidden>
-                                            </td>
-                                            <td>
-                                                <div class="action">
-                                                    <button type="button" class="icon-yelow" onclick="editarProducto({{ $producto->id }})" data-bs-toggle="tooltip" 
-        data-bs-title="Editar">
-                                                        <i class="lni lni-pencil"></i>
-                                                    </button>
-                                                    <button type="button" class="icon-red" onclick="eliminarProducto({{ $producto->id }})" data-bs-toggle="tooltip" 
-        data-bs-title="Eliminar">
-                                                        <i class="lni lni-trash-can"></i>
-                                                    </button>
-                                                    <button type="button" class="icon-green" onclick="guardarProducto({{ $producto->id }})" hidden data-bs-toggle="tooltip" 
-        data-bs-title="Guardar">
-                                                        <i class="lni lni-checkmark-circle"></i>
-                                                    </button>
-                                                    <button type="button" class="icon-red" onclick="cancelarEdicion({{ $producto->id }})" hidden data-bs-toggle="tooltip" 
-        data-bs-title="Cancelar">
-                                                        <i class="lni lni-close"></i>
-                                                    </button>
-                                                </div>
-                                                <span class="msg"></span>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
-                                                <i class="lni lni-inbox" style="font-size: 32px; margin-bottom: 10px;"></i>
-                                                <p>No hay productos registrados</p>
-                                            </td>
-                                        </tr>
-                                    @endforelse
+                                    @include('productos._table', ['productos' => $productos, 'empresa' => $empresa])
                                 </tbody>
                             </table>
                         </div>
                         
                         <!-- Paginación Minimalista AJAX -->
-                        @if($productos->count() > 0)
-                            <div class="pagination">
-                                <button id="btn-prev" onclick="cargarPagina({{ $productos->currentPage() - 1 }})" @if($productos->onFirstPage()) disabled @endif>
-                                    <i class="lni lni-chevron-left"></i>
-                                </button>
-                                <span class="page-info">Página <strong id="current-page">{{ $productos->currentPage() }}</strong> de <strong>{{ $productos->lastPage() }}</strong></span>
-                                <button id="btn-next" onclick="cargarPagina({{ $productos->currentPage() + 1 }})" @if($productos->currentPage() == $productos->lastPage()) disabled @endif>
-                                    <i class="lni lni-chevron-right"></i>
-                                </button>
-                            </div>
-                        @endif
+                        @include('productos._pagination', ['productos' => $productos, 'search' => ''])
                     </div>
                 </div>
             </div>
@@ -1109,6 +1018,9 @@
 <script>
 const csrf = '{{ csrf_token() }}';
 let currentStock = 0;
+let lastSearchTerm = '';
+let clearSearchRequested = false;
+const SEARCH_TIMEOUT_MS = 8000;
 
 const COBRA_IVA = @json((bool)($empresa && $empresa->cobra_iva));
 
@@ -1198,7 +1110,7 @@ function insertProductoFila(p) {
       </td>
       <td>
         <div class="action">
-          <button type="button" class="text-primary" onclick="editarProducto(${p.id})"data-bs-toggle="tooltip" 
+          <button type="button" class="icon-yelow" onclick="editarProducto(${p.id})"data-bs-toggle="tooltip" 
         data-bs-title="Editar">
             <i class="lni lni-pencil"></i>
           </button>
@@ -1206,11 +1118,11 @@ function insertProductoFila(p) {
         data-bs-title="Eliminar">
             <i class="lni lni-trash-can"></i>
           </button>
-          <button type="button" class="text-primary" onclick="guardarProducto(${p.id})" hiddendata-bs-toggle="tooltip" 
+          <button type="button" class="text-primary" onclick="guardarProducto(${p.id})" hidden data-bs-toggle="tooltip" 
         data-bs-title="Guardar">
             <i class="lni lni-checkmark-circle"></i>
           </button>
-          <button type="button" class="text-danger" onclick="cancelarEdicion(${p.id})" hiddendata-bs-toggle="tooltip" 
+          <button type="button" class="text-danger" onclick="cancelarEdicion(${p.id})" hidden data-bs-toggle="tooltip" 
         data-bs-title="Cancelar">
             <i class="lni lni-close"></i>
           </button>
@@ -1319,6 +1231,14 @@ async function addProduct(e) {
             body: JSON.stringify({ nombre, precio, iva, stock })
         });
 
+        if (res.status === 419) {
+          showAlert('Tu sesión ha expirado. Redirigiendo al inicio de sesión...', 'error');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1500);
+          return;
+        }
+
         const contentType = (res.headers.get('content-type') || '').toLowerCase();
 
         // Si el servidor devuelve JSON, parsearlo y usarlo
@@ -1356,59 +1276,68 @@ function showAlert(mensaje, tipo) {
     }, 4000);
 }
 
-async function cargarPagina(pagina) {
+/**
+ * Carga productos con búsqueda y paginación AJAX server-side
+ * @param {number} pagina - Número de página a cargar
+ * @param {string} search - Término de búsqueda (opcional)
+ */
+async function cargarPaginaAjax(pagina, search = null) {
     try {
-        const respuesta = await fetch(`/productos?page=${pagina}`, {
+        // Obtener búsqueda actual si no se proporciona
+    if (search === null || typeof search === 'undefined') {
+      search = lastSearchTerm || '';
+    }
+
+        // Construir URL con parámetros
+        const url = new URL('/productos', window.location.origin);
+        url.searchParams.append('page', pagina);
+        if (search) {
+            url.searchParams.append('search', search);
+        }
+
+        const respuesta = await fetch(url.toString(), {
             method: 'GET',
             headers: {
-                'Accept': 'text/html',
+                'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
 
+        if (respuesta.status === 419) {
+          showAlert('Tu sesión ha expirado. Redirigiendo al inicio de sesión...', 'error');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1500);
+          return;
+        }
+
         if (!respuesta.ok) throw new Error('Error al cargar página');
-        
-        const html = await respuesta.text();
-        const parser = new DOMParser();
-        const nuevoDoc = parser.parseFromString(html, 'text/html');
-        
-        // Reemplazar tbody
-        const nuevoTbody = nuevoDoc.querySelector('#productos-tbody');
+
+        const result = await respuesta.json();
+        if (!result.success) throw new Error(result.message || 'Error desconocido');
+
+        // Reemplazar tbody con HTML renderizado del servidor
         const tbodyActual = document.querySelector('#productos-tbody');
-        if (nuevoTbody && tbodyActual) {
-            tbodyActual.innerHTML = nuevoTbody.innerHTML;
+        if (tbodyActual) {
+            tbodyActual.innerHTML = result.html;
+            // Reinicializar tooltips en las nuevas filas
+            setTimeout(() => initializeAllTooltips(), 100);
         }
-        
-        // Actualizar página actual
-        const paginaActual = nuevoDoc.querySelector('#current-page');
-        const paginaActualElement = document.querySelector('#current-page');
-        if (paginaActual && paginaActualElement) {
-            paginaActualElement.textContent = paginaActual.textContent;
+
+        // Reemplazar paginación
+        const paginationContainer = document.querySelector('.pagination');
+        if (paginationContainer) {
+            paginationContainer.outerHTML = result.pagination;
         }
-        
-        // Actualizar botones
-        const btnPrev = document.querySelector('#btn-prev');
-        const btnNext = document.querySelector('#btn-next');
-        const nuevoBtnPrev = nuevoDoc.querySelector('#btn-prev');
-        const nuevoBtnNext = nuevoDoc.querySelector('#btn-next');
-        
-        if (nuevoBtnPrev && btnPrev) {
-            btnPrev.disabled = nuevoBtnPrev.disabled;
-            btnPrev.style.opacity = nuevoBtnPrev.disabled ? '0.5' : '1';
-            btnPrev.style.cursor = nuevoBtnPrev.disabled ? 'not-allowed' : 'pointer';
-        }
-        
-        if (nuevoBtnNext && btnNext) {
-            btnNext.disabled = nuevoBtnNext.disabled;
-            btnNext.style.opacity = nuevoBtnNext.disabled ? '0.5' : '1';
-            btnNext.style.cursor = nuevoBtnNext.disabled ? 'not-allowed' : 'pointer';
-        }
-        
+
+        lastSearchTerm = search || '';
+
         // Scroll suave al inicio de la tabla
         const tableWrapper = document.querySelector('.card-style');
         if (tableWrapper) {
-          tableWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            tableWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
     } catch (error) {
         showAlert('No se pudo cargar la página. Intenta de nuevo.', 'error');
     }
@@ -1592,6 +1521,16 @@ async function guardarProducto(id) {
             body: JSON.stringify(data)
         });
 
+        if (res.status === 419) {
+          msg.style.color = 'red';
+          msg.innerText = 'Sesión expirada.';
+          showAlert('Tu sesión ha expirado. Redirigiendo al inicio de sesión...', 'error');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1500);
+          return;
+        }
+
         const result = await res.json();
 
         if (!res.ok) throw result;
@@ -1686,6 +1625,15 @@ document.getElementById('confirmDelete').addEventListener('click', async functio
                 'Accept': 'application/json'
             }
         });
+
+        if (res.status === 419) {
+          msg.innerText = 'Sesión expirada.';
+          showAlert('Tu sesión ha expirado. Redirigiendo al inicio de sesión...', 'error');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1500);
+          return;
+        }
 
         const result = await res.json();
         if (!res.ok) throw result;
@@ -1790,74 +1738,113 @@ function debounce(func, delay) {
 }
 
 /**
- * Filtra las filas de la tabla según el término de búsqueda
+ * Realiza búsqueda server-side con debounce
+ * El backend retorna HTML con paginación respetando el filtro
  */
-function filtrarProductos(termino) {
-    const tbody = document.querySelector('#productos-tbody');
-    if (!tbody) return;
+async function buscarProductos(termino) {
+  const terminoLimpio = termino.trim();
 
-    const filas = tbody.querySelectorAll('tr');
-    const terminoLower = termino.toLowerCase().trim();
-    let filasVisibles = 0;
+  if (terminoLimpio.length > 100) {
+    showAlert('La búsqueda supera los 100 caracteres', 'error');
+    return;
+  }
 
-    filas.forEach(fila => {
-        // Si la fila tiene colspan (mensaje "No hay productos"), no la procesar
-        const colspanTd = fila.querySelector('td[colspan]');
-        if (colspanTd) return;
+  if (terminoLimpio === '' && !clearSearchRequested && lastSearchTerm) {
+    return;
+  }
 
-        // Obtener el nombre del producto (segunda columna)
-        const nombreCell = fila.querySelector('td:nth-child(2)');
-        const nombreText = nombreCell ? nombreCell.textContent.toLowerCase() : '';
+  const tbodyActual = document.querySelector('#productos-tbody');
+  const previousHtml = tbodyActual ? tbodyActual.innerHTML : '';
 
-        // Obtener el ID (primera columna)
-        const idCell = fila.querySelector('td:nth-child(1)');
-        const idText = idCell ? idCell.textContent.toLowerCase() : '';
+  if (tbodyActual) {
+    tbodyActual.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">Buscando...</td></tr>';
+  }
 
-        // Mostrar/ocultar según coincidencia
-        if (terminoLower === '' || nombreText.includes(terminoLower) || idText.includes(terminoLower)) {
-            fila.style.display = '';
-            filasVisibles++;
-        } else {
-            fila.style.display = 'none';
-        }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), SEARCH_TIMEOUT_MS);
+
+  try {
+    // Construir URL con parámetro de búsqueda
+    const url = new URL('/productos', window.location.origin);
+    url.searchParams.append('page', 1); // Resetear a página 1
+    if (terminoLimpio) {
+      url.searchParams.append('search', terminoLimpio);
+    }
+
+    const respuesta = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      signal: controller.signal
     });
 
-    // Mostrar mensaje si no hay resultados
-    mostrarMensajeVacio(filasVisibles, tbody, terminoLower);
-}
-
-/**
- * Muestra un mensaje si no hay resultados de búsqueda
- */
-function mostrarMensajeVacio(filasVisibles, tbody, termino) {
-    // Remover mensaje anterior si existe
-    const mensajeAnterior = tbody.querySelector('tr.busqueda-sin-resultados');
-    if (mensajeAnterior) mensajeAnterior.remove();
-
-    if (filasVisibles === 0 && termino !== '') {
-        const fila = document.createElement('tr');
-        fila.classList.add('busqueda-sin-resultados');
-        fila.innerHTML = `
-            <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
-                <i class="lni lni-search" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
-                <p style="margin: 0;">No se encontraron productos que contengan "<strong>${escapeHtml(termino)}</strong>"</p>
-            </td>
-        `;
-        tbody.appendChild(fila);
+    if (respuesta.status === 419) {
+      showAlert('Tu sesión ha expirado. Redirigiendo al inicio de sesión...', 'error');
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1500);
+      return;
     }
+
+    if (!respuesta.ok) throw new Error('Error al buscar');
+
+    const result = await respuesta.json();
+    if (!result.success) throw new Error(result.message || 'Error desconocido');
+
+    // Reemplazar contenido de la tabla con HTML renderizado del servidor
+    if (tbodyActual) {
+      tbodyActual.innerHTML = result.html;
+      // Reinicializar tooltips en las nuevas filas
+      setTimeout(() => initializeAllTooltips(), 100);
+    }
+
+    // Reemplazar paginación
+    const paginationContainer = document.querySelector('.pagination');
+    if (paginationContainer) {
+      paginationContainer.outerHTML = result.pagination;
+    }
+
+    lastSearchTerm = terminoLimpio;
+
+  } catch (error) {
+    if (error && error.name === 'AbortError') {
+      showAlert('La búsqueda tardó demasiado. Intenta de nuevo.', 'error');
+    } else {
+      console.error('Error en búsqueda:', error);
+      showAlert('Error en la búsqueda. Intenta de nuevo.', 'error');
+    }
+    if (tbodyActual) {
+      tbodyActual.innerHTML = previousHtml;
+    }
+  } finally {
+    clearTimeout(timeoutId);
+    clearSearchRequested = false;
+  }
 }
 
 /**
- * Inicializa la funcionalidad de búsqueda
+ * Filtrar productos (función anterior - se mantiene por compatibilidad pero ya no se usa)
+ * DEPRECATED: Usar buscarProductos() en su lugar para server-side
+ */
+function filtrarProductos(termino) {
+    // Esta función ya no se utiliza
+    // La búsqueda ahora es server-side mediante buscarProductos()
+}
+
+/**
+ * Inicializa la funcionalidad de búsqueda con debounce
+ * Ahora utiliza búsqueda server-side
  */
 function initSearchFunctionality() {
     const inputBusqueda = document.querySelector('#buscar-producto');
     if (!inputBusqueda) return;
 
-    // Crear función con debounce
+    // Crear función con debounce de 300ms
     const busquedaDebounced = debounce(function(e) {
         const termino = e.target.value;
-        filtrarProductos(termino);
+        buscarProductos(termino);
     }, 300);
 
     // Event listener con debounce
@@ -1866,23 +1853,18 @@ function initSearchFunctionality() {
     // Limpiar búsqueda al presionar ESC
     inputBusqueda.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
+        clearSearchRequested = true;
+        lastSearchTerm = '';
             this.value = '';
-            filtrarProductos('');
+            buscarProductos('');
             this.blur();
         }
     });
 }
 
-// Reinicializar búsqueda después de cargar página (paginación)
-const originalCargarPagina = window.cargarPagina;
-window.cargarPagina = async function(pagina) {
-    await originalCargarPagina(pagina);
-    // Limpiar búsqueda al cambiar de página
-    const inputBusqueda = document.querySelector('#buscar-producto');
-    if (inputBusqueda) inputBusqueda.value = '';
-    // Inicializar tooltips en la nueva página
-    setTimeout(() => initializeAllTooltips(), 100);
-};
+// Actualizar búsqueda después de cargar página (paginación)
+// La búsqueda ahora es server-side, no es necesario limpiar el input
+// Solo reinicializamos los tooltips de las nuevas filas
 </script>
 
 @endsection

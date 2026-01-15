@@ -407,6 +407,7 @@ class ReporteController extends Controller
     public function apiData(Request $request)
     {
         $tipo = $request->input('tipo', 'ventas');
+        $search = $request->input('search', '');  // ← Búsqueda server-side
         $fecha_inicio = $this->sanitizeDate($request->input('fecha_inicio'));
         $fecha_fin = $this->sanitizeDate($request->input('fecha_fin'));
         $page = max(1, (int)$request->input('page', 1));
@@ -423,19 +424,35 @@ class ReporteController extends Controller
             'fecha_fin' => $fecha_fin,
             'estado' => null,
             'order' => 'desc',
+            'search' => $search,  // ← Pasar búsqueda a filtros
         ];
 
         // Obtener datos según tipo
         if ($tipo === 'movimientos') {
-            $query = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+            // Eager loading de producto + búsqueda server-side
+            $query = \App\Models\InventarioMovimiento::with('producto')
+                ->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+                ->when($search, function ($q) use ($search) {
+                    // Buscar en nombre del producto o cantidad
+                    return $q->whereHas('producto', function ($sq) use ($search) {
+                        $sq->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($search) . '%']);
+                    })->orWhereRaw('CAST(cantidad AS CHAR) LIKE ?', ['%' . $search . '%']);
+                })
                 ->orderBy('created_at', 'desc');
-            $data = $query->paginate(15);
+            $data = $query->paginate(15)->appends($request->query());  // ← Conservar parámetros
         } else {
-            // ventas con eager loading para evitar N+1
+            // Ventas con eager loading + búsqueda server-side
             $query = \App\Models\Venta::with('factura')
                 ->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+                ->when($search, function ($q) use ($search) {
+                    // Buscar en número de factura o cliente
+                    return $q->whereHas('factura', function ($sq) use ($search) {
+                        $sq->whereRaw('LOWER(numero) LIKE ?', ['%' . strtolower($search) . '%'])
+                           ->orWhereRaw('LOWER(cliente_nombre) LIKE ?', ['%' . strtolower($search) . '%']);
+                    });
+                })
                 ->orderBy('created_at', 'desc');
-            $data = $query->paginate(15);
+            $data = $query->paginate(15)->appends($request->query());  // ← Conservar parámetros
         }
 
         // Calcular estadísticas
@@ -448,7 +465,7 @@ class ReporteController extends Controller
                     'id' => $item->id,
                     'created_at' => $item->created_at,
                     'producto_id' => $item->producto_id,
-                    'producto_nombre' => $item->producto_nombre,
+                    'producto_nombre' => optional($item->producto)->nombre ?? 'Producto #' . $item->producto_id,
                     'cantidad' => $item->cantidad,
                     'tipo' => $item->tipo,
                     'origen' => $item->origen,

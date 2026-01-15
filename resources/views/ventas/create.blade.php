@@ -215,10 +215,12 @@
                 <div class="modal-body pt-0">
                     <div class="row g-3 mb-3">
                         <div class="col-6">
-                            <input type="text" id="cliente" class="form-control form-control-sm alegra-input-rounded" placeholder="Cliente" />
+                            <input type="text" id="cliente" class="form-control form-control-sm alegra-input-rounded" placeholder="Cliente" maxlength="25" oninput="validarCaracteres(this, 25, 'contador-cliente')" />
+                            <small class="text-muted" id="contador-cliente" style="font-size: 11px; display: none;"></small>
                         </div>
                         <div class="col-6">
-                            <input type="text" id="cliente_nit" class="form-control form-control-sm alegra-input-rounded" placeholder="NIT / Documento" />
+                            <input type="text" id="cliente_nit" class="form-control form-control-sm alegra-input-rounded" placeholder="NIT / Documento" maxlength="25" oninput="validarCaracteres(this, 25, 'contador-nit')" />
+                            <small class="text-muted" id="contador-nit" style="font-size: 11px; display: none;"></small>
                         </div>
                     </div>
 
@@ -325,17 +327,102 @@
 </div>
 
 <script>
+// ========== VALIDACIÓN DE ELEMENTOS DOM AL INICIAR ==========
+function validarElementosDOM() {
+    const elementos = {
+        'buscar-producto': 'input de búsqueda',
+        'tabla-productos': 'tabla de productos',
+        'carrito-contenido': 'contenido del carrito',
+        'total': 'elemento total',
+        'btn-finalizar': 'botón finalizar',
+        'mensaje': 'contenedor de mensajes',
+        'modalPago': 'modal de pago',
+        'cliente': 'input cliente',
+        'cliente_nit': 'input NIT',
+        'forma_pago': 'input forma de pago'
+    };
+
+    for (const [id, descripcion] of Object.entries(elementos)) {
+        if (!document.getElementById(id)) {
+            console.error(`❌ Error crítico: Elemento "${descripcion}" (id="${id}") no encontrado en el DOM`);
+            return false;
+        }
+    }
+    return true;
+}
+
+// Validar CSRF token
+function validarCSRFToken() {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken || !csrfToken.content) {
+        console.error('❌ Error crítico: Meta tag csrf-token no encontrado o sin contenido');
+        return null;
+    }
+    return csrfToken.content;
+}
+
+// ========== INICIALIZACIÓN CON VALIDACIONES ==========
 let carrito = [];
 let productoSeleccionado = null;
 let todosProductos = [];
 let busquedaTimeout = null;
+let ventaEnProceso = false; // Flag para prevenir race condition
+let csrfTokenGlobal = null; // Almacenar token de forma segura
 
+// Obtener elementos DOM de forma segura
 const inputBuscar = document.getElementById('buscar-producto');
 const tablaProductos = document.getElementById('tabla-productos');
 const carritoDiv = document.getElementById('carrito-contenido');
 const totalSpan = document.getElementById('total');
 const btnFinalizar = document.getElementById('btn-finalizar');
 const mensajeDiv = document.getElementById('mensaje');
+
+// Validar caracteres en tiempo real
+function validarCaracteres(input, limite, contadorId) {
+    const contador = document.getElementById(contadorId);
+    const actual = input.value.length;
+    
+    if (contador) {
+        // Si el input está vacío, nunca mostrar el mensaje
+        if (actual === 0) {
+            contador.style.display = 'none';
+            input.classList.remove('border-danger');
+            return;
+        }
+        
+        // Si llegó al 90% del límite, mostrar advertencia
+        if (actual >= limite * 0.9) {
+            if (actual >= limite) {
+                contador.textContent = '⚠️ Límite de caracteres alcanzado';
+                contador.style.color = '#dc2626'; // Rojo
+            } else {
+                contador.textContent = `⚠️ Casi al límite (${actual}/${limite})`;
+                contador.style.color = '#f59e0b'; // Naranja
+            }
+            contador.style.display = 'block'; // Mostrar
+            input.classList.add('border-danger');
+        } else {
+            // Ocultar si está dentro del límite
+            contador.style.display = 'none';
+            input.classList.remove('border-danger');
+        }
+    }
+}
+
+// Limpiar mensajes de validación de caracteres
+function limpiarMensajesCaracteres() {
+    const contador_cliente = document.getElementById('contador-cliente');
+    const contador_nit = document.getElementById('contador-nit');
+    
+    if (contador_cliente) contador_cliente.style.display = 'none';
+    if (contador_nit) contador_nit.style.display = 'none';
+    
+    const cliente = document.getElementById('cliente');
+    const cliente_nit = document.getElementById('cliente_nit');
+    
+    if (cliente) cliente.classList.remove('border-danger');
+    if (cliente_nit) cliente_nit.classList.remove('border-danger');
+}
 
 // Escapar HTML
 function escapeHtml(text) {
@@ -513,10 +600,19 @@ function actualizarCarrito() {
 function cambiarCantidad(index, nuevaCantidad) {
     nuevaCantidad = parseInt(nuevaCantidad);
     
-    if (nuevaCantidad < 1) {
+    // VALIDACIÓN 1: Verificar que el índice exista en el carrito
+    if (index < 0 || index >= carrito.length) {
+        console.warn(`⚠️ Intento de acceso a índice inválido: ${index}. Carrito actual: ${carrito.length} items`);
+        mostrarAlertaCarrito('Error al modificar cantidad. Por favor, intenta de nuevo.');
+        return;
+    }
+    
+    // VALIDACIÓN 2: Verificar que la cantidad sea válida
+    if (isNaN(nuevaCantidad) || nuevaCantidad < 1) {
         return; // Bloquear si intenta ir por debajo de 1
     }
 
+    // VALIDACIÓN 3: Verificar stock disponible
     if (nuevaCantidad > carrito[index].stock) {
         mostrarAlertaCarrito(`${carrito[index].nombre}  No tiene más stock disponible`);
         return;
@@ -568,9 +664,40 @@ function confirmarVenta() {
 
 // Finalizar venta
 async function finalizarVenta() {
+    // ========== VALIDACIÓN 1: PREVENIR RACE CONDITION ==========
+    if (ventaEnProceso) {
+        console.warn('⚠️ Una venta ya está siendo procesada. Ignora este clic.');
+        mostrarAlertaCarrito('La venta ya está siendo procesada. Por favor, espera...');
+        return;
+    }
+
+    // ========== VALIDACIÓN 2: VERIFICAR CSRF TOKEN ==========
+    if (!csrfTokenGlobal) {
+        console.error('❌ Error: CSRF token no disponible');
+        mostrarMensaje('Error de seguridad. Por favor, recarga la página.', 'error');
+        return;
+    }
+
     const cliente = document.getElementById('cliente').value.trim() || null;
     const cliente_nit = document.getElementById('cliente_nit').value.trim() || null;
     const forma_pago = document.getElementById('forma_pago').value;
+
+    // ========== VALIDACIÓN 4: VALIDAR LONGITUD DE CARACTERES ==========
+    if (cliente && cliente.length > 25) {
+        mostrarMensaje('El nombre del cliente no puede exceder 25 caracteres', 'error');
+        return;
+    }
+    
+    if (cliente_nit && cliente_nit.length > 25) {
+        mostrarMensaje('El NIT/Documento no puede exceder 25 caracteres', 'error');
+        return;
+    }
+
+    // ========== VALIDACIÓN 3: VALIDAR CARRITO NO ESTÉ VACÍO ==========
+    if (!carrito || carrito.length === 0) {
+        mostrarMensaje('El carrito está vacío', 'error');
+        return;
+    }
 
     const data = {
         cliente: cliente,
@@ -584,8 +711,12 @@ async function finalizarVenta() {
         }))
     };
 
-    // Desactivar botón
-    document.getElementById('btn-confirmar-pago').disabled = true;
+    // ========== MARCAR VENTA COMO EN PROCESO ==========
+    ventaEnProceso = true;
+    const btnConfirmar = document.getElementById('btn-confirmar-pago');
+    if (btnConfirmar) {
+        btnConfirmar.disabled = true;
+    }
 
     // Timeout para mostrar loading (solo si tarda más de 300ms)
     let loadingTimeout = setTimeout(() => {
@@ -596,22 +727,32 @@ async function finalizarVenta() {
         const res = await fetch('/ventas', {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-CSRF-TOKEN': csrfTokenGlobal,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
             body: JSON.stringify(data)
         });
 
-        const result = await res.json();
-
         // Cancelar timeout si aún no se mostró el loading
         clearTimeout(loadingTimeout);
+
+        // ========== MANEJO DE RESPUESTA CON VALIDACIÓN ==========
+        let result;
+        try {
+            result = await res.json();
+        } catch (e) {
+            console.error('Error al parsear respuesta JSON:', e);
+            throw new Error('Respuesta inválida del servidor');
+        }
 
         if (!res.ok) throw result;
 
         // Mostrar pantalla de éxito
-        document.getElementById('resultado-total').textContent = formatoPrecio(result.total);
+        const resultadoTotal = document.getElementById('resultado-total');
+        if (resultadoTotal) {
+            resultadoTotal.textContent = formatoPrecio(result.total);
+        }
         
         // Guardar ID de venta para ver factura
         window.ultimaVentaId = result.venta_id;
@@ -622,13 +763,22 @@ async function finalizarVenta() {
         // Cancelar timeout
         clearTimeout(loadingTimeout);
         
-        // Mostrar pantalla de error (sin detalles técnicos en pre-producción)
         console.error('Error en venta:', error);
-        document.getElementById('resultado-error').textContent = 'No se pudo procesar la venta. Por favor, intenta de nuevo.';
+        const resultadoError = document.getElementById('resultado-error');
+        if (resultadoError) {
+            resultadoError.textContent = 'No se pudo procesar la venta. Por favor, intenta de nuevo.';
+        }
         modalEstado('error');
         
     } finally {
-        document.getElementById('btn-confirmar-pago').disabled = false;
+        // ========== LIMPIAR FLAG Y BOTONES ==========
+        ventaEnProceso = false;
+        if (btnConfirmar) {
+            btnConfirmar.disabled = false;
+        }
+        
+        // Limpiar mensajes de caracteres
+        limpiarMensajesCaracteres();
     }
 }
 
@@ -719,15 +869,36 @@ function mostrarAlertaCarrito(texto) {
 
 // Limpiar carrito cuando se cierra el modal
 document.getElementById('modalPago').addEventListener('hidden.bs.modal', function() {
+    // ⚠️ IMPORTANTE: NO limpiamos el carrito aquí
+    // Solo volvemos al estado de formulario
+    // El carrito solo se limpia si la venta fue exitosa (en nuevaVenta())
     modalEstado('formulario');
-    limpiarVenta();
+    // Recargar productos para actualizar stock
     cargarProductos();
 });
 
-// Inicializar
+// ========== INICIALIZACIÓN CON VALIDACIONES DE SEGURIDAD ==========
 document.addEventListener('DOMContentLoaded', function() {
+    // PASO 1: Validar todos los elementos del DOM
+    if (!validarElementosDOM()) {
+        console.error('❌ Inicialización fallida: Faltan elementos esenciales en el HTML');
+        mostrarMensaje('Error en la inicialización de la página. Por favor, recarga.', 'error');
+        return;
+    }
+
+    // PASO 2: Validar y guardar CSRF token
+    csrfTokenGlobal = validarCSRFToken();
+    if (!csrfTokenGlobal) {
+        console.error('❌ Inicialización fallida: No se pudo obtener el CSRF token');
+        mostrarMensaje('Error de seguridad. Por favor, recarga la página.', 'error');
+        return;
+    }
+
+    // PASO 3: Inicializar funcionalidad normal
     cargarProductos();
     seleccionarPago('efectivo');
+
+    console.log('✅ Inicialización completada exitosamente');
 });
 </script>
 

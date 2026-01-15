@@ -49,19 +49,18 @@
         <div id="noCoincidencias" style="display:none; padding: 40px; text-align: center; color: #ef4444; font-weight: 500;">
           No se encontraron ventas para esta búsqueda.
         </div>
+
+        <div id="ventasError" style="display:none; padding: 16px 24px; color: #ef4444; font-weight: 500;">
+        </div>
         
         <div class="table-responsive" data-registros-pagina="{{ $registrosPorPagina ?? 10 }}">
           <table id="tablaVentas">
             <thead>
               <tr>
-                <th>ID</th>
                 <th>Número Factura</th>
                 <th>Fecha</th>
                 <th>Cliente</th>
                 <th>Total</th>
-                @if($empresa && $empresa->cobra_iva)
-                <th>IVA / Impuestos</th>
-                @endif
                 <th>Forma de Pago</th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -70,16 +69,30 @@
             <tbody>
               @foreach($ventas as $venta)
               <tr data-venta-id="{{ $venta->id }}">
-                <td>{{ $venta->id }}</td>
-                <td><span class="invoice-number">{{ optional($venta->factura)->numero ?? '-' }}</span></td>
-                <td>{{ optional($venta->fecha)->format('Y-m-d H:i') ?? '-' }}</td>
-                <td><span class="client-name">{{ optional($venta->factura)->cliente_nombre ?? 'Consumidor final' }}</span></td>
-                <td><span class="amount">${{ number_format($venta->total ?? 0, 0, ',', '.') }}</span></td>
-                @if($empresa && $empresa->cobra_iva)
-                <td>${{ number_format(optional($venta->factura)->impuestos ?? 0, 0, ',', '.') }}</td>
-                @endif
                 <td>
-                  <span class="payment-method">
+                  <span class="invoice-number">
+                    {{ optional($venta->factura)->numero ?? '-' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="truncate truncate-medium"
+                        data-bs-toggle="tooltip"
+                        data-bs-title="{{ optional($venta->fecha)->format('Y-m-d H:i') ?? '-' }}">
+                    {{ optional($venta->fecha)->format('Y-m-d H:i') ?? '-' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="client-name truncate truncate-long"
+                        data-bs-toggle="tooltip"
+                        data-bs-title="{{ optional($venta->factura)->cliente_nombre ?? 'Consumidor final' }}">
+                    {{ optional($venta->factura)->cliente_nombre ?? 'Consumidor final' }}
+                  </span>
+                </td>
+                <td><span class="amount">${{ number_format($venta->total ?? 0, 0, ',', '.') }}</span></td>
+                <td>
+                  <span class="payment-method truncate truncate-short"
+                        data-bs-toggle="tooltip"
+                        data-bs-title="{{ optional($venta->factura)->forma_pago ?? '-' }}">
                     @php
                       $formaPago = optional($venta->factura)->forma_pago ?? '-';
                       $icono = '';
@@ -129,7 +142,7 @@
                       </button>
                     @else
                       @if($venta->estado !== 'anulada')
-                        <button class="btn-action btn-disabled btn-tooltip" disabled data-tooltip="Solo se puede anular el mismo día">
+                        <button class="btn-action btn-disabled " data-bs-toggle="tooltip" data-bs-title="Solo se puede anular el mismo día">
                           <i class="lni lni-close"></i> Anular
                         </button>
                       @endif
@@ -415,6 +428,39 @@ tbody tr:hover {
   background: #f3f4f6;
 }
 
+/* ========== TRUNCADO DE TEXTO ========== */
+.truncate {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.truncate-long {
+  max-width: 180px;
+}
+
+.truncate-medium {
+  max-width: 120px;
+}
+
+.truncate-short {
+  max-width: 80px;
+}
+
+/* Tooltip Bootstrap */
+.bs-tooltip-auto[data-popper-placement^="top"] > .tooltip-arrow,
+.bs-tooltip-top > .tooltip-arrow {
+  bottom: calc(-1 * var(--bs-tooltip-arrow-height));
+}
+
+.tooltip-inner {
+  max-width: 300px;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
 /* Custom Tooltip */
 .btn-tooltip {
   position: relative;
@@ -698,7 +744,7 @@ tbody tr:hover {
 document.addEventListener('DOMContentLoaded', function() {
   const tabla = document.getElementById('tablaVentas');
   if (!tabla) return;
-  
+
   const buscador = document.getElementById('buscadorVentas');
   const fechaInicio = document.getElementById('fechaInicio');
   const fechaFin = document.getElementById('fechaFin');
@@ -710,131 +756,112 @@ document.addEventListener('DOMContentLoaded', function() {
   const messageBox = document.getElementById('anularMessage');
   const modalInvoiceNumber = document.getElementById('modalInvoiceNumber');
   const cancelReason = document.getElementById('cancelReason');
-  
+  const ventasError = document.getElementById('ventasError');
+
   let currentUrl = null;
   let currentRow = null;
-  let paginaActual = 1;
-  // Soluciona problema #7: Leer registrosPorPagina desde atributo del servidor
+  let currentPage = 1;
+  let currentFetchController = null;
+  let currentFetchId = 0;
   const registrosPorPagina = parseInt(document.querySelector('.table-responsive').getAttribute('data-registros-pagina')) || 10;
-  
-  // Guardar texto original de cada celda
-  const filas = Array.from(tabla.querySelectorAll('tbody tr'));
-  filas.forEach(tr => {
-    Array.from(tr.children).forEach(td => {
-      td.setAttribute('data-original', td.textContent.trim());
-    });
-  });
-  
-  // Función para limpiar resaltado
-  function limpiarResaltado(tr) {
-    Array.from(tr.children).forEach((td, idx) => {
-      if (td.hasAttribute('data-original') && idx !== tr.children.length - 1) {
-        td.innerHTML = td.getAttribute('data-original');
+  const empresaCobraIva = {{ $empresa && $empresa->cobra_iva ? 'true' : 'false' }};
+
+  const paginationPrevBtn = document.querySelector('.pagination button:first-child');
+  const paginationNextBtn = document.querySelector('.pagination button:last-child');
+  const pageInfo = document.querySelector('.page-info');
+  const tbody = tabla.querySelector('tbody');
+
+  let debounceTimer = null;
+  const DEBOUNCE_MS = 400; // 300-500ms sugerido
+
+  // Escape regex safe
+  function escapeRegex(text) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function formatCurrency(n) {
+    try {
+      return '$' + new Intl.NumberFormat('es-CL').format(n || 0);
+    } catch (e) {
+      return '$' + (n || 0);
+    }
+  }
+
+  function highlightText(text, term) {
+    if (!term) return text;
+    const safe = escapeRegex(term).slice(0, 50);
+    if (!safe) return text;
+    const re = new RegExp('(' + safe + ')', 'gi');
+    return text.replace(re, '<mark class="highlight">$1</mark>');
+  }
+
+  function showVentasError(message) {
+    if (!ventasError) return;
+    ventasError.textContent = message;
+    ventasError.style.display = '';
+  }
+
+  function hideVentasError() {
+    if (!ventasError) return;
+    ventasError.textContent = '';
+    ventasError.style.display = 'none';
+  }
+
+  function handleSessionExpired() {
+    showVentasError('Tu sesión ha expirado');
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  }
+
+  // ========== TOOLTIP TRUNCADO ==========
+  function initializeTooltipsInRow(element) {
+    if (!element) return;
+
+    const tooltipElements = element.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipElements.forEach(el => {
+      if (el._bsTooltip) return;
+      if (el.classList.contains('truncate')) {
+        if (el.scrollWidth <= el.clientWidth) return;
       }
-    });
-  }
-  
-  // Función para resaltar coincidencias - Soluciona problema #6: Mejorar regex con límite
-  function resaltarCoincidencia(texto, filtro) {
-    if (!filtro) return texto;
-    // Escapar caracteres especiales de regex para evitar inyección
-    const regexSafeFilter = filtro.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // Limitar el tamaño del filtro a 50 caracteres para evitar ReDoS
-    if (regexSafeFilter.length > 50) return texto;
-    const regex = new RegExp('(' + regexSafeFilter + ')', 'gi');
-    return texto.replace(regex, '<mark class="highlight">$1</mark>');
-  }
-  
-  // Función para actualizar paginación
-  function actualizarPaginacion() {
-    const filasVisibles = filas.filter(tr => tr.getAttribute('data-filtered') !== 'false');
-    const totalPaginas = Math.ceil(filasVisibles.length / registrosPorPagina);
-    const inicio = (paginaActual - 1) * registrosPorPagina;
-    const fin = inicio + registrosPorPagina;
-    
-    // Mostrar/ocultar filas según página
-    filasVisibles.forEach((tr, idx) => {
-      tr.style.display = (idx >= inicio && idx < fin) ? '' : 'none';
-    });
-    
-    // Actualizar info de página
-    const pageInfo = document.querySelector('.page-info');
-    pageInfo.textContent = `Página ${paginaActual} de ${totalPaginas || 1}`;
-    
-    // Actualizar estado de botones
-    const paginationBtns = document.querySelectorAll('.pagination button');
-    paginationBtns[0].disabled = paginaActual === 1;
-    paginationBtns[1].disabled = paginaActual === totalPaginas || totalPaginas === 0;
-  }
-  
-  // Función de filtrado
-  function filtrarTabla() {
-    const filtro = buscador.value.trim().toLowerCase();
-    const fInicio = fechaInicio.value;
-    const fFin = fechaFin.value;
-    let visibles = 0;
-    
-    filas.forEach(tr => {
-      limpiarResaltado(tr);
-      let mostrar = true;
-      
-      // Filtrar por texto
-      if (filtro) {
-        mostrar = false;
-        Array.from(tr.children).forEach((td, idx) => {
-          if (idx === tr.children.length - 1) return;
-          const texto = td.getAttribute('data-original') || '';
-          if (texto.toLowerCase().includes(filtro)) {
-            mostrar = true;
-          }
+      try {
+        new bootstrap.Tooltip(el, {
+          placement: 'top',
+          trigger: 'hover focus',
+          boundary: 'viewport'
         });
+      } catch (e) {
+        // Bootstrap no disponible
       }
-      
-      // Filtrar por fecha
-      if (mostrar && (fInicio || fFin)) {
-        const fechaTexto = tr.children[2].getAttribute('data-original') || '';
-        const fechaVenta = fechaTexto.split(' ')[0];
-        if (fInicio && fechaVenta < fInicio) mostrar = false;
-        if (fFin && fechaVenta > fFin) mostrar = false;
-      }
-      
-      // Marcar como filtrado o no
-      tr.setAttribute('data-filtered', mostrar ? 'true' : 'false');
-      
-      // Resaltar coincidencias
-      if (mostrar && filtro) {
-        Array.from(tr.children).forEach((td, idx) => {
-          if (idx === tr.children.length - 1) return;
-          const texto = td.getAttribute('data-original') || '';
-          if (texto.toLowerCase().includes(filtro)) {
-            td.innerHTML = resaltarCoincidencia(texto, filtro);
-          }
-        });
-      }
-      
-      if (mostrar) visibles++;
     });
-    
-    noCoincidencias.style.display = visibles === 0 ? '' : 'none';
-    document.querySelector('.table-responsive').style.display = visibles === 0 ? 'none' : '';
-    document.querySelector('.pagination').style.display = visibles === 0 ? 'none' : '';
-    paginaActual = 1;
-    actualizarPaginacion();
   }
-  
-  // Event listeners para filtros
-  buscador.addEventListener('input', filtrarTabla);
-  fechaInicio.addEventListener('change', filtrarTabla);
-  fechaFin.addEventListener('change', filtrarTabla);
-  
-  // Funciones del modal
+
+  function initializeAllTooltips() {
+    const tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipElements.forEach(el => {
+      if (el._bsTooltip) return;
+      if (el.classList.contains('truncate')) {
+        if (el.scrollWidth <= el.clientWidth) return;
+      }
+      try {
+        new bootstrap.Tooltip(el, {
+          placement: 'top',
+          trigger: 'hover focus',
+          boundary: 'viewport'
+        });
+      } catch (e) {
+        // Bootstrap no disponible
+      }
+    });
+  }
+
+  // Abrir / cerrar modal
   function openModal(url, row, invoice) {
     currentUrl = url;
     currentRow = row;
     modalInvoiceNumber.textContent = 'Factura: ' + invoice;
     modal.classList.add('active');
   }
-  
   function closeModal() {
     modal.classList.remove('active');
     form.reset();
@@ -843,30 +870,13 @@ document.addEventListener('DOMContentLoaded', function() {
     currentUrl = null;
     currentRow = null;
   }
-  
-  // Event listeners del modal
+
   cancelBtn.addEventListener('click', closeModal);
-  
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      closeModal();
-    }
-  });
-  
-  // Attach click handlers a botones de anular
-  document.querySelectorAll('.btn-anular').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const url = btn.dataset.url || btn.getAttribute('data-url');
-      const invoice = btn.dataset.invoice || btn.getAttribute('data-invoice');
-      const row = btn.closest('tr');
-      openModal(url, row, invoice);
-    });
-  });
-  
-  // Submit del formulario de anulación
+  modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+  // Enviar anulación (igual que antes)
   confirmBtn.addEventListener('click', async function(e) {
     e.preventDefault();
-    
     if (!cancelReason.value.trim()) {
       messageBox.style.display = 'block';
       messageBox.style.background = '#fee2e2';
@@ -874,17 +884,16 @@ document.addEventListener('DOMContentLoaded', function() {
       messageBox.textContent = 'El motivo es obligatorio';
       return;
     }
-    
     if (!currentUrl) return;
-    
+
     confirmBtn.disabled = true;
     const originalText = confirmBtn.innerHTML;
     confirmBtn.innerHTML = '<i class="lni lni-spinner" style="animation: spin 1s linear infinite;"></i> Procesando...';
     messageBox.style.display = 'none';
     messageBox.textContent = '';
-    
+
     const fd = new FormData(form);
-    
+
     try {
       const res = await fetch(currentUrl, {
         method: 'POST',
@@ -893,35 +902,31 @@ document.addEventListener('DOMContentLoaded', function() {
           'X-Requested-With': 'XMLHttpRequest'
         }
       });
-      
-      const json = await res.json();
-      
+
+      if (res.status === 419) {
+        messageBox.style.display = 'block';
+        messageBox.style.background = '#fee2e2';
+        messageBox.style.color = '#991b1b';
+        messageBox.textContent = 'Tu sesión ha expirado';
+        setTimeout(() => window.location.reload(), 500);
+        return;
+      }
+
+      let json = null;
+      try {
+        json = await res.json();
+      } catch (e) {
+        throw new Error('JSON inválido');
+      }
+
       if (res.ok && json.success) {
-        // Actualizar fila en la tabla
-        if (currentRow) {
-          const celdas = currentRow.querySelectorAll('td');
-          // Actualizar estado
-          const estadoCell = celdas[celdas.length - 2];
-          if (estadoCell) {
-            estadoCell.innerHTML = '<span class="status-badge status-cancelled">Anulada</span>';
-          }
-          // Actualizar acciones
-          const btnCell = celdas[celdas.length - 1];
-          if (btnCell) {
-            const printBtn = btnCell.querySelector('.btn-print');
-            btnCell.innerHTML = '';
-            if (printBtn) {
-              btnCell.appendChild(printBtn);
-            }
-          }
-        }
-        
+        // Refrescar página actual para reflejar cambios
+        fetchVentas();
         messageBox.style.display = 'block';
         messageBox.style.background = '#d1fae5';
         messageBox.style.color = '#065f46';
         messageBox.textContent = json.message || 'Venta anulada correctamente';
-        
-        setTimeout(closeModal, 1500);
+        setTimeout(closeModal, 1200);
       } else {
         messageBox.style.display = 'block';
         messageBox.style.background = '#fee2e2';
@@ -938,31 +943,166 @@ document.addEventListener('DOMContentLoaded', function() {
       confirmBtn.innerHTML = originalText;
     }
   });
-  
-  // Botones de paginación
-  const paginationBtns = document.querySelectorAll('.pagination button');
-  paginationBtns[0].addEventListener('click', function() {
-    if (paginaActual > 1) {
-      paginaActual--;
-      actualizarPaginacion();
+
+  // Render filas desde respuesta JSON
+  function renderRows(items, searchTerm) {
+    tbody.innerHTML = '';
+    if (!items || !items.length) {
+      noCoincidencias.style.display = '';
+      document.querySelector('.table-responsive').style.display = 'none';
+      document.querySelector('.pagination').style.display = 'none';
+      return;
     }
-  });
-  
-  paginationBtns[1].addEventListener('click', function() {
-    const filasVisibles = filas.filter(tr => tr.getAttribute('data-filtered') === 'true');
-    const totalPaginas = Math.ceil(filasVisibles.length / registrosPorPagina);
-    if (paginaActual < totalPaginas) {
-      paginaActual++;
-      actualizarPaginacion();
+
+    noCoincidencias.style.display = 'none';
+    document.querySelector('.table-responsive').style.display = '';
+    document.querySelector('.pagination').style.display = '';
+
+    items.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-venta-id', item.id);
+
+      const numeroFactura = item.numero_factura || ('FA-' + item.id);
+      const estado = (item.estado || '---').toLowerCase();
+      let estadoClass = 'status-completed';
+      let estadoTexto = 'Completada';
+      if (estado === 'anulada') { estadoClass = 'status-cancelled'; estadoTexto = 'Anulada'; }
+      else if (estado === 'pendiente') { estadoClass = 'status-pending'; estadoTexto = 'Pendiente'; }
+      else if (estado === 'completada') { estadoClass = 'status-completed'; estadoTexto = 'Completada'; }
+      else { estadoTexto = estado.charAt(0).toUpperCase() + estado.slice(1); }
+
+      const cols = [];
+      cols.push('<td><span class="invoice-number">' + highlightText(numeroFactura, searchTerm) + '</span></td>');
+      cols.push('<td><span class="truncate truncate-medium" data-bs-toggle="tooltip" data-bs-title="' + (item.fecha || '-') + '">' + (item.fecha || '-') + '</span></td>');
+      cols.push('<td><span class="client-name truncate truncate-long" data-bs-toggle="tooltip" data-bs-title="' + (item.cliente || 'Consumidor final') + '">' + highlightText(item.cliente || 'Consumidor final', searchTerm) + '</span></td>');
+      cols.push('<td><span class="amount">' + formatCurrency(item.total) + '</span></td>');
+
+      cols.push('<td><span class="payment-method truncate truncate-short" data-bs-toggle="tooltip" data-bs-title="' + (item.forma_pago || '-') + '">' + (item.forma_pago || '-') + '</span></td>');
+      cols.push('<td><span class="status-badge ' + estadoClass + '">' + estadoTexto + '</span></td>');
+
+      // Acciones
+      let acciones = '<div class="action-buttons">';
+      acciones += '<a href="/ventas/' + item.id + '/factura" target="_blank" class="btn-action btn-print"><i class="mdi mdi-file-document-outline"></i> Factura</a>';
+      if (item.puede_anular) {
+        acciones += '<button class="btn-action btn-cancel btn-anular" data-url="/ventas/' + item.id + '/devolucion" data-invoice="' + numeroFactura + '"><i class="lni lni-close"></i> Anular</button>';
+      } else {
+        if (estado !== 'anulada') {
+          acciones += '<button class="btn-action btn-disabled " disabled data-bs-toggle="tooltip" data-bs-title="Solo se puede anular el mismo día"><i class="lni lni-close"></i> Anular</button>';
+        }
+      }
+      acciones += '</div>';
+
+      cols.push('<td>' + acciones + '</td>');
+
+      tr.innerHTML = cols.join('');
+      tbody.appendChild(tr);
+
+      initializeTooltipsInRow(tr);
+    });
+
+    // Re-attach anular listeners
+    attachAnularHandlers();
+  }
+
+  function attachAnularHandlers() {
+    document.querySelectorAll('.btn-anular').forEach(btn => {
+      btn.removeEventListener('click', btn._anularHandler);
+      const handler = function() {
+        const url = btn.dataset.url || btn.getAttribute('data-url');
+        const invoice = btn.dataset.invoice || btn.getAttribute('data-invoice');
+        const row = btn.closest('tr');
+        openModal(url, row, invoice);
+      };
+      btn.addEventListener('click', handler);
+      btn._anularHandler = handler;
+    });
+  }
+
+  function updatePaginationFromResponse(resp) {
+    const current = resp.current_page || resp.currentPage || 1;
+    const last = resp.last_page || resp.lastPage || resp.last_page || 1;
+    currentPage = current;
+    pageInfo.textContent = `Página ${current} de ${last || 1}`;
+    paginationPrevBtn.disabled = current <= 1;
+    paginationNextBtn.disabled = current >= last;
+  }
+
+  async function fetchVentas() {
+    const params = new URLSearchParams();
+    params.set('page', currentPage);
+    params.set('per_page', registrosPorPagina);
+    const s = (buscador.value || '').trim();
+    if (s) params.set('search', s);
+    if (fechaInicio.value) params.set('date_from', fechaInicio.value);
+    if (fechaFin.value) params.set('date_to', fechaFin.value);
+
+    const requestId = ++currentFetchId;
+    if (currentFetchController) {
+      currentFetchController.abort();
     }
+    currentFetchController = new AbortController();
+
+    try {
+      const res = await fetch(window.location.pathname + '?' + params.toString(), {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        signal: currentFetchController.signal
+      });
+      if (requestId !== currentFetchId) return;
+
+      if (res.status === 419) {
+        handleSessionExpired();
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error('HTTP ' + res.status);
+      }
+
+      let json = null;
+      try {
+        json = await res.json();
+      } catch (e) {
+        throw new Error('JSON inválido');
+      }
+
+      if (requestId !== currentFetchId) return;
+
+      hideVentasError();
+      const items = json.data || json.data || json; // handle different shapes
+      // Laravel paginator returns an object with 'data' array
+      const dataArray = json.data || json.data || (Array.isArray(json) ? json : (json.data || []));
+      renderRows(dataArray, s);
+      updatePaginationFromResponse(json);
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+      showVentasError('Error al cargar ventas. Intenta de nuevo.');
+    }
+  }
+
+  // Debounced search + reset page
+  buscador.addEventListener('input', function() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function() {
+      currentPage = 1;
+      fetchVentas();
+    }, DEBOUNCE_MS);
   });
-  
-  // Inicializar todas las filas como filtradas
-  filas.forEach(tr => {
-    tr.setAttribute('data-filtered', 'true');
+
+  fechaInicio.addEventListener('change', function() { currentPage = 1; fetchVentas(); });
+  fechaFin.addEventListener('change', function() { currentPage = 1; fetchVentas(); });
+
+  paginationPrevBtn.addEventListener('click', function() {
+    if (currentPage > 1) { currentPage--; fetchVentas(); }
   });
-  
-  // Inicializar paginación
-  actualizarPaginacion();
+  paginationNextBtn.addEventListener('click', function() {
+    currentPage++; fetchVentas();
+  });
+
+  // Inicializar: cargar datos server-side (mantiene compatibilidad con render inicial)
+  initializeAllTooltips();
+  fetchVentas();
 });
 </script>@endsection

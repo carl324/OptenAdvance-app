@@ -242,12 +242,91 @@ class VentaController extends Controller
     }
 
     // Listado de ventas - Soluciona N+1 queries (#1) + Paginación en BD (#2)
-    public function index()
+    public function index(Request $request)
     {
         $registrosPorPagina = 10;
-        $ventas = Venta::with('factura', 'detalles.producto')
-            ->orderByDesc('fecha')
-            ->get();
+        $perPage = $request->input('per_page', $registrosPorPagina);
+        if (!is_numeric($perPage)) {
+            $perPage = $registrosPorPagina;
+        }
+        $perPage = (int) $perPage;
+        if ($perPage < 1 || $perPage > 100) {
+            $perPage = $registrosPorPagina;
+        }
+
+        $query = Venta::with('factura', 'detalles.producto')
+            ->orderByDesc('fecha');
+
+        // Filtro: texto (multi-columna)
+        if ($search = trim($request->input('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $like = '%' . strtolower($search) . '%';
+
+                // Buscar en columnas propias
+                $q->whereRaw('LOWER(CAST(total AS CHAR)) LIKE ?', [$like])
+                  ->orWhereRaw('LOWER(estado) LIKE ?', [$like]);
+
+                // Buscar en relación factura (numero, cliente, documento)
+                $q->orWhereHas('factura', function ($q2) use ($search, $like) {
+                    $q2->whereRaw('LOWER(numero) LIKE ?', [$like])
+                       ->orWhereRaw('LOWER(cliente_nombre) LIKE ?', [$like])
+                       ->orWhereRaw('LOWER(cliente_nit) LIKE ?', [$like]);
+                });
+            });
+        }
+
+        // Filtro: estado (param name: status)
+        if ($status = $request->input('status')) {
+            $query->where('estado', $status);
+        }
+
+        // Filtro: rango de fechas sobre created_at
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        if ($dateFrom || $dateTo) {
+            try {
+                if ($dateFrom && $dateTo) {
+                    $start = Carbon::parse($dateFrom)->startOfDay();
+                    $end = Carbon::parse($dateTo)->endOfDay();
+                    $query->whereBetween('created_at', [$start, $end]);
+                } elseif ($dateFrom) {
+                    $start = Carbon::parse($dateFrom)->startOfDay();
+                    $query->where('created_at', '>=', $start);
+                } elseif ($dateTo) {
+                    $end = Carbon::parse($dateTo)->endOfDay();
+                    $query->where('created_at', '<=', $end);
+                }
+            } catch (\Exception $e) {
+                // Ignorar formato inválido de fecha para no romper la vista
+                Log::warning('Fecha de filtro inválida en index ventas: ' . $e->getMessage());
+            }
+        }
+
+        // Ejecutar paginación luego de aplicar filtros
+        $ventas = $query->paginate($perPage)->appends($request->query());
+
+        // Si la request es AJAX o espera JSON, devolver JSON con data y meta
+        if ($request->ajax() || $request->wantsJson()) {
+            // Transformar colección para enviar solo campos necesarios y evitar serializar toda la entidad
+            $ventas->getCollection()->transform(function ($venta) {
+                return [
+                    'id' => $venta->id,
+                    'numero_factura' => optional($venta->factura)->numero ?? null,
+                    'fecha' => optional($venta->fecha)->format('Y-m-d H:i') ?? null,
+                    'cliente' => optional($venta->factura)->cliente_nombre ?? 'Consumidor final',
+                    'total' => $venta->total ?? 0,
+                    'impuestos' => optional($venta->factura)->impuestos ?? 0,
+                    'forma_pago' => optional($venta->factura)->forma_pago ?? '-',
+                    'estado' => $venta->estado ?? '---',
+                    'puede_anular' => (
+                        ($venta->estado === 'completada') &&
+                        ($venta->factura && optional($venta->factura)->fecha_emision && Carbon::parse($venta->factura->fecha_emision)->isSameDay(Carbon::now()))
+                    ),
+                ];
+            });
+
+            return response()->json($ventas);
+        }
 
         $empresa = Empresa::first();
         return view('ventas.index', compact('ventas', 'empresa', 'registrosPorPagina'));

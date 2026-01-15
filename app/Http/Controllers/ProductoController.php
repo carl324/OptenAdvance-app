@@ -12,11 +12,18 @@ use Carbon\Carbon;
 class ProductoController extends Controller
 {
     // Listar productos activos
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search', '');
+        
+        // Búsqueda server-side con when()
         $productos = Producto::activos()
+            ->when($search, function ($query, $search) {
+                return $query->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($search) . '%']);
+            })
             ->orderBy('id', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->appends($request->query());
 
         $empresa = \App\Models\Empresa::first();
 
@@ -34,6 +41,18 @@ class ProductoController extends Controller
             )
             ->orderBy('inventario_movimientos.created_at', 'desc')
             ->get();
+
+        // Si es solicitud AJAX, devolver JSON con HTML renderizado
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'html' => view('productos._table', compact('productos', 'empresa'))->render(),
+                'pagination' => view('productos._pagination', compact('productos', 'search'))->render(),
+                'currentPage' => $productos->currentPage(),
+                'lastPage' => $productos->lastPage(),
+                'total' => $productos->total()
+            ]);
+        }
 
         return view('productos.index', compact('productos', 'empresa', 'movimientos'));
     }

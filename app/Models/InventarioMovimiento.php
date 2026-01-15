@@ -20,6 +20,14 @@ class InventarioMovimiento extends Model
 
     public $timestamps = true;
 
+    /**
+     * Relación: Un movimiento pertenece a un producto
+     */
+    public function producto()
+    {
+        return $this->belongsTo(Producto::class, 'producto_id');
+    }
+
     public static function entrada($productoId, $cantidad, $origen, $referenciaId = null, $descripcion = null)
     {
         // Envolver en transacción para garantizar consistencia atómica:
