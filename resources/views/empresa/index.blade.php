@@ -130,7 +130,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Actualmente tienes productos que cobran IVA. Después de realizar este cambio, los productos que cobran IVA dejarán de cobrarlo.</p>
+                    <p>Este cambio afecta solo a facturas futuras.<br>Las facturas ya emitidas no se modifican.</p>
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-iva-cancelar">Cancelar</button>
@@ -304,7 +304,30 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(resp => resp.json())
+            .then(resp => {
+                if (resp.status === 419) {
+                    // Sesión expirada
+                    mostrarMensaje('Tu sesión ha expirado. Por favor recarga la página e inicia sesión de nuevo.', false);
+                    throw new Error('session_expired');
+                }
+                if (resp.status === 422) {
+                    return resp.json().then(errData => {
+                        // Mostrar primer error válido o el mensaje general
+                        var msg = errData.message || 'Error de validación';
+                        if (errData.errors) {
+                            for (var k in errData.errors) {
+                                if (errData.errors[k] && errData.errors[k].length) {
+                                    msg = errData.errors[k][0];
+                                    break;
+                                }
+                            }
+                        }
+                        mostrarMensaje(msg, false);
+                        throw new Error('validation_error');
+                    });
+                }
+                return resp.json();
+            })
             .then(data => {
                 if (data.success || data.message) {
                     mostrarMensaje('Cambios guardados', true);
@@ -312,7 +335,13 @@
                     mostrarMensaje('No se pudo guardar el cambio', false);
                 }
             })
-            .catch(() => mostrarMensaje('Error de red al guardar', false));
+            .catch((err) => {
+                if (err.message === 'session_expired' || err.message === 'validation_error') {
+                    // ya mostrado
+                    return;
+                }
+                mostrarMensaje('Error de red al guardar', false);
+            });
         }
 
         // Inputs texto/email

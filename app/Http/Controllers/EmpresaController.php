@@ -30,7 +30,7 @@ class EmpresaController extends Controller
             }
             $campos = [
                 'nombre' => 'string|max:255',
-                'nit' => 'string|max:100',
+                'nit' => 'required|string|min:5|max:100',
                 'direccion' => 'nullable|string|max:500',
                 'telefono' => 'nullable|string|max:50',
                 'email' => 'nullable|email|max:255',
@@ -43,14 +43,25 @@ class EmpresaController extends Controller
                     $data[$campo] = $request->input($campo);
                 }
             }
-            // Validar solo los campos presentes
-            $validator = \Validator::make($data, array_intersect_key($campos, $data));
+            // Validar solo los campos presentes; mensajes claros para NIT
+            $messages = [
+                'nit.required' => 'El NIT es obligatorio.',
+                'nit.string' => 'El NIT debe ser un valor de texto.',
+                'nit.min' => 'El NIT es demasiado corto.',
+                'nit.max' => 'El NIT es demasiado largo.',
+            ];
+            $rules = array_intersect_key($campos, $data);
+            $validator = \Validator::make($data, $rules, $messages);
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error de validación',
                     'errors' => $validator->errors()
                 ], 422);
+            }
+            // Asegurar que NIT sea tratado como string
+            if (array_key_exists('nit', $data)) {
+                $data['nit'] = (string) $data['nit'];
             }
             // Normalizar checkbox
             if (array_key_exists('cobra_iva', $data)) {
@@ -64,7 +75,7 @@ class EmpresaController extends Controller
         // Petición normal (no AJAX): validar todo
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
-            'nit' => 'required|string|max:100',
+            'nit' => 'required|string|min:5|max:100',
             'direccion' => 'nullable|string|max:500',
             'telefono' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',

@@ -209,27 +209,46 @@ let allStats = {
   ingresos: 0
 };
 
+let lastValidDates = { from: '', to: '' };
+let currentSearchTerm = '';
+let searchTimeout;
+let isDebouncingSearch = false;
+let isFetchingData = false;
+let lastPagination = null;
+
+let dataAbortController = null;
+let statsAbortController = null;
+let dataRequestSeq = 0;
+let statsRequestSeq = 0;
+
 document.addEventListener('DOMContentLoaded', function() {
   // Establecer fechas por defecto (últimos 30 días)
   const today = new Date();
   const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
 
-  document.getElementById('dateTo').value = today.toISOString().split('T')[0];
-  document.getElementById('dateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
+  const toValue = today.toISOString().split('T')[0];
+  const fromValue = thirtyDaysAgo.toISOString().split('T')[0];
+
+  document.getElementById('dateTo').value = toValue;
+  document.getElementById('dateFrom').value = fromValue;
+  lastValidDates = { from: fromValue, to: toValue };
 
   // Event listeners
-  document.getElementById('dateFrom').addEventListener('change', aplicarFechas);
-  document.getElementById('dateTo').addEventListener('change', aplicarFechas);
+  document.getElementById('dateFrom').addEventListener('change', () => onDateChange('from'));
+  document.getElementById('dateTo').addEventListener('change', () => onDateChange('to'));
   document.getElementById('reportType').addEventListener('change', cambiarTipo);
-  
+
   // Búsqueda con debounce de 300ms
   const searchInput = document.getElementById('searchInput');
-  let searchTimeout;
-  searchInput.addEventListener('input', function(e) {
+  searchInput.addEventListener('input', function() {
     clearTimeout(searchTimeout);
     const searchTerm = this.value.trim();
+    isDebouncingSearch = true;
+    renderPagination();
     searchTimeout = setTimeout(() => {
+      isDebouncingSearch = false;
       buscarEnTabla(searchTerm);
+      renderPagination();
     }, 300);
   });
 
@@ -237,7 +256,18 @@ document.addEventListener('DOMContentLoaded', function() {
   aplicarFechas();
 });
 
+function onDateChange(sourceField) {
+  const validation = validateAndNormalizeDates(true, sourceField);
+  if (!validation.valid) {
+    restoreDateInputs();
+    return;
+  }
+  lastValidDates = validation.normalized;
+  aplicarFechas();
+}
+
 function cambiarTipo() {
+  cancelSearchDebounce();
   currentType = document.getElementById('reportType').value;
   currentPage = 1;
   actualizarColumnasTabla();
@@ -249,9 +279,15 @@ function cambiarTipo() {
  * Carga estadísticas y tabla en paralelo
  */
 function aplicarFechas() {
+  const validation = validateAndNormalizeDates(true);
+  if (!validation.valid) {
+    restoreDateInputs();
+    return;
+  }
+  lastValidDates = validation.normalized;
   currentPage = 1; // Resetear a página 1 cuando cambian fechas
-  cargarEstadisticas();
-  cargarDatos();
+  cargarEstadisticas(validation.normalized);
+  cargarDatos(validation.normalized);
 }
 
 function actualizarColumnasTabla() {
@@ -278,30 +314,45 @@ function actualizarColumnasTabla() {
   }
 }
 
-async function cargarEstadisticas() {
-  const dateFrom = document.getElementById('dateFrom').value;
-  const dateTo = document.getElementById('dateTo').value;
+async function cargarEstadisticas(overrideDates = null) {
+  const dates = overrideDates || getValidatedDates(false);
+  if (!dates) {
+    return;
+  }
+
+  if (statsAbortController) {
+    statsAbortController.abort();
+  }
+  statsAbortController = new AbortController();
+  const requestId = ++statsRequestSeq;
 
   try {
     const params = new URLSearchParams({
-      fecha_inicio: dateFrom,
-      fecha_fin: dateTo
+      fecha_inicio: dates.from,
+      fecha_fin: dates.to
     });
 
     const response = await fetch(`/api/reportes/stats?${params}`, {
       headers: {
         'X-CSRF-TOKEN': csrf,
         'Accept': 'application/json'
-      }
+      },
+      signal: statsAbortController.signal
     });
 
     const data = await response.json();
+    if (requestId !== statsRequestSeq) {
+      return;
+    }
 
     if (data.success) {
       allStats = data.stats;
       actualizarValoresStats();
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      return;
+    }
     // Error silencioso - mantener valores anteriores
     console.log('No se pudieron cargar las estadísticas');
   }
@@ -314,9 +365,21 @@ function actualizarValoresStats() {
   document.getElementById('statIngresos').textContent = formatNumber(allStats.ingresos, 0);
 }
 
-async function cargarDatos() {
-  const dateFrom = document.getElementById('dateFrom').value;
-  const dateTo = document.getElementById('dateTo').value;
+async function cargarDatos(overrideDates = null) {
+  const dates = overrideDates || getValidatedDates(true);
+  if (!dates) {
+    restoreDateInputs();
+    return;
+  }
+
+  if (dataAbortController) {
+    dataAbortController.abort();
+  }
+  dataAbortController = new AbortController();
+  const requestId = ++dataRequestSeq;
+
+  isFetchingData = true;
+  renderPagination();
 
   // Mostrar loading
   document.getElementById('tableBody').innerHTML = `
@@ -331,19 +394,27 @@ async function cargarDatos() {
   try {
     const params = new URLSearchParams({
       tipo: currentType,
-      fecha_inicio: dateFrom,
-      fecha_fin: dateTo,
+      fecha_inicio: dates.from,
+      fecha_fin: dates.to,
       page: currentPage
     });
+
+    if (currentSearchTerm) {
+      params.append('search', currentSearchTerm);
+    }
 
     const response = await fetch(`/api/reportes?${params}`, {
       headers: {
         'X-CSRF-TOKEN': csrf,
         'Accept': 'application/json'
-      }
+      },
+      signal: dataAbortController.signal
     });
 
     const data = await response.json();
+    if (requestId !== dataRequestSeq) {
+      return;
+    }
 
     if (data.success) {
       allData = data.data;
@@ -353,9 +424,17 @@ async function cargarDatos() {
       mostrarError('No hay datos disponibles');
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      return;
+    }
     // Error silencioso - mantener UI consistente
     console.log('Error cargando datos');
     mostrarError('Error al cargar los datos');
+  } finally {
+    if (requestId === dataRequestSeq) {
+      isFetchingData = false;
+      renderPagination();
+    }
   }
 }
 
@@ -434,25 +513,39 @@ function actualizarTabla(data) {
 }
 
 function actualizarPaginacion(pagination) {
+  lastPagination = pagination;
+  renderPagination();
+}
+
+function renderPagination() {
+  if (!lastPagination) {
+    return;
+  }
   const infoDiv = document.getElementById('paginationInfo');
   const btnPrev = document.getElementById('btnPrevPage');
   const btnNext = document.getElementById('btnNextPage');
 
-  infoDiv.textContent = `Página ${pagination.current_page} de ${pagination.last_page}`;
+  infoDiv.textContent = `Página ${lastPagination.current_page} de ${lastPagination.last_page}`;
 
-  btnPrev.disabled = pagination.current_page <= 1;
-  btnNext.disabled = pagination.current_page >= pagination.last_page;
+  const basePrevDisabled = lastPagination.current_page <= 1;
+  const baseNextDisabled = lastPagination.current_page >= lastPagination.last_page;
+  const lock = isFetchingData || isDebouncingSearch;
+
+  btnPrev.disabled = basePrevDisabled || lock;
+  btnNext.disabled = baseNextDisabled || lock;
 
   btnPrev.onclick = function() {
-    if (pagination.current_page > 1) {
-      irAPagina(pagination.current_page - 1);
+    if (lock || lastPagination.current_page <= 1) {
+      return;
     }
+    irAPagina(lastPagination.current_page - 1);
   };
 
   btnNext.onclick = function() {
-    if (pagination.current_page < pagination.last_page) {
-      irAPagina(pagination.current_page + 1);
+    if (lock || lastPagination.current_page >= lastPagination.last_page) {
+      return;
     }
+    irAPagina(lastPagination.current_page + 1);
   };
 }
 
@@ -466,39 +559,10 @@ function irAPagina(page) {
  * Resetea a página 1 cuando busca
  */
 async function buscarEnTabla(searchTerm) {
-  try {
-    currentPage = 1;  // Resetear a página 1
-    const dateFrom = document.getElementById('dateFrom').value;
-    const dateTo = document.getElementById('dateTo').value;
-
-    const params = new URLSearchParams({
-      tipo: currentType,
-      fecha_inicio: dateFrom,
-      fecha_fin: dateTo,
-      page: currentPage,
-      search: searchTerm  // ← Búsqueda server-side
-    });
-
-    const response = await fetch(`/api/reportes?${params}`, {
-      headers: {
-        'X-CSRF-TOKEN': csrf,
-        'Accept': 'application/json'
-      }
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      allData = data.data;
-      actualizarTabla(data.data);
-      actualizarPaginacion(data.pagination);
-    } else {
-      mostrarError('No hay datos disponibles');
-    }
-  } catch (error) {
-    console.log('Error en búsqueda:', error);
-    mostrarError('Error al buscar los datos');
-  }
+  currentSearchTerm = searchTerm;
+  currentPage = 1;  // Resetear a página 1
+  cancelSearchDebounce();
+  cargarDatos();
 }
 
 /**
@@ -514,15 +578,21 @@ function limpiarFiltros() {
   const today = new Date();
   const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
 
-  document.getElementById('dateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
-  document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+  const toValue = today.toISOString().split('T')[0];
+  const fromValue = thirtyDaysAgo.toISOString().split('T')[0];
+
+  document.getElementById('dateFrom').value = fromValue;
+  document.getElementById('dateTo').value = toValue;
   document.getElementById('reportType').value = 'ventas';
   document.getElementById('searchInput').value = '';
   currentType = 'ventas';
+  currentSearchTerm = '';
   currentPage = 1;
+  lastValidDates = { from: fromValue, to: toValue };
+  clearValidationMessage();
   actualizarColumnasTabla();
-  cargarEstadisticas();
-  cargarDatos();
+  cargarEstadisticas(lastValidDates);
+  cargarDatos(lastValidDates);
 }
 
 function exportarDatos() {
@@ -617,6 +687,107 @@ function formatDate(dateString) {
   if (!dateString) return '-';
   const date = new Date(dateString);
   return date.toLocaleDateString('es-CO') + ' ' + date.toLocaleTimeString('es-CO', {hour: '2-digit', minute: '2-digit'});
+}
+
+function isValidISODate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return false;
+  }
+  return date.toISOString().startsWith(value);
+}
+
+function validateAndNormalizeDates(showMessage = true, sourceField = null) {
+  const dateFromInput = document.getElementById('dateFrom');
+  const dateToInput = document.getElementById('dateTo');
+  const rawFrom = dateFromInput.value.trim();
+  const rawTo = dateToInput.value.trim();
+
+  if (!rawFrom || !rawTo) {
+    if (showMessage) {
+      showValidationMessage('Debe completar ambas fechas antes de continuar.');
+    }
+    return { valid: false };
+  }
+
+  if (!isValidISODate(rawFrom) || !isValidISODate(rawTo)) {
+    if (showMessage) {
+      showValidationMessage('Formato de fecha inválido. Use YYYY-MM-DD.');
+    }
+    return { valid: false };
+  }
+
+  if (rawFrom > rawTo) {
+    if (showMessage) {
+      showValidationMessage('La fecha "Desde" no puede ser mayor que "Hasta".');
+    }
+    return { valid: false };
+  }
+
+  clearValidationMessage();
+  return { valid: true, normalized: { from: rawFrom, to: rawTo }, sourceField };
+}
+
+function getValidatedDates(showMessage = true) {
+  const validation = validateAndNormalizeDates(showMessage);
+  if (!validation.valid) {
+    return null;
+  }
+  return validation.normalized;
+}
+
+function restoreDateInputs() {
+  if (lastValidDates.from) {
+    document.getElementById('dateFrom').value = lastValidDates.from;
+  }
+  if (lastValidDates.to) {
+    document.getElementById('dateTo').value = lastValidDates.to;
+  }
+}
+
+function showValidationMessage(message) {
+  const container = ensureValidationContainer();
+  container.textContent = message;
+  container.style.display = 'block';
+}
+
+function clearValidationMessage() {
+  const container = document.getElementById('dateValidationMessage');
+  if (container) {
+    container.style.display = 'none';
+    container.textContent = '';
+  }
+}
+
+function ensureValidationContainer() {
+  let container = document.getElementById('dateValidationMessage');
+  if (container) {
+    return container;
+  }
+  const filtersCard = document.querySelector('.card-style.mb-30');
+  container = document.createElement('div');
+  container.id = 'dateValidationMessage';
+  container.style.display = 'none';
+  container.style.marginTop = '12px';
+  container.style.padding = '10px 12px';
+  container.style.borderRadius = '6px';
+  container.style.background = '#fdecea';
+  container.style.color = '#b71c1c';
+  container.style.fontSize = '13px';
+  if (filtersCard) {
+    filtersCard.appendChild(container);
+  } else {
+    document.body.appendChild(container);
+  }
+  return container;
+}
+
+function cancelSearchDebounce() {
+  clearTimeout(searchTimeout);
+  isDebouncingSearch = false;
 }
 
 /**
