@@ -9,40 +9,43 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            overflow-x: hidden;
         }
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 2.6mm;
+            line-height: 1.25;
             color: #333;
         }
 
         .container {
             width: 100%;
-            max-width: 8.5in;
-            margin: 0 auto;
-            padding: 20px;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
         }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 15px;
+        .header-table {
+            width: 100%;
+            border-bottom: 0.2mm solid #b5b5b5;
+            margin-bottom: 4mm;
+            padding-bottom: 2mm;
+        }
+
+        .header-table td {
+            vertical-align: top;
         }
 
         .company-info h1 {
-            font-size: 18px;
-            margin-bottom: 5px;
+            font-size: 3.6mm;
+            margin-bottom: 1.2mm;
             font-weight: bold;
         }
 
         .company-info p {
-            font-size: 10px;
-            margin: 2px 0;
+            font-size: 2.4mm;
+            margin: 0.7mm 0;
         }
 
         .invoice-details {
@@ -50,264 +53,264 @@
         }
 
         .invoice-details h2 {
-            font-size: 28px;
+            font-size: 3.4mm;
             font-weight: bold;
-            margin-bottom: 5px;
-            color: #666;
+            margin-bottom: 1.2mm;
+            color: #555;
         }
 
         .invoice-details p {
-            font-size: 10px;
-            margin: 2px 0;
+            font-size: 2.4mm;
+            margin: 0.7mm 0;
         }
 
         .invoice-number {
             font-weight: bold;
-            font-size: 11px;
-        }
-
-        .section {
-            margin-bottom: 20px;
-        }
-
-        .section-title {
-            font-weight: bold;
-            font-size: 11px;
-            margin-bottom: 8px;
-            padding-bottom: 4px;
-            border-bottom: 1px solid #ddd;
+            font-size: 2.6mm;
         }
 
         .client-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .client-section, .invoice-date {
-            flex: 1;
+            margin-bottom: 4mm;
         }
 
         .client-section p {
-            margin: 3px 0;
-            font-size: 10px;
+            margin: 0.6mm 0;
+            font-size: 2.4mm;
         }
 
         .client-label {
             font-weight: bold;
-            font-size: 10px;
-            margin-bottom: 5px;
-        }
-
-        .invoice-date {
-            text-align: right;
-        }
-
-        .invoice-date p {
-            margin: 3px 0;
-            font-size: 10px;
+            font-size: 2.4mm;
+            margin-bottom: 1mm;
         }
 
         table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 4mm;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         thead {
-            background-color: #f5f5f5;
+            background-color: #f2f2f2;
         }
 
         thead th {
-            padding: 8px;
+            padding: 1.4mm 1.2mm;
             text-align: left;
             font-weight: bold;
-            font-size: 10px;
-            border-bottom: 2px solid #333;
+            font-size: 2.4mm;
+            border-bottom: 0.2mm solid #b5b5b5;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         tbody td {
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
-            font-size: 10px;
+            padding: 1.2mm 1.2mm;
+            border-bottom: 0.2mm solid #d3d3d3;
+            font-size: 2.4mm;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .text-right {
             text-align: right;
+            padding-right: 0.6mm;
         }
 
         .text-center {
             text-align: center;
         }
 
+        .product-cell {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
         .totals {
             width: 100%;
-            margin-top: 20px;
+            margin-top: 3mm;
         }
 
-        .totals-row {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 5px;
-            font-size: 11px;
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        .totals-label {
-            width: 150px;
+        .totals-table td {
+            padding: 0.8mm 0;
+            font-size: 2.6mm;
+        }
+
+        .totals-table .label {
             text-align: right;
-            padding-right: 10px;
+            padding-right: 2.5mm;
             font-weight: bold;
         }
 
-        .totals-value {
-            width: 100px;
+        .totals-table .value {
+            width: 40mm;
             text-align: right;
+            padding-right: 4mm;
         }
 
-        .totals-row.total {
-            border-top: 2px solid #333;
-            border-bottom: 2px solid #333;
-            padding: 8px 0;
+        .totals-table .total td {
+            border-top: 0.2mm solid #b5b5b5;
+            border-bottom: 0.2mm solid #b5b5b5;
+            padding: 1.2mm 0;
             font-weight: bold;
-            font-size: 12px;
+            padding-right: 4mm;
+            font-size: 4mm;
         }
 
         .footer {
-            margin-top: 30px;
+            margin-top: 4mm;
             text-align: center;
-            font-size: 9px;
+            font-size: 2.2mm;
             color: #666;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-        }
-
-        .note {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-left: 3px solid #333;
-            font-size: 10px;
+            border-top: 0.2mm solid #d3d3d3;
+            padding-top: 2mm;
         }
 
         @page {
-            margin: 0.5in;
+            size: A4;
+            margin: 10mm;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="company-info">
+    @php
+        $factura = $venta->factura;
+
+        $total = $factura->total ?? $venta->total ?? 0;
+        $impuestos = $factura->impuestos ?? $venta->detalles->sum(fn($d) => $d->iva ?? 0);
+        $hasIva = ((float) $impuestos) > 0;
+        $subtotal = $total - $impuestos;
+    @endphp
+
+    <!-- Header -->
+     <h2 class="text-center">FACTURA COMERCIAL</h2>
+     <br><br>
+    <table class="header-table">
+        <tr>
+            <td class="company-info" style="width: 65%;">
                 <h1>{{ $empresa->nombre ?? 'Mi Empresa' }}</h1>
                 <p>NIT: {{ $empresa->nit ?? '---' }}</p>
                 <p>{{ $empresa->direccion ?? '' }}</p>
                 <p>Tel: {{ $empresa->telefono ?? '' }}</p>
                 <p>Email: {{ $empresa->email ?? '' }}</p>
-            </div>
-            <div class="invoice-details">
-                <h2>FACTURA</h2>
+            </td>
+            <td class="invoice-details" style="width: 35%;">
+                
                 <p class="invoice-number">
-                    Número: {{ $venta->factura->numero ?? 'FA-' . str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}
+                    ID de Factura: {{ $factura->numero ?? '—' }}
                 </p>
-                <p>Fecha: {{ $venta->created_at->format('d/m/Y H:i') }}</p>
-            </div>
-        </div>
+                <p><strong>Fecha de emisión:</strong>
+                    {{ optional($factura->created_at)->format('d/m/Y H:i') ?? '—' }}
+                </p>
+                <p><strong>Método de Pago:</strong> {{ $factura->forma_pago ?? '—' }}</p>
+            </td>
+        </tr>
+    </table>
 
-        <!-- Cliente -->
-        <div class="client-info">
-            <div class="client-section">
-                <div class="client-label">PARA:</div>
-                <p><strong>{{ $venta->cliente_nombre ?? 'Cliente' }}</strong></p>
-                <p>Documento: {{ $venta->cliente_documento ?? '---' }}</p>
-            </div>
-            <div class="invoice-date">
-                <div class="client-label">FECHA Y HORA:</div>
-                <p>{{ $venta->created_at->format('d/m/Y') }}</p>
-                <p>{{ $venta->created_at->format('H:i:s') }}</p>
-            </div>
-        </div>
-
-        <!-- Tabla de productos -->
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 50%;">Producto</th>
-                    <th class="text-right" style="width: 12%;">Cantidad</th>
-                    <th class="text-right" style="width: 18%;">Precio Unitario</th>
-                    @if ($venta->factura && $venta->factura->cobra_iva)
-                        <th class="text-right" style="width: 10%;">IVA</th>
+    <!-- Cliente -->
+    <div class="client-info">
+        <table style="width:100%;border-collapse:collapse;">
+            <tr>
+                <td>
+                    <div class="client-label">Cliente:</div>
+                    <p>
+                        <strong>{{ $factura->cliente_nombre ?? 'Consumidor final' }}</strong>
+                    </p>
+                    @if(!empty($factura->cliente_nit))
+                        <p>Documento/NIT: {{ $factura->cliente_nit }}</p>
                     @endif
-                    <th class="text-right" style="width: 20%;">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($venta->detalles as $detalle)
-                    <tr>
-                        <td>{{ $detalle->producto->nombre }}</td>
-                        <td class="text-right">{{ $detalle->cantidad }}</td>
-                        <td class="text-right">
-                            {{ $empresa->moneda ?? '$' }}
-                            {{ number_format($detalle->precio_unitario, 2, ',', '.') }}
-                        </td>
-                        @if ($venta->factura && $venta->factura->cobra_iva)
-                            <td class="text-right">
-                                {{ $empresa->moneda ?? '$' }}
-                                {{ number_format($detalle->iva, 2, ',', '.') }}
-                            </td>
-                        @endif
-                        <td class="text-right">
-                            {{ $empresa->moneda ?? '$' }}
-                            {{ number_format($detalle->total, 2, ',', '.') }}
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="text-center">Sin productos</td>
-                    </tr>
-                @endforelse
-            </tbody>
+                </td>
+            </tr>
         </table>
+    </div>
 
-        <!-- Totales -->
-        <div class="totals">
-            <div class="totals-row">
-                <div class="totals-label">Subtotal:</div>
-                <div class="totals-value">
-                    {{ $empresa->moneda ?? '$' }}
-                    {{ number_format($venta->subtotal, 2, ',', '.') }}
-                </div>
-            </div>
+    <!-- Productos -->
+    <table>
+        <thead>
+            <tr>
+                <th style="width:40%;">Producto</th>
+                <th class="text-right" style="width:8%;">Cantidad</th>
+                <th class="text-right" style="width:14%;">Precio Unitario</th>
+                @if($hasIva)
+                    <th class="text-right" style="width:10%;">Tarifa IVA</th>
+                    <th class="text-right" style="width:10%;">Valor IVA</th>
+                @endif
+                <th class="text-right" style="width:18%;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($venta->detalles as $detalle)
+                @php
+                    $tarifaIva = optional($detalle->producto)->iva ?? null;
+                    $ivaValor = $detalle->iva ?? 0;
+                    $lineSubtotal = ($detalle->precio_unitario ?? 0) * ($detalle->cantidad ?? 1);
+                @endphp
+                <tr>
+                    <td class="product-cell">
+                        {{ optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id }}
+                    </td>
+                    <td class="text-right">{{ $detalle->cantidad }}</td>
+                    <td class="text-right">
+                        {{ number_format($detalle->precio_unitario ?? 0, 0, ',', '.') }}
+                    </td>
+                    @if($hasIva)
+                        <td class="text-right">
+                            {{ $tarifaIva ? $tarifaIva.'%' : '—' }}
+                        </td>
+                        <td class="text-right">
+                            {{ number_format($ivaValor, 0, ',', '.') }}
+                        </td>
+                    @endif
+                    <td class="text-right">
+                        {{ number_format($lineSubtotal + $ivaValor, 0, ',', '.') }}
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="{{ $hasIva ? 6 : 4 }}" class="text-center">Sin productos</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
 
-            @if ($venta->factura && $venta->factura->cobra_iva && $venta->impuestos > 0)
-                <div class="totals-row">
-                    <div class="totals-label">IVA ({{ $venta->factura->iva_porcentaje ?? 19 }}%):</div>
-                    <div class="totals-value">
-                        {{ $empresa->moneda ?? '$' }}
-                        {{ number_format($venta->impuestos, 2, ',', '.') }}
-                    </div>
-                </div>
+    <!-- Totales -->
+    <div class="totals">
+        <table class="totals-table">
+            <tr>
+                <td></td>
+                <td class="label">Subtotal:</td>
+                <td class="value">{{ number_format($subtotal, 0, ',', '.') }}</td>
+            </tr>
+
+            @if($hasIva)
+            <tr>
+                <td></td>
+                <td class="label">IVA:</td>
+                <td class="value">{{ number_format($impuestos, 0, ',', '.') }}</td>
+            </tr>
             @endif
 
-            <div class="totals-row total">
-                <div class="totals-label">TOTAL:</div>
-                <div class="totals-value">
-                    {{ $empresa->moneda ?? '$' }}
-                    {{ number_format($venta->total, 2, ',', '.') }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Método de pago -->
-        <div class="section">
-            <p><strong>Método de Pago:</strong> {{ $venta->metodo_pago ?? 'No especificado' }}</p>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p>Gracias por su compra</p>
-            <p style="margin-top: 10px;">Este documento fue generado automáticamente el {{ now()->format('d/m/Y H:i:s') }}</p>
-        </div>
+            <tr class="total">
+                <td></td>
+                <td class="label">TOTAL:</td>
+                <td class="value">{{ number_format($total, 0, ',', '.') }}</td>
+            </tr>
+        </table>
     </div>
+
+    <div class="footer">
+        <p>Gracias por su compra</p>
+    </div>
+</div>
+
 </body>
 </html>

@@ -11,9 +11,7 @@
         <div class="title-wrapper pt-30">
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <div class="title">
-                        <h2>Factura</h2>
-                    </div>
+                    
                 </div>
                 <div class="col-md-6">
                     <div class="breadcrumb-wrapper"></div>
@@ -55,6 +53,7 @@
                                 @endphp
                                 <p><span class="text-medium">Fecha de emisión:</span> {{ $displayFecha }}</p>
                                 <p><span class="text-medium">ID de Factura:</span> {{ $venta->factura->numero ?? '#' . $venta->id }}</p>
+                                <p><span class="text-medium">Medio de pago:</span> {{ $venta->factura->forma_pago ?? $venta->forma_pago ?? 'No especificado' }}</p>
                             </div>
                         </div>
 
@@ -91,7 +90,10 @@
                                         @endphp
                                         @if($hasIva)
                                             <th class="amount">
-                                                <h6 class="text-sm text-medium">IVA</h6>
+                                                <h6 class="text-sm text-medium">Tarifa IVA</h6>
+                                            </th>
+                                            <th class="amount">
+                                                <h6 class="text-sm text-medium">Valor IVA</h6>
                                             </th>
                                         @endif
                                         <th class="amount">
@@ -113,6 +115,11 @@
                                         </td>
                                         @if($hasIva)
                                             <td>
+                                                <p class="text-sm">
+                                                    {{ (optional($d->producto)->iva ?? 0) > 0 ? optional($d->producto)->iva . '%' : '—' }}
+                                                </p>
+                                            </td>
+                                            <td>
                                                 <p class="text-sm">${{ number_format($d->iva ?? 0, 0, ',', '.') }}</p>
                                             </td>
                                         @endif
@@ -127,7 +134,7 @@
                                     @endphp
                                     
                                     <tr>
-                                        <td colspan="{{ $hasIva ? '4' : '3' }}" style="text-align: right;">
+                                        <td colspan="{{ $hasIva ? '5' : '3' }}" style="text-align: right;">
                                             <h6 class="text-sm text-medium">Subtotal</h6>
                                         </td>
                                         <td style="text-align: right;">
@@ -137,7 +144,7 @@
 
                                     @if($hasIva)
                                     <tr>
-                                        <td colspan="{{ $hasIva ? '4' : '3' }}" style="text-align: right;">
+                                        <td colspan="{{ $hasIva ? '5' : '3' }}" style="text-align: right;">
                                             <h6 class="text-sm text-medium">IVA Total</h6>
                                         </td>
                                         <td style="text-align: right;">
@@ -147,7 +154,7 @@
                                     @endif
 
                                     <tr>
-                                        <td colspan="{{ $hasIva ? '4' : '3' }}" style="text-align: right;">
+                                        <td colspan="{{ $hasIva ? '5' : '3' }}" style="text-align: right;">
                                             <h4>Total</h4>
                                         </td>
                                         <td style="text-align: right;">
@@ -182,6 +189,17 @@
 <script>
 function imprimirFactura() {
     const ventaId = {{ $venta->id }};
+    const btn = document.querySelector('button[onclick="imprimirFactura()"]');
+    const originalText = btn ? btn.textContent : '';
+
+    if (btn && btn.disabled) {
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Cargando...';
+    }
     
     // Crear iframe oculto dinámicamente
     const iframe = document.createElement('iframe');
@@ -207,6 +225,10 @@ function imprimirFactura() {
             // Eliminar el iframe después de la impresión
             setTimeout(() => {
                 document.body.removeChild(iframe);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
             }, 100);
         }, 300);
     };
@@ -215,6 +237,10 @@ function imprimirFactura() {
     iframe.onerror = function() {
         console.error('Error al cargar la vista de impresión');
         document.body.removeChild(iframe);
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
     };
     
     // Agregar el iframe al DOM
@@ -226,19 +252,40 @@ async function descargarPDF() {
     const btnText = document.getElementById('btn-descargar-text');
     const ventaId = {{ $venta->id }};
 
+    if (btn.disabled) {
+        return;
+    }
+
     btn.disabled = true;
     btnText.textContent = 'Generando PDF...';
+
+    const controller = new AbortController();
+    let timedOut = false;
+    let descargaExitosa = false;
+    const timeoutId = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+    }, 30000);
 
     try {
         const res = await fetch(`/ventas/${ventaId}/factura/pdf`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/pdf'
-            }
+            },
+            signal: controller.signal
         });
 
         if (!res.ok) {
-            throw new Error('Error al descargar la factura');
+            let mensaje = 'No se pudo descargar la factura.';
+
+            if (res.status === 419) {
+                mensaje = 'Sesión expirada. Recarga la página.';
+            } else if (res.status >= 500) {
+                mensaje = 'Error del servidor. Intenta más tarde.';
+            }
+
+            throw new Error(mensaje);
         }
 
         // Obtener nombre del archivo
@@ -268,12 +315,32 @@ async function descargarPDF() {
             });
         }
 
+        descargaExitosa = true;
+
     } catch (error) {
         console.error('Error:', error);
-        alert('Error: ' + (error.message || 'No se pudo descargar la factura'));
+
+        if (timedOut || error.name === 'AbortError') {
+            btnText.textContent = 'La descarga tardó demasiado. Intenta de nuevo.';
+        } else {
+            btnText.textContent = error.message || 'No se pudo descargar la factura.';
+        }
     } finally {
+        clearTimeout(timeoutId);
         btn.disabled = false;
-        btnText.textContent = 'Descargar Factura';
+
+        if (descargaExitosa) {
+            btnText.textContent = 'Descargar Factura';
+            return;
+        }
+
+        if (btnText.textContent !== 'Descargar Factura') {
+            setTimeout(() => {
+                if (!btn.disabled) {
+                    btnText.textContent = 'Descargar Factura';
+                }
+            }, 3500);
+        }
     }
 }
 

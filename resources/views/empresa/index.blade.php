@@ -33,9 +33,7 @@
                 <div class="title-wrapper pt-30">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <div class="title">
-                                <h2>Datos de la empresa</h2>
-                            </div>
+                            
                         </div>
                         <div class="col-md-6">
                             <div class="breadcrumb-wrapper"></div>
@@ -51,21 +49,25 @@
                         <div class="col-lg-6">
                             <div class="card-style mb-30">
                                 <div class="input-style-2">
+                                    <label for="nombre" class="text-dark mb-2 d-block">Nombre de la empresa</label>
                                     <input id="nombre" name="nombre" type="text" placeholder="Nombre de la empresa" value="{{ old('nombre', $empresa->nombre ?? '') }}" />
                                     <span class="icon"><i class="lni lni-briefcase"></i></span>
                                 </div>
 
                                 <div class="input-style-2">
+                                    <label for="nit" class="text-dark mb-2 d-block">NIT</label>
                                     <input id="nit" name="nit" type="text" placeholder="NIT de la empresa" value="{{ old('nit', $empresa->nit ?? '') }}" />
                                     <span class="icon"><i class="mdi mdi-card-account-details-outline"></i></span>
                                 </div>
 
                                 <div class="input-style-2">
+                                    <label for="telefono" class="text-dark mb-2 d-block">Teléfono</label>
                                     <input id="telefono" name="telefono" type="text" placeholder="Número de teléfono" value="{{ old('telefono', $empresa->telefono ?? '') }}" />
                                     <span class="icon"><i class="lni lni-phone"></i></span>
                                 </div>
 
                                 <div class="input-style-2">
+                                    <label for="email" class="text-dark mb-2 d-block">Email de contacto</label>
                                     <input id="email" name="email" type="email" placeholder="Email de contacto" value="{{ old('email', $empresa->email ?? '') }}" />
                                     <span class="icon"><i class="lni lni-envelope"></i></span>
                                 </div>
@@ -76,11 +78,13 @@
                         <div class="col-lg-6">
                             <div class="card-style mb-30">
                                 <div class="input-style-2">
+                                    <label for="moneda" class="text-dark mb-2 d-block">Moneda</label>
                                     <input id="moneda" name="moneda" type="text" placeholder="Moneda (ej: COP, USD)" value="{{ old('moneda', $empresa->moneda ?? '') }}" />
                                     <span class="icon"><i class="mdi mdi-currency-usd"></i></span>
                                 </div>
 
                                 <div class="input-style-2">
+                                    <label for="direccion" class="text-dark mb-2 d-block">Dirección</label>
                                     <input id="direccion" name="direccion" type="text" placeholder="Dirección" value="{{ old('direccion', $empresa->direccion ?? '') }}" />
                                     <span class="icon"><i class="lni lni-map-marker"></i></span>
                                 </div>
@@ -99,7 +103,7 @@
                             <!-- Sección de copia de seguridad manual (no intrusiva) -->
                             <div class="card-style mb-30">
                                 <h6 class="mb-20">Respaldo de datos</h6>
-                                <p class="text-xs text-gray mb-15">Crear un respaldo local del archivo de base de datos. Se guardará en tu carpeta <strong>Descargas</strong> dentro de <em>opten-backups</em>.</p>
+                                <p class="text-xs text-gray mb-15">Crear un respaldo local del archivo de base de datos. Se guardará en tu carpeta <strong>Descargas</strong></p>
 
                                 <form method="POST" action="{{ route('backup.store') }}" id="backup-form">
                                     @csrf
@@ -122,19 +126,30 @@
     </div>
 
     <!-- Modal de advertencia para desactivar IVA -->
-    <div class="modal fade" id="modal-iva" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal fade" id="modal-iva" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
             <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title">¿Desactivar IVA?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header px-4 py-3 border-bottom">
+                    <div class="d-flex align-items-center gap-3 w-100">
+                        <div class="flex-grow-1">
+                            <h5 class="modal-title mb-0 fw-semibold" style="color:#111827;">¿Desactivar IVA?</h5>
+                            <div class="text-sm" style="color:#6b7280;">Requiere confirmación</div>
+                        </div>
+                        <span class="d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px;border-radius:12px;background:#fee2e2;color:#b91c1c;">
+                            <i class="lni lni-warning" aria-hidden="true"></i>
+                        </span>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <p>Este cambio afecta solo a facturas futuras.<br>Las facturas ya emitidas no se modifican.</p>
+                <div class="modal-body px-4 py-3">
+                    <p class="mb-0 text-sm" style="line-height:1.55;color:#111827;">
+                        Este cambio se aplicará solo a las facturas futuras.
+Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este momento..<br>
+                        <span class="d-inline-block mt-2" style="color:#6b7280;">Las facturas ya emitidas no se verán afectadas ni se modificarán.</span>
+                    </p>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-iva-cancelar">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btn-iva-confirmar">Confirmar</button>
+                <div class="modal-footer px-4 py-3 border-top">
+                    <button type="button" class="main-btn light-btn btn-hover " data-bs-dismiss="modal" id="btn-iva-cancelar">Cancelar</button>
+                    <button type="button" class="main-btn primary-btn btn-hover" id="btn-iva-confirmar">Confirmar</button>
                 </div>
             </div>
         </div>
@@ -148,11 +163,36 @@
         const btn = document.getElementById('btn-backup');
         const btnText = document.getElementById('btn-backup-text');
         const form = document.getElementById('backup-form');
+
+        function setBackupConfirmInvalid(isInvalid) {
+            if (!checkbox) return;
+            const label = checkbox.closest('label');
+
+            if (isInvalid) {
+                if (label) {
+                    label.classList.add('text-danger');
+                }
+            } else {
+                if (label) {
+                    label.classList.remove('text-danger');
+                }
+            }
+        }
+
+        // Si el usuario marca el checkbox, limpiar el estado de error
+        if (checkbox && !checkbox.dataset.boundBackupValidation) {
+            checkbox.addEventListener('change', function () {
+                if (checkbox.checked) setBackupConfirmInvalid(false);
+            });
+            checkbox.dataset.boundBackupValidation = '1';
+        }
         
         if (!checkbox.checked) {
-            alert('Debes confirmar que deseas crear el respaldo.');
+            setBackupConfirmInvalid(true);
             return;
         }
+
+        setBackupConfirmInvalid(false);
         
         btn.disabled = true;
         btnText.textContent = 'Creando respaldo...';
@@ -239,7 +279,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', function(){
-        var csrf = document.querySelector('meta[name="csrf-token"]').content || '{{ csrf_token() }}';
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var csrf = (csrfMeta && csrfMeta.getAttribute('content')) ? csrfMeta.getAttribute('content') : '{{ csrf_token() }}';
         var empresaId = {{ $empresa->id ?? 'null' }};
         var existenProductosConIVA = {{ $existenProductosConIVA ? 'true' : 'false' }};
 
@@ -267,6 +308,62 @@
             setTimeout(() => div.remove(), 2500);
         }
 
+        // Estado por campo (.input-style-2)
+        function getFieldUI(fieldName) {
+            var input = document.getElementById(fieldName);
+            if (!input) return null;
+
+            var container = input.closest('.input-style-2');
+            if (!container) return null;
+
+            var iconSpan = container.querySelector('.icon');
+            if (!iconSpan) return null;
+
+            if (!iconSpan.dataset.defaultIconHtml) {
+                iconSpan.dataset.defaultIconHtml = iconSpan.innerHTML;
+            }
+
+            var errorEl = container.querySelector('.field-error');
+            if (!errorEl) {
+                errorEl = document.createElement('div');
+                errorEl.className = 'field-error text-xs mt-1';
+                errorEl.style.display = 'none';
+                errorEl.style.color = '#dc3545';
+                container.appendChild(errorEl);
+            }
+
+            return {
+                input: input,
+                container: container,
+                iconSpan: iconSpan,
+                errorEl: errorEl
+            };
+        }
+
+        function setFieldSaving(fieldName) {
+            var ui = getFieldUI(fieldName);
+            if (!ui) return;
+            ui.errorEl.style.display = 'none';
+            ui.errorEl.textContent = '';
+            ui.iconSpan.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>';
+        }
+
+        function setFieldSuccess(fieldName) {
+            var ui = getFieldUI(fieldName);
+            if (!ui) return;
+            ui.errorEl.style.display = 'none';
+            ui.errorEl.textContent = '';
+            ui.iconSpan.innerHTML = '<i class="lni lni-checkmark-circle" style="color:#198754"></i>';
+        }
+
+        function setFieldError(fieldName, message) {
+            var ui = getFieldUI(fieldName);
+            if (!ui) return;
+            ui.iconSpan.innerHTML = '<i class="lni lni-close" style="color:#dc3545"></i>';
+            ui.errorEl.textContent = message || 'No se pudo guardar.';
+            ui.errorEl.style.display = 'block';
+        }
+
         function abrirModal(onConfirm) {
             cierreModalPendiente = onConfirm;
             modalAbierto = true;
@@ -282,6 +379,11 @@
 
         // Guardar todos los campos vía AJAX
         function guardarEmpresaAJAX(campo, valor) {
+            // No tocar feedback del switch IVA ni backup
+            if (campo !== 'cobra_iva') {
+                setFieldSaving(campo);
+            }
+
             // Recolectar todos los valores actuales
             var data = {
                 _token: csrf,
@@ -306,8 +408,9 @@
             })
             .then(resp => {
                 if (resp.status === 419) {
-                    // Sesión expirada
-                    mostrarMensaje('Tu sesión ha expirado. Por favor recarga la página e inicia sesión de nuevo.', false);
+                    if (campo !== 'cobra_iva') {
+                        setFieldError(campo, 'No se pudo guardar. Recarga la página e intenta de nuevo.');
+                    }
                     throw new Error('session_expired');
                 }
                 if (resp.status === 422) {
@@ -322,17 +425,29 @@
                                 }
                             }
                         }
-                        mostrarMensaje(msg, false);
+                        if (campo !== 'cobra_iva') {
+                            setFieldError(campo, msg);
+                        }
                         throw new Error('validation_error');
                     });
                 }
+
+                if (resp.status >= 500) {
+                    if (campo !== 'cobra_iva') {
+                        setFieldError(campo, 'No se pudo guardar. Intenta de nuevo.');
+                    }
+                    throw new Error('server_error');
+                }
+
                 return resp.json();
             })
             .then(data => {
-                if (data.success || data.message) {
-                    mostrarMensaje('Cambios guardados', true);
-                } else {
-                    mostrarMensaje('No se pudo guardar el cambio', false);
+                if (campo !== 'cobra_iva') {
+                    if (data && (data.success || data.message)) {
+                        setFieldSuccess(campo);
+                    } else {
+                        setFieldError(campo, 'No se pudo guardar.');
+                    }
                 }
             })
             .catch((err) => {
@@ -340,7 +455,9 @@
                     // ya mostrado
                     return;
                 }
-                mostrarMensaje('Error de red al guardar', false);
+                if (campo !== 'cobra_iva') {
+                    setFieldError(campo, 'No se pudo guardar. Intenta de nuevo.');
+                }
             });
         }
 

@@ -173,94 +173,95 @@
 </head>
 <body>
     <div class="receipt">
-        <!-- Header -->
-        <div class="header">
-            <h1>{{ $empresa->nombre ?? 'Factura' }}</h1>
-            <p>NIT: {{ $empresa->nit ?? '---' }}</p>
-            <p>{{ $empresa->direccion ?? '' }}</p>
-            <p>Tel: {{ $empresa->telefono ?? '' }}</p>
-        </div>
+    @php
+        $factura = $venta->factura;
+        $total = $factura->total ?? $venta->total ?? 0;
+        $impuestos = $factura->impuestos ?? $venta->detalles->sum(fn($d) => $d->iva ?? 0);
+        $hasIva = ((float) $impuestos) > 0;
+        $subtotal = $total - $impuestos;
+    @endphp
 
-        <!-- Información de la Factura -->
-        <div class="info-section">
-            <div class="info-row">
-                <span class="label">Factura:</span>
-                <span class="value">{{ $venta->factura->numero ?? '#' . str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Fecha:</span>
-                <span class="value">{{ $venta->created_at->format('d/m/Y H:i') }}</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Cliente:</span>
-                <span class="value">{{ $venta->cliente_nombre ?? 'Consumidor final' }}</span>
-            </div>
-            @if ($venta->cliente_documento)
-            <div class="info-row">
-                <span class="label">Doc:</span>
-                <span class="value">{{ $venta->cliente_documento }}</span>
-            </div>
-            @endif
-        </div>
+    <!-- Header -->
+    <div class="header">
+        <h1>{{ $empresa->nombre ?? 'Factura' }}</h1>
+        <p>NIT: {{ $empresa->nit ?? '---' }}</p>
+        <p>Direccion:{{ $empresa->direccion ?? '' }}</p>
+        <p>Telefono: {{ $empresa->telefono ?? '' }}</p>
+        <p>Email: {{ $empresa->email ?? '' }}</p>
+    </div>
 
-        <!-- Ítems -->
-        <div class="items">
-            @foreach ($venta->detalles as $d)
+    <!-- Información de la Factura -->
+    <div class="info-section">
+        <div class="info-row">
+            <span class="label">Factura:</span>
+            <span class="value">{{ $factura->numero ?? '#' . str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Fecha:</span>
+            <span class="value">{{ optional($factura->created_at)->format('d/m/Y H:i') ?? '—' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Método de pago:</span>
+            <span class="value">{{ strtoupper($factura->forma_pago ?? 'Efectivo') }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Cliente:</span>
+            <span class="value">{{ $factura->cliente_nombre ?? 'Consumidor final' }}</span>
+        </div>
+        @if(!empty($factura->cliente_nit))
+        <div class="info-row">
+            <span class="label">Documento/NIT:</span>
+            <span class="value">{{ $factura->cliente_nit }}</span>
+        </div>
+        @endif
+    </div>
+
+    <!-- Ítems -->
+    <div class="items">
+        @foreach($venta->detalles as $detalle)
+            @php
+                $tarifaIva = optional($detalle->producto)->iva ?? null;
+                $ivaValor = $detalle->iva ?? 0;
+                $lineTotal = ($detalle->precio_unitario ?? 0) * ($detalle->cantidad ?? 1) + $ivaValor;
+            @endphp
             <div class="item">
-                <div class="item-name">{{ $d->producto->nombre }}</div>
+                <div class="item-name">{{ optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id }}</div>
                 <div class="item-details">
-                    <span class="item-qty">{{ $d->cantidad }}x @ ${{ number_format($d->precio_unitario, 0, ',', '.') }}</span>
-                    <span class="item-price">${{ number_format($d->subtotal, 0, ',', '.') }}</span>
+                    <span class="item-qty">{{ $detalle->cantidad }}x ${{ number_format($detalle->precio_unitario ?? 0, 0, ',', '.') }}</span>
+                    <span class="item-price">${{ number_format($lineTotal, 0, ',', '.') }}</span>
                 </div>
-                @php
-                    $iva = $d->iva ?? 0;
-                @endphp
-                @if ($iva > 0)
+                @if($ivaValor > 0)
                 <div style="font-size: 8px; text-align: right; color: #666;">
-                    IVA: ${{ number_format($iva, 0, ',', '.') }}
+                    IVA: ${{ number_format($ivaValor, 0, ',', '.') }} ({{ $tarifaIva ? $tarifaIva.'%' : '—' }})
                 </div>
                 @endif
             </div>
-            @endforeach
+        @endforeach
+    </div>
+
+    <!-- Totales -->
+    <div class="totals">
+        <div class="total-row">
+            <span class="total-label">Subtotal:</span>
+            <span class="total-value">${{ number_format($subtotal, 0, ',', '.') }}</span>
         </div>
-
-        <!-- Totales -->
-        <div class="totals">
-            @php
-                $subtotal = $venta->subtotal ?? ($venta->total - array_sum($venta->detalles->pluck('iva')->toArray()));
-                $impuestos = $venta->impuestos ?? $venta->detalles->sum('iva');
-            @endphp
-            
-            <div class="total-row">
-                <span class="total-label">Subtotal:</span>
-                <span class="total-value">${{ number_format($subtotal, 0, ',', '.') }}</span>
-            </div>
-
-            @if ($impuestos > 0)
-            <div class="total-row">
-                <span class="total-label">IVA:</span>
-                <span class="total-value">${{ number_format($impuestos, 0, ',', '.') }}</span>
-            </div>
-            @endif
-
-            <div class="divider"></div>
-
-            <div class="total-row grand-total">
-                <span>TOTAL:</span>
-                <span>${{ number_format($venta->total, 0, ',', '.') }}</span>
-            </div>
+        @if($hasIva)
+        <div class="total-row">
+            <span class="total-label">IVA:</span>
+            <span class="total-value">${{ number_format($impuestos, 0, ',', '.') }}</span>
         </div>
-
-        <!-- Método de Pago -->
-        <div class="payment-method">
-            <strong>{{ strtoupper($venta->metodo_pago ?? 'Efectivo') }}</strong>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p>¡Gracias por su compra!</p>
-            <p style="margin-top: 5px; font-size: 7px;">{{ now()->format('d/m/Y H:i:s') }}</p>
+        @endif
+        <div class="total-row ">
+            <span class="total-label">TOTAL:</span>
+            <span class="total-value">${{ number_format($total, 0, ',', '.') }}</span>
         </div>
     </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>¡Gracias por su compra!</p>
+    </div>
+</div>
+
 </body>
 </html>
