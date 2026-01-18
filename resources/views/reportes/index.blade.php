@@ -155,18 +155,21 @@
                 <th class="min-width" id="colTipo" style="display:none">
                   <h6 class="text-sm text-medium">Tipo</h6>
                 </th>
+                <th class="min-width" id="colOrigen" style="display:none">
+                  <h6 class="text-sm text-medium">Origen</h6>
+                </th>
                 <!-- Total/Cantidad - común pero cambia label -->
                 <th class="min-width" id="colTotal">
                   <h6 class="text-sm text-medium">Total</h6>
                 </th>
-                <th>
+                <th id="colAcciones">
                   <h6 class="text-sm text-medium text-center">Acciones</h6>
                 </th>
               </tr>
             </thead>
             <tbody id="tableBody">
               <tr>
-                <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
+                <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
                   <i class="lni lni-inbox" style="font-size: 32px; margin-bottom: 10px;"></i>
                   <p>Cargando datos...</p>
                 </td>
@@ -302,7 +305,9 @@ function actualizarColumnasTabla() {
     document.getElementById('colEstado').style.display = '';
     document.getElementById('colProducto').style.display = 'none';
     document.getElementById('colTipo').style.display = 'none';
+    document.getElementById('colOrigen').style.display = 'none';
     document.getElementById('colTotal').querySelector('h6').textContent = 'Total';
+    document.getElementById('colAcciones').style.display = '';
   } else {
     // Inventario: mostrar Producto, Tipo | ocultar Factura, Cliente, Estado
     document.getElementById('colFactura').style.display = 'none';
@@ -310,8 +315,14 @@ function actualizarColumnasTabla() {
     document.getElementById('colEstado').style.display = 'none';
     document.getElementById('colProducto').style.display = '';
     document.getElementById('colTipo').style.display = '';
+    document.getElementById('colOrigen').style.display = '';
     document.getElementById('colTotal').querySelector('h6').textContent = 'Cantidad';
+    document.getElementById('colAcciones').style.display = 'none';
   }
+}
+
+function getCurrentColspan() {
+  return currentType === 'ventas' ? 6 : 5;
 }
 
 async function cargarEstadisticas(overrideDates = null) {
@@ -384,7 +395,7 @@ async function cargarDatos(overrideDates = null) {
   // Mostrar loading
   document.getElementById('tableBody').innerHTML = `
     <tr>
-      <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
+      <td colspan="${getCurrentColspan()}" style="text-align: center; padding: 40px; color: #999;">
         <i class="lni lni-reload" style="font-size: 32px; animation: spin 1s linear infinite;"></i>
         <p>Cargando datos...</p>
       </td>
@@ -445,7 +456,7 @@ function actualizarTabla(data) {
   if (data.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
+        <td colspan="${getCurrentColspan()}" style="text-align: center; padding: 40px; color: #999;">
           <i class="lni lni-inbox" style="font-size: 32px; margin-bottom: 10px;"></i>
           <p>No hay datos para este período</p>
         </td>
@@ -483,11 +494,17 @@ function actualizarTabla(data) {
         </tr>
       `;
     } else {
+      const productoNombre = row.producto_nombre || 'Producto #' + row.producto_id;
+      const productoLimite = 'Complete Los Datos Del Producto'.length;
+      const productoTruncado = productoNombre.length > productoLimite;
       return `
         <tr>
           <td><p class="text-sm">${formatDate(row.created_at)}</p></td>
           <td>
-            <p class="text-sm">${row.producto_nombre || 'Producto #' + row.producto_id}</p>
+            <span class="text-sm ${productoTruncado ? 'truncate truncate-long' : ''}" 
+                  ${productoTruncado ? 'data-bs-toggle="tooltip" data-bs-title="' + productoNombre.replace(/"/g, '&quot;') + '"' : ''}>
+              ${productoNombre}
+            </span>
           </td>
           </td>
           <td>
@@ -495,14 +512,8 @@ function actualizarTabla(data) {
               ${row.tipo === 'entrada' ? 'Entrada' : 'Salida'}
             </span>
           </td>
+          <td><p class="text-sm">${row.origen || '-'}</p></td>
           <td><p class="text-sm">${formatNumber(row.cantidad, 0)}</p></td>
-          <td style="text-align: center;">
-            <div class="action-buttons">
-              <button class="btn-action btn-secondary" disabled title="Función disponible próximamente">
-                <i class="lni lni-eye"></i> Ver detalles
-              </button>
-            </div>
-          </td>
         </tr>
       `;
     }
@@ -667,7 +678,7 @@ function verDetallesVenta(ventaId) {
 function mostrarError(mensaje) {
   document.getElementById('tableBody').innerHTML = `
     <tr>
-      <td colspan="8" style="text-align: center; padding: 40px; color: #c62828;">
+      <td colspan="${getCurrentColspan()}" style="text-align: center; padding: 40px; color: #c62828;">
         <i class="lni lni-close-circle" style="font-size: 32px; margin-bottom: 10px;"></i>
         <p>${mensaje}</p>
       </td>
