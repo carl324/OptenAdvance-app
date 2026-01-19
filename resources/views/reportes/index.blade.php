@@ -198,6 +198,38 @@
   </div>
 </section>
 
+<!-- ========== Modal Límite Exportación start ========== -->
+<div class="modal-overlay" id="exportLimitModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="icon-warning">
+        <i class="lni lni-warning"></i>
+      </div>
+      <div class="modal-header-text">
+        <h3>Límite de exportación alcanzado</h3>
+      </div>
+    </div>
+    
+    <div class="modal-body">
+      <div class="warning-message">
+        Por seguridad, el sistema permite exportar hasta 10.000 registros por archivo.
+        Para exportaciones mayores, reduzca el rango de fechas o contacte a soporte.
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-cancel" id="closeExportLimitModal" type="button">
+        Cerrar
+      </button>
+      <a class="modal-btn modal-btn-primary" id="contactSupportBtn" href="{{ route('soporte.index') }}">
+        Contactar soporte
+      </a>
+      
+    </div>
+  </div>
+</div>
+<!-- ========== Modal Límite Exportación end ========== -->
+
 
 
 <script>
@@ -257,7 +289,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Cargar estadísticas e inicializar datos
   aplicarFechas();
+
+  const exportLimitModal = document.getElementById('exportLimitModal');
+  const closeExportLimitModal = document.getElementById('closeExportLimitModal');
+  const contactSupportBtn = document.getElementById('contactSupportBtn');
+
+  if (closeExportLimitModal) {
+    closeExportLimitModal.addEventListener('click', hideExportLimitModal);
+  }
+  if (contactSupportBtn) {
+    contactSupportBtn.addEventListener('click', hideExportLimitModal);
+  }
+  if (exportLimitModal) {
+    exportLimitModal.addEventListener('click', (event) => {
+      if (event.target === exportLimitModal) {
+        hideExportLimitModal();
+      }
+    });
+  }
 });
+
+function showExportLimitModal() {
+  const modal = document.getElementById('exportLimitModal');
+  if (modal) {
+    modal.classList.add('active');
+  }
+}
+
+function hideExportLimitModal() {
+  const modal = document.getElementById('exportLimitModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+}
 
 function onDateChange(sourceField) {
   const validation = validateAndNormalizeDates(true, sourceField);
@@ -634,6 +698,10 @@ function exportarDatos() {
     }
   })
   .then(response => {
+    if (response.status === 413) {
+      showExportLimitModal();
+      return;
+    }
     if (response.ok) {
       // Obtener nombre del archivo
       const contentDisposition = response.headers.get('content-disposition');
@@ -915,6 +983,125 @@ function initializeTooltips() {
   .page-info {
     font-size: 14px;
     color: #6b7280;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 16px;
+    max-width: 520px;
+    width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    animation: modalSlideIn 0.3s ease-out;
+  }
+
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .modal-header {
+    display: flex;
+    gap: 16px;
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .icon-warning {
+    width: 48px;
+    height: 48px;
+    background: #fef3c7;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .icon-warning i {
+    font-size: 24px;
+    color: #f59e0b;
+  }
+
+  .modal-header-text h3 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .modal-body {
+    padding: 24px;
+  }
+
+  .warning-message {
+    padding: 12px 16px;
+    background: #fef3c7;
+    border-left: 3px solid #f59e0b;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #92400e;
+    margin-bottom: 0;
+  }
+
+  .modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 16px 24px 24px;
+  }
+
+  .modal-btn {
+    flex: 1;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .modal-btn-cancel {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  .modal-btn-cancel:hover {
+    background: #e5e7eb;
+  }
+
+  .modal-btn-primary {
+    background: #2563eb;
+    color: white;
+  }
+
+  .modal-btn-primary:hover {
+    background: #1d4ed8;
   }
 
   /* Estilos para truncate y tooltips */

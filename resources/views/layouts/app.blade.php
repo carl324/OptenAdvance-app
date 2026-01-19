@@ -76,8 +76,8 @@
   <!-- ======== sidebar-nav start =========== -->
   <aside class="sidebar-nav-wrapper">
     <div class="navbar-logo">
-      <a href="index.html">
-        <img src="assets/images/logo/logo.svg" alt="logo" />
+      <a href="/">
+        <img src="/assets/images/logo/horizontal.svg" alt="logo" />
       </a>
     </div>
     <nav class="sidebar-nav">
@@ -127,6 +127,15 @@
             <span class="text fw-semibold">Empresa</span>
           </a>
         </li>
+        <li class="nav-item {{ activeRoute('soporte.index') }}">
+          <a href="{{ route('soporte.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
+            <span class="icon fs-4 me-3">
+              <i class="lni lni-cogs"></i>
+
+            </span>
+            <span class="text fw-semibold">Soporte</span>
+          </a>
+        </li>
 
       </ul>
     </nav>
@@ -169,30 +178,26 @@
 
     @yield('content')
     <footer class="footer">
-      <div class="container-fluid">
-        <div class="row align-items-center justify-content-between">
-          <div class="col-md-6 order-last order-md-first">
-            <div class="copyright text-center text-md-start">
-              <p class="text-sm">
-                Designed and Developed by
-                <a href="https://plainadmin.com" rel="nofollow" target="_blank">
-                  PlainAdmin
-                </a>
-              </p>
-            </div>
-          </div>
-          <!-- end col-->
-          <div class="col-md-6">
-            <div class="terms d-flex justify-content-center justify-content-md-end">
-              <a href="#0" class="text-sm">Term & Conditions</a>
-              <a href="#0" class="text-sm ml-15">Privacy & Policy</a>
-            </div>
-          </div>
+  <div class="container-fluid">
+    <div class="row align-items-center justify-content-between">
+      <div class="col-md-6 order-last order-md-first">
+        <div class="copyright text-center text-md-start">
+          <p class="text-sm mb-0">
+            © {{ date('Y') }} OptenAdvance · v1.0.0
+          </p>
         </div>
-        <!-- end row -->
       </div>
-      <!-- end container -->
-    </footer>
+
+      <div class="col-md-6">
+        <div class="terms d-flex justify-content-center justify-content-md-end">
+          <a href="/terminos-y-condiciones" class="text-sm">Términos y Condiciones</a>
+          <a href="/politica-de-privacidad" class="text-sm ml-15">Política de Privacidad</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
   </main>
   <script src="/assets/js/bootstrap.bundle.min.js"></script>
   <script src="/assets/js/Chart.min.js"></script>

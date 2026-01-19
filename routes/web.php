@@ -40,6 +40,11 @@ Route::get('/api/reportes', [ReporteController::class, 'apiData'])->name('report
 Route::get('/api/reportes/stats', [ReporteController::class, 'apiStats'])->name('reportes.api.stats');
 Route::get('/api/reportes/export', [ReporteController::class, 'apiExport'])->name('reportes.api.export');
 
+// Soporte: vista estática
+Route::get('/soporte', function () {
+    return view('soporte.index');
+})->name('soporte.index');
+
 Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
 Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
 Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
@@ -56,6 +61,12 @@ Route::post('/empresa', [EmpresaController::class, 'update'])->name('empresa.upd
 
 // Copia de seguridad manual: copia el archivo SQLite a la carpeta Downloads/opten-backups del usuario
 Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
+
+// Legal: términos y condiciones (vista estática)
+Route::view('/terminos-y-condiciones', 'legal.terminos')->name('legal.terminos');
+
+// Legal: política de privacidad (vista estática)
+Route::view('/politica-de-privacidad', 'legal.privacidad')->name('legal.privacidad');
 
 // Onboarding simple: vista independiente (closure que devuelve la vista)
 Route::get('/onboarding', function () {

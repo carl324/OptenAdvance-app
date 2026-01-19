@@ -1104,7 +1104,7 @@ function insertProductoFila(p) {
         <input class="edit" data-field="precio_con_iva" type="text" value="${formatCOP(precioConIvaInt)}" hidden readonly>
       </td>
       ` : ''}
-      <td class="min-width text-center">
+      <td class="min-width">
         <span class="view stock_view" data-field="stock" data-bs-toggle="tooltip" data-bs-title="${p.stock}">${p.stock}</span>
         <input class="edit stock_input" data-field="stock" type="text" value="${p.stock}" hidden data-original-stock="${p.stock}">
       </td>
@@ -1118,11 +1118,11 @@ function insertProductoFila(p) {
         data-bs-title="Eliminar">
             <i class="lni lni-trash-can"></i>
           </button>
-          <button type="button" class="text-primary" onclick="guardarProducto(${p.id})" hidden data-bs-toggle="tooltip" 
+          <button type="button" class="icon-green" onclick="guardarProducto(${p.id})" hidden data-bs-toggle="tooltip" 
         data-bs-title="Guardar">
             <i class="lni lni-checkmark-circle"></i>
           </button>
-          <button type="button" class="text-danger" onclick="cancelarEdicion(${p.id})" hidden data-bs-toggle="tooltip" 
+          <button type="button" class="icon-red" onclick="cancelarEdicion(${p.id})" hidden data-bs-toggle="tooltip" 
         data-bs-title="Cancelar">
             <i class="lni lni-close"></i>
           </button>

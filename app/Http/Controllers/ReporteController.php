@@ -138,7 +138,11 @@ class ReporteController extends Controller
                 // Protección: no permitir exportaciones masivas que puedan agotar memoria
                 $count = Reporte::ventasDetalle($filtros)->count();
                 if ($count > self::MAX_EXPORT_ROWS) {
-                    return response('La exportación contiene ' . $count . " filas, excede el límite de exportación (" . self::MAX_EXPORT_ROWS . "). Reduce el rango de fechas o aplica filtros más específicos.", 413);
+                    return response()->json([
+                        'success' => false,
+                        'code' => 'EXPORT_LIMIT_EXCEEDED',
+                        'message' => 'El reporte es demasiado grande para exportar. Reduzca el rango de fechas o contacte a soporte.'
+                    ], 413);
                 }
 
                 $this->exportVentasCompletas($sheet, $filtros, $empresa);
@@ -148,7 +152,11 @@ class ReporteController extends Controller
             case 'inventario_movimientos':
                 $count = Reporte::inventarioMovimientos($filtros)->count();
                 if ($count > self::MAX_EXPORT_ROWS) {
-                    return response('La exportación contiene ' . $count . " filas, excede el límite de exportación (" . self::MAX_EXPORT_ROWS . "). Reduce el rango de fechas o aplica filtros más específicos.", 413);
+                    return response()->json([
+                        'success' => false,
+                        'code' => 'EXPORT_LIMIT_EXCEEDED',
+                        'message' => 'El reporte es demasiado grande para exportar. Reduzca el rango de fechas o contacte a soporte.'
+                    ], 413);
                 }
 
                 $this->exportInventarioMovimientos($sheet, $filtros);
@@ -587,15 +595,38 @@ class ReporteController extends Controller
 
         // Obtener datos sin paginación (con límite de seguridad)
         if ($tipo === 'movimientos') {
-            $data = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+            $movimientosQuery = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
+            $count = (clone $movimientosQuery)->count();
+            if ($count > self::MAX_EXPORT_ROWS) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'EXPORT_LIMIT_EXCEEDED',
+                    'message' => 'El reporte es demasiado grande para exportar. Reduzca el rango de fechas o contacte a soporte.'
+                ], 413);
+            }
+
+            $data = $movimientosQuery
+                ->with('producto')
                 ->orderBy('created_at', 'desc')
-                ->limit(self::MAX_EXPORT_ROWS)
                 ->get();
         } else {
-            $data = \App\Models\Venta::with('detalles.producto', 'factura')
-                ->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+            $ventasQuery = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
+            $detalleCount = \App\Models\VentaDetalle::whereHas('venta', function ($q) use ($fecha_inicio, $fecha_fin) {
+                $q->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
+            })->count();
+            $ventasSinDetalles = (clone $ventasQuery)->doesntHave('detalles')->count();
+            $count = $detalleCount + $ventasSinDetalles;
+            if ($count > self::MAX_EXPORT_ROWS) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'EXPORT_LIMIT_EXCEEDED',
+                    'message' => 'El reporte es demasiado grande para exportar. Reduzca el rango de fechas o contacte a soporte.'
+                ], 413);
+            }
+
+            $data = $ventasQuery
+                ->with('detalles.producto', 'factura')
                 ->orderBy('created_at', 'desc')
-                ->limit(self::MAX_EXPORT_ROWS)
                 ->get();
         }
 
@@ -606,23 +637,25 @@ class ReporteController extends Controller
         if ($tipo === 'movimientos') {
             // Headers para movimientos
             $sheet->setCellValue('A1', 'ID');
-            $sheet->setCellValue('B1', 'Fecha');
-            $sheet->setCellValue('C1', 'Producto');
+            $sheet->setCellValue('B1', 'Producto');
+            $sheet->setCellValue('C1', 'Tipo');
             $sheet->setCellValue('D1', 'Cantidad');
-            $sheet->setCellValue('E1', 'Tipo');
-            $sheet->setCellValue('F1', 'Origen');
+            $sheet->setCellValue('E1', 'Origen');
+            $sheet->setCellValue('F1', 'Descripción');
+            $sheet->setCellValue('G1', 'Fecha');
 
             // Aplicar estilos al header
-            $this->aplicarEstilosHeader($sheet, ['A1', 'B1', 'C1', 'D1', 'E1', 'F1']);
+            $this->aplicarEstilosHeader($sheet, ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1']);
 
             $row = 2;
             foreach ($data as $item) {
                 $sheet->setCellValue('A' . $row, $item->id);
-                $sheet->setCellValue('B' . $row, $item->created_at ? $item->created_at->format('Y-m-d H:i') : '');
-                $sheet->setCellValue('C' . $row, $item->producto_nombre);
+                $sheet->setCellValue('B' . $row, optional($item->producto)->nombre);
+                $sheet->setCellValue('C' . $row, $item->tipo);
                 $sheet->setCellValue('D' . $row, $item->cantidad);
-                $sheet->setCellValue('E' . $row, $item->tipo);
-                $sheet->setCellValue('F' . $row, $item->origen);
+                $sheet->setCellValue('E' . $row, $item->origen);
+                $sheet->setCellValue('F' . $row, $item->descripcion);
+                $sheet->setCellValue('G' . $row, $item->created_at ? $item->created_at->format('d/m/Y H:i') : '');
                 $row++;
             }
         } else {
@@ -638,9 +671,11 @@ class ReporteController extends Controller
             $sheet->setCellValue('I1', 'IVA');
             $sheet->setCellValue('J1', 'Total');
             $sheet->setCellValue('K1', 'Estado');
+            $sheet->setCellValue('L1', 'Medio de pago');
+            $sheet->setCellValue('M1', 'Motivo de anulación');
 
             // Aplicar estilos al header
-            $this->aplicarEstilosHeader($sheet, ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1', 'J1', 'K1']);
+            $this->aplicarEstilosHeader($sheet, ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1', 'J1', 'K1', 'L1', 'M1']);
 
             $row = 2;
             $totalVentas = 0;
@@ -649,6 +684,11 @@ class ReporteController extends Controller
             
             foreach ($data as $venta) {
                 $detalles = $venta->detalles ?? collect();
+                $medioPago = optional($venta->factura)->forma_pago ?? '-';
+                $motivoAnulacion = '-';
+                if ($venta->estado === 'anulada') {
+                    $motivoAnulacion = optional($detalles->first())->motivo_anulacion ?? '-';
+                }
                 
                 if ($detalles->isEmpty()) {
                     // Si no hay detalles, mostrar solo la venta
@@ -658,6 +698,8 @@ class ReporteController extends Controller
                     $sheet->setCellValue('D' . $row, optional($venta->factura)->cliente_nombre);
                     $sheet->setCellValue('J' . $row, $venta->total);
                     $sheet->setCellValue('K' . $row, $venta->estado);
+                    $sheet->setCellValue('L' . $row, $medioPago);
+                    $sheet->setCellValue('M' . $row, $motivoAnulacion);
                     $row++;
                     
                     if ($venta->estado === 'completada') {
@@ -679,6 +721,8 @@ class ReporteController extends Controller
                         $sheet->setCellValue('I' . $row, $detalle->iva ?? 0);
                         $sheet->setCellValue('J' . $row, $venta->total);
                         $sheet->setCellValue('K' . $row, $venta->estado);
+                        $sheet->setCellValue('L' . $row, $medioPago);
+                        $sheet->setCellValue('M' . $row, $motivoAnulacion);
                         
                         $ivaVenta += ($detalle->iva ?? 0);
                         $row++;

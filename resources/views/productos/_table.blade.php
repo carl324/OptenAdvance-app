@@ -41,7 +41,7 @@
                 <input class="edit" data-field="precio_con_iva" type="text" value="{{ number_format($producto->precio_con_iva, 0, ',', '.') }}" hidden readonly>
             </td>
         @endif
-        <td class="min-width text-center">
+                <td class="min-width">
           <span class="view stock_view" 
               data-field="stock" 
               data-bs-toggle="tooltip" 
