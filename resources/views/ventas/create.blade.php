@@ -109,8 +109,219 @@
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
+  .caja-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+  padding: 48px 56px;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.caja-hero::before {
+  content: "";
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.caja-content {
+  flex: 1;
+  max-width: 500px;
+  z-index: 1;
+}
+
+.caja-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(147, 51, 234, 0.08));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 100px;
+  margin-bottom: 16px;
+}
+
+.caja-badge svg {
+  color: #3b82f6;
+}
+
+.caja-badge span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.caja-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.caja-subtitle {
+  font-size: 15px;
+  color: #64748b;
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.caja-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.caja-visual {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.caja-visual img {
+  width: 320px;
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(0 20px 40px rgba(15, 23, 42, 0.12));
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .caja-hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 40px 32px;
+    gap: 32px;
+  }
+  
+  .caja-content {
+    max-width: 100%;
+  }
+  
+  .caja-actions {
+    justify-content: center;
+  }
+  
+  .caja-visual img {
+    width: 280px;
+  }
+}
+
+@media (max-width: 576px) {
+  .caja-hero {
+    padding: 32px 24px;
+  }
+  
+  .caja-title {
+    font-size: 26px;
+  }
+  
+  .caja-subtitle {
+    font-size: 14px;
+  }
+  
+  .caja-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .caja-actions button {
+    width: 100%;
+  }
+  
+  .caja-visual img {
+    width: 240px;
+  }
+}
 </style>
 
+@if(!$cajaAbierta)
+<section class="section pt-30">
+  <div class="container-fluid">
+    <div class="card-style mb-30 p-0 overflow-hidden">
+      <div class="caja-hero">
+        <div class="caja-content">
+          <div class="caja-badge">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="6" fill="currentColor" opacity="0.2"/>
+              <circle cx="6" cy="6" r="3" fill="currentColor"/>
+            </svg>
+            <span>Sistema POS</span>
+          </div>
+          
+          <h2 class="caja-title">Caja registradora</h2>
+          <p class="caja-subtitle">Gestiona tus ventas de forma rápida y eficiente</p>
+          
+          <div class="caja-actions">
+                        <button class="main-btn primary-btn btn-hover" type="button" data-bs-toggle="modal" data-bs-target="#modalAbrirCaja">
+              <i class="lni lni-unlock me-2"></i>
+              Abrir caja
+            </button>
+            <button class="main-btn light-btn btn-hover">
+              <i class="lni lni-bar-chart me-2"></i>
+              Ver reportes
+            </button>
+          </div>
+        </div>
+        
+        <div class="caja-visual">
+          <img src="/assets/images/cards/caja.png" alt="Caja registradora" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="modal fade" id="modalAbrirCaja" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content alegra-modal-square px-2">
+            <div class="modal-header border-0 pb-3">
+                <h6 class="text-medium mb-0">Apertura de caja</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ route('caja.abrir') }}">
+                @csrf
+                <div class="modal-body pt-0">
+                    <div class="mb-3">
+                        <label for="monto_apertura" class="form-label text-xs text-gray">Monto de apertura</label>
+                        <input type="number" step="0.01" min="0" class="form-control form-control-sm alegra-input" id="monto_apertura" name="monto_apertura" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nota_apertura" class="form-label text-xs text-gray">Nota (opcional)</label>
+                        <input type="text" class="form-control form-control-sm alegra-input" id="nota_apertura" name="nota_apertura" maxlength="255">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-3">
+                    <div class="d-flex gap-3 w-100">
+                        <button class="main-btn light-btn btn-hover flex-fill" type="button" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button class="main-btn primary-btn btn-hover flex-fill" type="submit">
+                            Abrir caja
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
+@if($cajaAbierta)
 <section class="section">
     <div class="container-fluid">
         <div class="title-wrapper pt-30"></div>
@@ -901,5 +1112,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Inicialización completada exitosamente');
 });
 </script>
+
+@endif
 
 @endsection

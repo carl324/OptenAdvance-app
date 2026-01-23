@@ -6,11 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\Venta;
 use App\Models\VentaDetalle;
 use App\Models\Producto;
 use App\Models\InventarioMovimiento;
+use App\Models\Caja;
 use App\Models\Empresa;
 
 class VentaController extends Controller
@@ -40,7 +42,8 @@ class VentaController extends Controller
     public function create()
     {
         $empresa = Empresa::first();
-        return view('ventas.create', compact('empresa'));
+        $cajaAbierta = Caja::where('estado', 'abierta')->exists();
+        return view('ventas.create', compact('empresa', 'cajaAbierta'));
     }
 
     // Buscar productos (incluye IVA)
@@ -82,6 +85,14 @@ class VentaController extends Controller
                 'productos.*.precio'   => 'required|numeric|min:0',
                 'productos.*.iva'      => 'nullable|numeric|min:0|max:100',
             ]);
+
+            $caja = Caja::where('estado', 'abierta')->first();
+            if (!$caja) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay caja abierta'
+                ], 409);
+            }
 
             // Bug #23: Forzar forma_pago a 'efectivo' si viene vacio o null
             $data['forma_pago'] = $data['forma_pago'] ?? 'efectivo';
@@ -151,6 +162,8 @@ class VentaController extends Controller
                 'total'   => $totalFinal,
                 'estado'  => 'completada',
                 'fecha'   => now(),
+                'user_id' => Auth::id(),
+                'caja_id' => $caja->id,
             ]);
 
             // Factura
@@ -172,6 +185,7 @@ class VentaController extends Controller
                 'total'          => $totalFinal,
                 'impuestos'      => $totalIva,
                 'forma_pago'     => $data['forma_pago'] ?? null,
+                'user_id'        => Auth::id(),
                 'created_at'     => now(),
                 'updated_at'     => now(),
             ]);
@@ -192,7 +206,8 @@ class VentaController extends Controller
                     $calc['item']['cantidad'],
                     'venta',
                     $venta->id,
-                    "Venta #{$venta->id}"
+                    "Venta #{$venta->id}",
+                    Auth::id()
                 );
             }
 
@@ -436,7 +451,8 @@ class VentaController extends Controller
                     $cantidad,
                     'venta_anulada',
                     $venta->id,
-                    $descripcion
+                    $descripcion,
+                    Auth::id()
                 );
             }
 

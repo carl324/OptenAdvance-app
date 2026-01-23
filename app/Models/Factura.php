@@ -20,6 +20,7 @@ class Factura extends Model
         'total',
         'impuestos',
         'forma_pago',
+        'user_id',
     ];
 
     public $timestamps = true;

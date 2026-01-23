@@ -20,6 +20,8 @@ class Venta extends Model
         'total',
         'estado',
         'fecha',
+        'user_id',
+        'caja_id',
     ];
 
     protected $casts = [
@@ -36,6 +38,11 @@ class Venta extends Model
     public function factura()
     {
         return $this->hasOne(Factura::class);
+    }
+
+    public function caja()
+    {
+        return $this->belongsTo(Caja::class, 'caja_id');
     }
 
     public function scopeCompletadas($query)

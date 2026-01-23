@@ -16,6 +16,7 @@ class InventarioMovimiento extends Model
         'origen',
         'referencia_id',
         'descripcion',
+        'user_id',
     ];
 
     public $timestamps = true;
@@ -28,12 +29,12 @@ class InventarioMovimiento extends Model
         return $this->belongsTo(Producto::class, 'producto_id');
     }
 
-    public static function entrada($productoId, $cantidad, $origen, $referenciaId = null, $descripcion = null)
+    public static function entrada($productoId, $cantidad, $origen, $referenciaId = null, $descripcion = null, $userId = null)
     {
         // Envolver en transacción para garantizar consistencia atómica:
         // Si create() falla → no se modifica stock
         // Si increment() falla → se revierte el create()
-        return DB::transaction(function () use ($productoId, $cantidad, $origen, $referenciaId, $descripcion) {
+        return DB::transaction(function () use ($productoId, $cantidad, $origen, $referenciaId, $descripcion, $userId) {
             self::create([
                 'producto_id'   => $productoId,
                 'tipo'          => 'entrada',
@@ -41,6 +42,7 @@ class InventarioMovimiento extends Model
                 'origen'        => $origen,
                 'referencia_id' => $referenciaId,
                 'descripcion'   => $descripcion,
+                'user_id'       => $userId,
             ]);
 
             DB::table('productos')
@@ -49,12 +51,12 @@ class InventarioMovimiento extends Model
         });
     }
 
-    public static function salida($productoId, $cantidad, $origen, $referenciaId = null, $descripcion = null)
+    public static function salida($productoId, $cantidad, $origen, $referenciaId = null, $descripcion = null, $userId = null)
     {
         // Envolver en transacción para garantizar consistencia atómica:
         // Validación + decremento + movimiento deben ser indivisibles
         // Si cualquier paso falla → todo se revierte
-        return DB::transaction(function () use ($productoId, $cantidad, $origen, $referenciaId, $descripcion) {
+        return DB::transaction(function () use ($productoId, $cantidad, $origen, $referenciaId, $descripcion, $userId) {
             // Validación atómica: verificar stock y decrementar en una operación
             // La cláusula where+decrement es atómica en la BD
             $actualizados = DB::table('productos')
@@ -75,6 +77,7 @@ class InventarioMovimiento extends Model
                 'origen'        => $origen,
                 'referencia_id' => $referenciaId,
                 'descripcion'   => $descripcion,
+                'user_id'       => $userId,
             ]);
         });
     }

@@ -32,6 +32,6 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $routeMiddleware = [
-        // route middleware map (left empty to avoid custom middleware registration)
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
     ];
 }

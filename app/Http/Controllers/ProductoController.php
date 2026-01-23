@@ -7,6 +7,7 @@ use App\Models\Producto;
 use App\Models\InventarioMovimiento;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class ProductoController extends Controller
@@ -120,7 +121,8 @@ class ProductoController extends Controller
                     'cantidad' => $stockInicial,
                     'tipo' => 'entrada',
                     'origen' => 'registro_producto',
-                    'descripcion' => 'Stock inicial al registrar producto'
+                    'descripcion' => 'Stock inicial al registrar producto',
+                    'user_id' => Auth::id(),
                 ]);
             }
 
@@ -246,7 +248,8 @@ class ProductoController extends Controller
                             abs($diferencia),
                             'ajuste',
                             $producto->id,
-                            "Ajuste manual: de {$stockAnterior} a {$stockNuevo} (+{$diferencia})"
+                            "Ajuste manual: de {$stockAnterior} a {$stockNuevo} (+{$diferencia})",
+                            Auth::id()
                         );
                     } else {
                         // Stock disminuyó = SALIDA
@@ -256,7 +259,8 @@ class ProductoController extends Controller
                             abs($diferencia),
                             'ajuste',
                             $producto->id,
-                            "Ajuste manual: de {$stockAnterior} a {$stockNuevo} ({$diferencia})"
+                            "Ajuste manual: de {$stockAnterior} a {$stockNuevo} ({$diferencia})",
+                            Auth::id()
                         );
                     }
 
