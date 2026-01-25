@@ -8,6 +8,7 @@ use App\Models\Empresa;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class ReporteController extends Controller
 {
@@ -162,6 +163,24 @@ class ReporteController extends Controller
                 $this->exportInventarioMovimientos($sheet, $filtros);
                 $filename = 'reporte_inventario_movimientos';
                 break;
+
+            case 'cajas':
+                // Contar registros en rango sin paginación
+                $queryCount = \DB::table('cajas as c')
+                    ->whereBetween('c.fecha_apertura', [$filtros['fecha_inicio'] . ' 00:00:00', $filtros['fecha_fin'] . ' 23:59:59']);
+
+                $count = $queryCount->count();
+                if ($count > self::MAX_EXPORT_ROWS) {
+                    return response()->json([
+                        'success' => false,
+                        'code' => 'EXPORT_LIMIT_EXCEEDED',
+                        'message' => 'El reporte es demasiado grande para exportar. Reduzca el rango de fechas o contacte a soporte.'
+                    ], 413);
+                }
+
+                $this->exportCajas($sheet, $filtros);
+                $filename = 'reporte_cajas';
+                break;
             
             default:
                 $filename = 'reporte';
@@ -185,8 +204,8 @@ class ReporteController extends Controller
     {
         $sheet->setTitle('Ventas Completas');
         
-        // Headers
-        $headers = ['Fecha', 'Venta ID', 'N° Factura', 'Cliente', 'Producto', 'Cantidad', 'Precio Unit.', 'Subtotal'];
+        // Headers (añadimos Vendedor y Rol)
+        $headers = ['Fecha', 'Venta ID', 'N° Factura', 'Cliente', 'Vendedor', 'Rol', 'Producto', 'Cantidad', 'Precio Unit.', 'Subtotal'];
 
         // Verificar si hay datos históricos con IVA > 0
         $detalles = Reporte::ventasDetalle($filtros)->get();
@@ -218,6 +237,12 @@ class ReporteController extends Controller
         $totalIva = 0;
         $totalTotal = 0;
 
+        // Cargar usuarios relacionados en una sola consulta para evitar N+1
+        $userIds = $detalles->map(function($d) {
+            return optional($d->venta)->user_id;
+        })->filter()->unique()->values()->all();
+        $users = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
+
         foreach ($detalles as $d) {
             // Origen del registro (solo para UI / export)
             $d->origen_reporte = 'venta_detalle';
@@ -228,24 +253,38 @@ class ReporteController extends Controller
             // Usar subtotal directamente (ya incluye IVA desde BD)
             $total = $d->subtotal;
 
-            $sheet->setCellValue('A' . $row, $fecha);
-            $sheet->setCellValue('B' . $row, $d->venta_id);
-            $sheet->setCellValue('C' . $row, $facturaNumero);
-            $sheet->setCellValue('D' . $row, $cliente);
-            $sheet->setCellValue('E' . $row, $producto);
-            $sheet->setCellValue('F' . $row, (float)$d->cantidad);
-            $sheet->setCellValue('G' . $row, (float)$d->precio_unitario);
-            $sheet->setCellValue('H' . $row, (float)$d->subtotal);
+            // Obtener vendedor y rol desde colección precargada
+            $ventaUserId = optional($d->venta)->user_id;
+            $vendedor = $users->get($ventaUserId);
+            $vendedorNombre = optional($vendedor)->name ?? '-';
+            $vendedorRol = optional($vendedor)->role ?? '-';
 
-            $currentCol = 'I';
+            // Preparar fila de valores acorde al orden de $headers
+            $values = [];
+            $values[] = $fecha;
+            $values[] = $d->venta_id;
+            $values[] = $facturaNumero;
+            $values[] = $cliente;
+            $values[] = $vendedorNombre;
+            $values[] = $vendedorRol;
+            $values[] = $producto;
+            $values[] = (float)$d->cantidad;
+            $values[] = (float)$d->precio_unitario;
+            $values[] = (float)$d->subtotal;
+
             if ($mostrarIva) {
-                $sheet->setCellValue($currentCol . $row, (float)$d->iva);
-                $currentCol++;
+                $values[] = (float)$d->iva;
             }
 
-            $sheet->setCellValue($currentCol . $row, (float)$total);
-            $currentCol++;
-            $sheet->setCellValue($currentCol . $row, $d->venta->estado ?? '-');
+            $values[] = (float)$total;
+            $values[] = $d->venta->estado ?? '-';
+
+            // Escribir valores en hoja
+            $col = 'A';
+            foreach ($values as $val) {
+                $sheet->setCellValue($col . $row, $val);
+                $col++;
+            }
 
             $totalCantidad += (float)$d->cantidad;
             $totalSubtotal += (float)$d->subtotal;
@@ -255,33 +294,63 @@ class ReporteController extends Controller
             $row++;
         }
 
-        // Totales
-        $sheet->setCellValue('E' . $row, 'TOTALES');
-        $sheet->getStyle('E' . $row)->getFont()->setBold(true);
-        $sheet->setCellValue('F' . $row, $totalCantidad);
-        $sheet->setCellValue('H' . $row, $totalSubtotal);
+        // Totales: ubicar columnas dinámicamente según headers
+        $idxProducto = array_search('Producto', $headers);
+        $idxCantidad = array_search('Cantidad', $headers);
+        $idxSubtotal = array_search('Subtotal', $headers);
+        $idxIva = array_search('IVA', $headers);
+        $idxTotal = array_search('Total', $headers);
 
-        $currentCol = 'I';
-        if ($mostrarIva) {
-            $sheet->setCellValue($currentCol . $row, $totalIva);
-            $currentCol++;
+        if ($idxProducto !== false) {
+            $colProducto = Coordinate::stringFromColumnIndex($idxProducto + 1);
+            $sheet->setCellValue($colProducto . $row, 'TOTALES');
+            $sheet->getStyle($colProducto . $row)->getFont()->setBold(true);
         }
-        $sheet->setCellValue($currentCol . $row, $totalTotal);
-        
-        $sheet->getStyle('F' . $row . ':' . $currentCol . $row)->getFont()->setBold(true);
+        if ($idxCantidad !== false) {
+            $colCantidad = Coordinate::stringFromColumnIndex($idxCantidad + 1);
+            $sheet->setCellValue($colCantidad . $row, $totalCantidad);
+        }
+        if ($idxSubtotal !== false) {
+            $colSubtotal = Coordinate::stringFromColumnIndex($idxSubtotal + 1);
+            $sheet->setCellValue($colSubtotal . $row, $totalSubtotal);
+        }
 
-        // Formato de moneda
+        if ($idxIva !== false) {
+            $colIva = Coordinate::stringFromColumnIndex($idxIva + 1);
+            $sheet->setCellValue($colIva . $row, $totalIva);
+        }
+
+        if ($idxTotal !== false) {
+            $colTotal = Coordinate::stringFromColumnIndex($idxTotal + 1);
+            $sheet->setCellValue($colTotal . $row, $totalTotal);
+        }
+
+        // Poner en negrita la fila de totales en las columnas numéricas si existen
+        $firstNumIdx = $idxCantidad !== false ? $idxCantidad + 1 : null;
+        $lastNumIdx = $idxTotal !== false ? $idxTotal + 1 : null;
+        if ($firstNumIdx && $lastNumIdx) {
+            $sheet->getStyle(Coordinate::stringFromColumnIndex($firstNumIdx) . $row . ':' . Coordinate::stringFromColumnIndex($lastNumIdx) . $row)->getFont()->setBold(true);
+        }
+
+        // Formato de moneda: aplicar a Precio Unitario, Subtotal, IVA y Total si existen
         $currencyFormat = '"$"#,##0';
-        $sheet->getStyle('G2:H' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
-        
-        if ($mostrarIva) {
-            $sheet->getStyle('I2:J' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
-        } else {
-            $sheet->getStyle('I2:I' . $row)->getNumberFormat()->setFormatCode($currencyFormat);
+        $priceIdx = array_search('Precio Unit.', $headers);
+        if ($priceIdx !== false && $idxSubtotal !== false) {
+            $colPrice = Coordinate::stringFromColumnIndex($priceIdx + 1);
+            $colSubtotal = Coordinate::stringFromColumnIndex($idxSubtotal + 1);
+            $sheet->getStyle($colPrice . '2:' . $colSubtotal . $row)->getNumberFormat()->setFormatCode($currencyFormat);
+        }
+        if ($idxIva !== false && $idxTotal !== false) {
+            $colIva = Coordinate::stringFromColumnIndex($idxIva + 1);
+            $colTotal = Coordinate::stringFromColumnIndex($idxTotal + 1);
+            $sheet->getStyle($colIva . '2:' . $colTotal . $row)->getNumberFormat()->setFormatCode($currencyFormat);
+        } elseif ($idxTotal !== false) {
+            $colTotal = Coordinate::stringFromColumnIndex($idxTotal + 1);
+            $sheet->getStyle($colTotal . '2:' . $colTotal . $row)->getNumberFormat()->setFormatCode($currencyFormat);
         }
 
         // Auto size
-        $lastCol = $mostrarIva ? 'K' : 'J';
+        $lastCol = Coordinate::stringFromColumnIndex(count($headers));
         foreach (range('A', $lastCol) as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
@@ -365,6 +434,97 @@ class ReporteController extends Controller
     }
 
     /**
+     * Exporta el reporte de cajas a Excel
+     */
+    private function exportCajas($sheet, $filtros)
+    {
+        $sheet->setTitle('Cajas');
+
+        // Headers solicitados
+        $headers = [
+            'Fecha apertura',
+            'Fecha cierre',
+            'Usuario',
+            'Estado',
+            'Monto apertura',
+            'Total ventas',
+            'Total efectivo',
+            'Monto cierre calculado',
+            'Monto cierre real',
+            'Diferencia',
+            'Nota apertura',
+            'Nota cierre',
+        ];
+
+        // Escribir headers
+        $col = 'A';
+        $headerCells = [];
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . '1', $h);
+            $headerCells[] = $col . '1';
+            $col++;
+        }
+
+        // Aplicar estilos al header
+        $this->aplicarEstilosHeader($sheet, $headerCells);
+
+        // Obtener datos con JOIN a users para traer el nombre
+        $rows = \DB::table('cajas as c')
+            ->leftJoin('users as u', 'u.id', '=', 'c.user_id')
+            ->whereBetween('c.fecha_apertura', [$filtros['fecha_inicio'] . ' 00:00:00', $filtros['fecha_fin'] . ' 23:59:59'])
+            ->orderBy('c.fecha_apertura', 'desc')
+            ->select(
+                'c.fecha_apertura',
+                'c.fecha_cierre',
+                \DB::raw('u.name as usuario'),
+                'c.estado',
+                'c.monto_apertura',
+                'c.total_ventas',
+                'c.total_efectivo',
+                'c.monto_cierre_calculado',
+                'c.monto_cierre_real',
+                'c.diferencia',
+                'c.nota_apertura',
+                'c.nota_cierre'
+            )
+            ->get();
+
+        $row = 2;
+        foreach ($rows as $r) {
+            // Formatear fechas
+            $fechaA = $r->fecha_apertura ? (\Carbon\Carbon::parse($r->fecha_apertura)->format('Y-m-d H:i')) : '';
+            $fechaC = $r->fecha_cierre ? (\Carbon\Carbon::parse($r->fecha_cierre)->format('Y-m-d H:i')) : 'Abierta';
+
+            $sheet->setCellValue('A' . $row, $fechaA);
+            $sheet->setCellValue('B' . $row, $fechaC);
+            $sheet->setCellValue('C' . $row, $r->usuario ?? '-');
+            $sheet->setCellValue('D' . $row, $r->estado ?? '-');
+
+            // Montos como números
+            $sheet->setCellValue('E' . $row, $r->monto_apertura !== null ? (float)$r->monto_apertura : null);
+            $sheet->setCellValue('F' . $row, $r->total_ventas !== null ? (float)$r->total_ventas : null);
+            $sheet->setCellValue('G' . $row, $r->total_efectivo !== null ? (float)$r->total_efectivo : null);
+            $sheet->setCellValue('H' . $row, $r->monto_cierre_calculado !== null ? (float)$r->monto_cierre_calculado : null);
+            $sheet->setCellValue('I' . $row, $r->monto_cierre_real !== null ? (float)$r->monto_cierre_real : null);
+            $sheet->setCellValue('J' . $row, $r->diferencia !== null ? (float)$r->diferencia : null);
+
+            $sheet->setCellValue('K' . $row, $r->nota_apertura ?? '-');
+            $sheet->setCellValue('L' . $row, $r->nota_cierre ?? '-');
+
+            $row++;
+        }
+
+        // Aplicar formato numérico a columnas E-J (montos)
+        $currencyRange = 'E2:J' . max(2, $row - 1);
+        $sheet->getStyle($currencyRange)->getNumberFormat()->setFormatCode('#,##0');
+
+        // Auto size
+        foreach (range('A', 'L') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+    }
+
+    /**
      * Sanitiza una fecha recibida por input.
      * Si la fecha no es válida devuelve null (ignorar silenciosamente).
      * Acepta formatos legibles por Carbon::parse().
@@ -436,7 +596,31 @@ class ReporteController extends Controller
         ];
 
         // Obtener datos según tipo
-        if ($tipo === 'movimientos') {
+        if ($tipo === 'cajas') {
+            // Cajas: usar tabla cajas y hacer LEFT JOIN con users para obtener el nombre
+            $query = \DB::table('cajas as c')
+                ->leftJoin('users as u', 'u.id', '=', 'c.user_id')
+                ->whereBetween('c.fecha_apertura', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+                ->when($search, function ($q) use ($search) {
+                    $term = '%' . strtolower($search) . '%';
+                    return $q->whereRaw('LOWER(u.name) LIKE ?', [$term])
+                             ->orWhereRaw('LOWER(c.estado) LIKE ?', [$term]);
+                })
+                ->select(
+                    'c.fecha_apertura',
+                    'c.fecha_cierre',
+                    \DB::raw('u.name as user_name'),
+                    'c.total_ventas',
+                    'c.total_efectivo',
+                    'c.monto_cierre_calculado',
+                    'c.monto_cierre_real',
+                    'c.diferencia',
+                    'c.estado'
+                )
+                ->orderBy('c.fecha_apertura', 'desc');
+
+            $data = $query->paginate(15)->appends($request->query());
+        } elseif ($tipo === 'movimientos') {
             // Eager loading de producto + búsqueda server-side
             $query = \App\Models\InventarioMovimiento::with('producto')
                 ->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
@@ -477,6 +661,19 @@ class ReporteController extends Controller
                     'cantidad' => $item->cantidad,
                     'tipo' => $item->tipo,
                     'origen' => $item->origen,
+                ];
+            } elseif ($tipo === 'cajas') {
+                // El query de cajas devuelve columnas ya seleccionadas y con alias user_name
+                return [
+                    'fecha_apertura' => $item->fecha_apertura,
+                    'fecha_cierre' => $item->fecha_cierre,
+                    'user_name' => $item->user_name,
+                    'total_ventas' => isset($item->total_ventas) ? (float)$item->total_ventas : null,
+                    'total_efectivo' => isset($item->total_efectivo) ? (float)$item->total_efectivo : null,
+                    'monto_cierre_calculado' => isset($item->monto_cierre_calculado) ? (float)$item->monto_cierre_calculado : null,
+                    'monto_cierre_real' => isset($item->monto_cierre_real) ? (float)$item->monto_cierre_real : null,
+                    'diferencia' => isset($item->diferencia) ? (float)$item->diferencia : null,
+                    'estado' => $item->estado,
                 ];
             } else {
                 return [
@@ -609,6 +806,37 @@ class ReporteController extends Controller
                 ->with('producto')
                 ->orderBy('created_at', 'desc')
                 ->get();
+        } elseif ($tipo === 'cajas') {
+            $cajasQuery = \DB::table('cajas as c')
+                ->leftJoin('users as u', 'u.id', '=', 'c.user_id')
+                ->whereBetween('c.fecha_apertura', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
+
+            $count = (clone $cajasQuery)->count();
+            if ($count > self::MAX_EXPORT_ROWS) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'EXPORT_LIMIT_EXCEEDED',
+                    'message' => 'El reporte es demasiado grande para exportar. Reduzca el rango de fechas o contacte a soporte.'
+                ], 413);
+            }
+
+            $data = $cajasQuery
+                ->select(
+                    'c.fecha_apertura',
+                    'c.fecha_cierre',
+                    \DB::raw('u.name as usuario'),
+                    'c.estado',
+                    'c.monto_apertura',
+                    'c.total_ventas',
+                    'c.total_efectivo',
+                    'c.monto_cierre_calculado',
+                    'c.monto_cierre_real',
+                    'c.diferencia',
+                    'c.nota_apertura',
+                    'c.nota_cierre'
+                )
+                ->orderBy('c.fecha_apertura', 'desc')
+                ->get();
         } else {
             $ventasQuery = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
             $detalleCount = \App\Models\VentaDetalle::whereHas('venta', function ($q) use ($fecha_inicio, $fecha_fin) {
@@ -658,30 +886,67 @@ class ReporteController extends Controller
                 $sheet->setCellValue('G' . $row, $item->created_at ? $item->created_at->format('d/m/Y H:i') : '');
                 $row++;
             }
+        } elseif ($tipo === 'cajas') {
+            // Headers para cajas
+            $headers = ['Fecha apertura','Fecha cierre','Usuario','Estado','Monto apertura','Total ventas','Total efectivo','Monto cierre calculado','Monto cierre real','Diferencia','Nota apertura','Nota cierre'];
+
+            $col = 'A';
+            $headerCells = [];
+            foreach ($headers as $h) {
+                $sheet->setCellValue($col . '1', $h);
+                $headerCells[] = $col . '1';
+                $col++;
+            }
+            $this->aplicarEstilosHeader($sheet, $headerCells);
+
+            $row = 2;
+            foreach ($data as $r) {
+                $fechaA = $r->fecha_apertura ? (\Carbon\Carbon::parse($r->fecha_apertura)->format('d/m/Y H:i')) : '';
+                $fechaC = $r->fecha_cierre ? (\Carbon\Carbon::parse($r->fecha_cierre)->format('d/m/Y H:i')) : 'Abierta';
+
+                $sheet->setCellValue('A' . $row, $fechaA);
+                $sheet->setCellValue('B' . $row, $fechaC);
+                $sheet->setCellValue('C' . $row, $r->usuario ?? '-');
+                $sheet->setCellValue('D' . $row, $r->estado ?? '-');
+
+                $sheet->setCellValue('E' . $row, $r->monto_apertura !== null ? (float)$r->monto_apertura : null);
+                $sheet->setCellValue('F' . $row, $r->total_ventas !== null ? (float)$r->total_ventas : null);
+                $sheet->setCellValue('G' . $row, $r->total_efectivo !== null ? (float)$r->total_efectivo : null);
+                $sheet->setCellValue('H' . $row, $r->monto_cierre_calculado !== null ? (float)$r->monto_cierre_calculado : null);
+                $sheet->setCellValue('I' . $row, $r->monto_cierre_real !== null ? (float)$r->monto_cierre_real : null);
+                $sheet->setCellValue('J' . $row, $r->diferencia !== null ? (float)$r->diferencia : null);
+
+                $sheet->setCellValue('K' . $row, $r->nota_apertura ?? '-');
+                $sheet->setCellValue('L' . $row, $r->nota_cierre ?? '-');
+
+                $row++;
+            }
+
+            $sheet->getStyle('E2:J' . max(2, $row - 1))->getNumberFormat()->setFormatCode('#,##0');
+
         } else {
-            // Headers para ventas con detalles
-            $sheet->setCellValue('A1', 'Venta ID');
-            $sheet->setCellValue('B1', 'Fecha');
-            $sheet->setCellValue('C1', 'N° Factura');
-            $sheet->setCellValue('D1', 'Cliente');
-            $sheet->setCellValue('E1', 'Producto');
-            $sheet->setCellValue('F1', 'Cantidad');
-            $sheet->setCellValue('G1', 'Precio Unitario');
-            $sheet->setCellValue('H1', 'Subtotal');
-            $sheet->setCellValue('I1', 'IVA');
-            $sheet->setCellValue('J1', 'Total');
-            $sheet->setCellValue('K1', 'Estado');
-            $sheet->setCellValue('L1', 'Medio de pago');
-            $sheet->setCellValue('M1', 'Motivo de anulación');
+            // Headers para ventas con detalles (añadimos Vendedor y Rol)
+            $headers = ['Venta ID', 'Fecha', 'N° Factura', 'Cliente', 'Vendedor', 'Rol', 'Producto', 'Cantidad', 'Precio Unitario', 'Subtotal', 'IVA', 'Total', 'Estado', 'Medio de pago', 'Motivo de anulación'];
+
+            $col = 'A';
+            $headerCells = [];
+            foreach ($headers as $h) {
+                $sheet->setCellValue($col . '1', $h);
+                $headerCells[] = $col . '1';
+                $col++;
+            }
 
             // Aplicar estilos al header
-            $this->aplicarEstilosHeader($sheet, ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1', 'J1', 'K1', 'L1', 'M1']);
+            $this->aplicarEstilosHeader($sheet, $headerCells);
 
             $row = 2;
             $totalVentas = 0;
             $totalIva = 0;
             $ventasCompletadas = 0;
-            
+            // Precargar usuarios para evitar N+1
+            $userIds = $data->map(function($v) { return $v->user_id; })->filter()->unique()->values()->all();
+            $users = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
+
             foreach ($data as $venta) {
                 $detalles = $venta->detalles ?? collect();
                 $medioPago = optional($venta->factura)->forma_pago ?? '-';
@@ -689,19 +954,36 @@ class ReporteController extends Controller
                 if ($venta->estado === 'anulada') {
                     $motivoAnulacion = optional($detalles->first())->motivo_anulacion ?? '-';
                 }
-                
                 if ($detalles->isEmpty()) {
-                    // Si no hay detalles, mostrar solo la venta
-                    $sheet->setCellValue('A' . $row, $venta->id);
-                    $sheet->setCellValue('B' . $row, $venta->created_at ? $venta->created_at->format('Y-m-d H:i') : '');
-                    $sheet->setCellValue('C' . $row, optional($venta->factura)->numero);
-                    $sheet->setCellValue('D' . $row, optional($venta->factura)->cliente_nombre);
-                    $sheet->setCellValue('J' . $row, $venta->total);
-                    $sheet->setCellValue('K' . $row, $venta->estado);
-                    $sheet->setCellValue('L' . $row, $medioPago);
-                    $sheet->setCellValue('M' . $row, $motivoAnulacion);
+                    // Si no hay detalles, mostrar solo la venta (llenar columnas de detalle con valores por defecto)
+                    $ventaUser = $users->get($venta->user_id);
+                    $vendedorNombre = optional($ventaUser)->name ?? '-';
+                    $vendedorRol = optional($ventaUser)->role ?? '-';
+
+                    $values = [];
+                    $values[] = $venta->id;
+                    $values[] = $venta->created_at ? $venta->created_at->format('Y-m-d H:i') : '';
+                    $values[] = optional($venta->factura)->numero;
+                    $values[] = optional($venta->factura)->cliente_nombre;
+                    $values[] = $vendedorNombre;
+                    $values[] = $vendedorRol;
+                    $values[] = '-'; // Producto
+                    $values[] = 0;   // Cantidad
+                    $values[] = '';  // Precio Unitario
+                    $values[] = '';  // Subtotal
+                    $values[] = 0;   // IVA
+                    $values[] = $venta->total;
+                    $values[] = $venta->estado;
+                    $values[] = $medioPago;
+                    $values[] = $motivoAnulacion;
+
+                    $col = 'A';
+                    foreach ($values as $val) {
+                        $sheet->setCellValue($col . $row, $val);
+                        $col++;
+                    }
                     $row++;
-                    
+
                     if ($venta->estado === 'completada') {
                         $totalVentas += $venta->total;
                         $ventasCompletadas++;
@@ -709,25 +991,37 @@ class ReporteController extends Controller
                 } else {
                     // Mostrar cada detalle en una fila
                     $ivaVenta = 0;
+                    $ventaUser = $users->get($venta->user_id);
+                    $vendedorNombre = optional($ventaUser)->name ?? '-';
+                    $vendedorRol = optional($ventaUser)->role ?? '-';
                     foreach ($detalles as $detalle) {
-                        $sheet->setCellValue('A' . $row, $venta->id);
-                        $sheet->setCellValue('B' . $row, $venta->created_at ? $venta->created_at->format('Y-m-d H:i') : '');
-                        $sheet->setCellValue('C' . $row, optional($venta->factura)->numero);
-                        $sheet->setCellValue('D' . $row, optional($venta->factura)->cliente_nombre);
-                        $sheet->setCellValue('E' . $row, optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id);
-                        $sheet->setCellValue('F' . $row, $detalle->cantidad);
-                        $sheet->setCellValue('G' . $row, $detalle->precio_unitario);
-                        $sheet->setCellValue('H' . $row, $detalle->subtotal);
-                        $sheet->setCellValue('I' . $row, $detalle->iva ?? 0);
-                        $sheet->setCellValue('J' . $row, $venta->total);
-                        $sheet->setCellValue('K' . $row, $venta->estado);
-                        $sheet->setCellValue('L' . $row, $medioPago);
-                        $sheet->setCellValue('M' . $row, $motivoAnulacion);
-                        
+                        $values = [];
+                        $values[] = $venta->id;
+                        $values[] = $venta->created_at ? $venta->created_at->format('Y-m-d H:i') : '';
+                        $values[] = optional($venta->factura)->numero;
+                        $values[] = optional($venta->factura)->cliente_nombre;
+                        $values[] = $vendedorNombre;
+                        $values[] = $vendedorRol;
+                        $values[] = optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id;
+                        $values[] = $detalle->cantidad;
+                        $values[] = $detalle->precio_unitario;
+                        $values[] = $detalle->subtotal;
+                        $values[] = $detalle->iva ?? 0;
+                        $values[] = $venta->total;
+                        $values[] = $venta->estado;
+                        $values[] = $medioPago;
+                        $values[] = $motivoAnulacion;
+
+                        $col = 'A';
+                        foreach ($values as $val) {
+                            $sheet->setCellValue($col . $row, $val);
+                            $col++;
+                        }
+
                         $ivaVenta += ($detalle->iva ?? 0);
                         $row++;
                     }
-                    
+
                     if ($venta->estado === 'completada') {
                         $totalVentas += $venta->total;
                         $totalIva += $ivaVenta;
@@ -775,7 +1069,7 @@ class ReporteController extends Controller
 
         // Crear archivo temporal
         $writer = new Xlsx($spreadsheet);
-        $nombreTipo = ($tipo === 'movimientos') ? 'inventario' : 'venta';
+        $nombreTipo = ($tipo === 'movimientos') ? 'inventario' : (($tipo === 'cajas') ? 'cajas' : 'venta');
         $fileName = 'reporte_' . $nombreTipo . '.xlsx';
 
         return response()->stream(function() use ($writer) {

@@ -93,6 +93,7 @@
             <select class="light-bg" id="reportType">
               <option value="ventas">Ventas</option>
               <option value="movimientos">Inventario</option>
+              <option value="cajas">Caja</option>
             </select>
           </div>
         </div>
@@ -359,10 +360,16 @@ function aplicarFechas() {
 
 function actualizarColumnasTabla() {
   const isVentas = currentType === 'ventas';
-  document.getElementById('tableTitle').textContent = isVentas ? 'Historial de Ventas' : 'Movimientos de Inventario';
+  const isMovimientos = currentType === 'movimientos';
+  const isCajas = currentType === 'cajas';
 
-  // Mostrar/ocultar columnas según tipo
   if (isVentas) {
+    document.getElementById('tableTitle').textContent = 'Historial de Ventas';
+    // Restaurar texto del primer th a 'Fecha'
+    const firstTh = document.querySelector('.top-selling-table thead tr th');
+    if (firstTh && firstTh.querySelector('h6')) {
+      firstTh.querySelector('h6').textContent = 'Fecha';
+    }
     // Ventas: mostrar Factura, Cliente, Estado | ocultar Producto, Tipo
     document.getElementById('colFactura').style.display = '';
     document.getElementById('colCliente').style.display = '';
@@ -372,7 +379,13 @@ function actualizarColumnasTabla() {
     document.getElementById('colOrigen').style.display = 'none';
     document.getElementById('colTotal').querySelector('h6').textContent = 'Total';
     document.getElementById('colAcciones').style.display = '';
-  } else {
+  } else if (isMovimientos) {
+    document.getElementById('tableTitle').textContent = 'Movimientos de Inventario';
+    // Restaurar texto del primer th a 'Fecha'
+    const firstTh = document.querySelector('.top-selling-table thead tr th');
+    if (firstTh && firstTh.querySelector('h6')) {
+      firstTh.querySelector('h6').textContent = 'Fecha';
+    }
     // Inventario: mostrar Producto, Tipo | ocultar Factura, Cliente, Estado
     document.getElementById('colFactura').style.display = 'none';
     document.getElementById('colCliente').style.display = 'none';
@@ -382,11 +395,60 @@ function actualizarColumnasTabla() {
     document.getElementById('colOrigen').style.display = '';
     document.getElementById('colTotal').querySelector('h6').textContent = 'Cantidad';
     document.getElementById('colAcciones').style.display = 'none';
+  } else if (isCajas) {
+    document.getElementById('tableTitle').textContent = 'Cierres de Caja';
+    // Mantener el <thead> fijo: mostrar/ocultar columnas existentes y ajustar textos
+    const firstTh = document.querySelector('.top-selling-table thead tr th');
+    if (firstTh && firstTh.querySelector('h6')) {
+      firstTh.querySelector('h6').textContent = 'Fecha apertura';
+    }
+
+    // Usar los ids existentes para mostrar las columnas necesarias para 'cajas'
+    // Fecha cierre <- colFactura
+    document.getElementById('colFactura').style.display = '';
+    const hf = document.getElementById('colFactura').querySelector('h6');
+    if (hf) hf.textContent = 'Fecha cierre';
+
+    // Usuario <- colCliente
+    document.getElementById('colCliente').style.display = '';
+    const hc = document.getElementById('colCliente').querySelector('h6');
+    if (hc) hc.textContent = 'Usuario';
+
+    // Total ventas <- colEstado
+    document.getElementById('colEstado').style.display = '';
+    const hEstado = document.getElementById('colEstado').querySelector('h6');
+    if (hEstado) hEstado.textContent = 'Total ventas';
+
+    // Total efectivo <- colProducto
+    document.getElementById('colProducto').style.display = '';
+    const hProd = document.getElementById('colProducto').querySelector('h6');
+    if (hProd) hProd.textContent = 'Total efectivo';
+
+    // Monto cierre calculado <- colTipo
+    document.getElementById('colTipo').style.display = '';
+    const hTipo = document.getElementById('colTipo').querySelector('h6');
+    if (hTipo) hTipo.textContent = 'Monto cierre calculado';
+
+    // Monto cierre real <- colOrigen
+    document.getElementById('colOrigen').style.display = '';
+    const hOrigen = document.getElementById('colOrigen').querySelector('h6');
+    if (hOrigen) hOrigen.textContent = 'Monto cierre real';
+
+    // Diferencia <- colTotal
+    document.getElementById('colTotal').style.display = '';
+    const hTotal = document.getElementById('colTotal').querySelector('h6');
+    if (hTotal) hTotal.textContent = 'Diferencia';
+
+    // Ocultar acciones
+    document.getElementById('colAcciones').style.display = 'none';
   }
 }
 
 function getCurrentColspan() {
-  return currentType === 'ventas' ? 6 : 5;
+  if (currentType === 'ventas') return 6;
+  if (currentType === 'movimientos') return 5;
+  if (currentType === 'cajas') return 8;
+  return 6;
 }
 
 async function cargarEstadisticas(overrideDates = null) {
@@ -557,7 +619,7 @@ function actualizarTabla(data) {
           </td>
         </tr>
       `;
-    } else {
+    } else if (currentType === 'movimientos') {
       const productoNombre = row.producto_nombre || 'Producto #' + row.producto_id;
       const productoLimite = 'Complete Los Datos Del Producto'.length;
       const productoTruncado = productoNombre.length > productoLimite;
@@ -580,7 +642,34 @@ function actualizarTabla(data) {
           <td><p class="text-sm">${formatNumber(row.cantidad, 0)}</p></td>
         </tr>
       `;
+    } else if (currentType === 'cajas') {
+      // Cada fila representa una caja (turno)
+      const fechaApertura = row.fecha_apertura ? formatDate(row.fecha_apertura) : '-';
+      const fechaCierre = row.fecha_cierre ? formatDate(row.fecha_cierre) : '<span class="text-sm">Abierta</span>';
+      const usuario = row.user_nombre || row.user_name || (row.user_id ? ('Usuario #' + row.user_id) : '-');
+      const totalVentas = row.total_ventas != null ? formatNumber(row.total_ventas, 0) : '-';
+      const totalEfectivo = row.total_efectivo != null ? formatNumber(row.total_efectivo, 0) : '-';
+      const montoCierreCalc = row.monto_cierre_calculado != null ? formatNumber(row.monto_cierre_calculado, 0) : '-';
+      const montoCierreReal = row.monto_cierre_real != null ? formatNumber(row.monto_cierre_real, 0) : '-';
+      const diferenciaVal = parseFloat(row.diferencia) || 0;
+      const diferencia = row.diferencia != null ? formatNumber(row.diferencia, 0) : '-';
+
+      return `
+        <tr>
+          <td><p class="text-sm">${fechaApertura}</p></td>
+          <td><p class="text-sm">${fechaCierre}</p></td>
+          <td>
+            <span class="truncate truncate-long" data-bs-toggle="tooltip" data-bs-title="${usuario}">${usuario}</span>
+          </td>
+          <td><p class="text-sm">${totalVentas}</p></td>
+          <td><p class="text-sm">${totalEfectivo}</p></td>
+          <td><p class="text-sm">${montoCierreCalc}</p></td>
+          <td><p class="text-sm">${montoCierreReal}</p></td>
+          <td><p class="text-sm" style="color: ${diferenciaVal !== 0 ? '#c62828' : 'inherit'}">${diferencia}</p></td>
+        </tr>
+      `;
     }
+    return '';
   }).join('');
 
   // Inicializar tooltips de Bootstrap
