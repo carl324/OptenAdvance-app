@@ -15,6 +15,7 @@ class VentaDetalle extends Model
         'precio_unitario',
         'iva',          // ← nuevo
         'subtotal',
+        'total_pagado',
     ];
 
     protected $casts = [
@@ -22,6 +23,7 @@ class VentaDetalle extends Model
         'precio_unitario' => 'float',
         'iva'             => 'float',   // ← nuevo
         'subtotal'        => 'float',
+        'total_pagado'    => 'float',
     ];
 
     public $timestamps = false;

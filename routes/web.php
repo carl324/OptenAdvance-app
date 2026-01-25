@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SetupController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\PersonalController;
+use App\Http\Controllers\AdminProfileController;
 
 Route::get('/setup', [SetupController::class, 'show'])->name('setup.show');
 Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
@@ -28,6 +29,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/ventas/nueva', [VentaController::class, 'create'])->name('ventas.create');
         Route::post('/ventas', [VentaController::class, 'store'])->name('ventas.store');
         Route::get('/ventas/{venta}', [VentaController::class, 'show'])->name('ventas.show');
+        Route::get('/ventas/{venta}/detalle', [VentaController::class, 'detalle'])->name('ventas.detalle');
         Route::get('/ventas/{venta}/factura', [VentaController::class, 'factura'])->name('ventas.factura');
         Route::get('/ventas/{venta}/factura/pdf', [VentaController::class, 'descargarPDF'])->name('ventas.factura.pdf');
         Route::get('/ventas/{venta}/factura/impresion', [VentaController::class, 'impresion'])->name('ventas.factura.impresion');
@@ -49,9 +51,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/api/reportes/stats', [ReporteController::class, 'apiStats'])->name('reportes.api.stats');
         Route::get('/api/reportes/export', [ReporteController::class, 'apiExport'])->name('reportes.api.export');
 
+        // Rutas de productos solo para admin (excepto index)
         Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
         Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
-        Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
         Route::put('/productos/{id}', [ProductoController::class, 'update']);
         Route::delete('/productos/{id}', [ProductoController::class, 'destroy']);
 
@@ -64,10 +66,18 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/personal', [PersonalController::class, 'index'])->name('personal.index');
         Route::post('/personal', [PersonalController::class, 'store'])->name('personal.store');
+        Route::post('/empleados/{id}/update', [PersonalController::class, 'update']);
+        Route::delete('/empleados/{id}/delete', [PersonalController::class, 'destroy']);
+        Route::post('/perfil/admin/update', [AdminProfileController::class, 'update'])->name('perfil.admin.update');
 
         Route::get('/onboarding', function () {
             return view('onboarding');
         })->name('onboarding');
+    });
+
+    // Ruta de listado de productos accesible para admin y empleado
+    Route::middleware(['role:admin,empleado'])->group(function () {
+        Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
     });
 
     // Soporte: vista estática

@@ -4,47 +4,183 @@
 
 @section('content')
 <style>
-  .alegra-modal-square {
-    border-radius: 8px;
-  }
+/* =========================
+   SECCIÓN: SUMMARY / TOTALES
+   ========================= */
+.summary {
+    text-align: center;
+    padding-bottom: 30px;
+}
 
-  /* Estados del modal */
-  .estado-modal {
+.summary .label {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.summary .total {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 4px 0;
+}
+
+.summary .pending {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* =====================================
+   MODAL FORMULARIO (ÚNICO CON GRID)
+   ===================================== */
+#estado-formulario .modal-body {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 45px;
+    margin-top: 20px;
+}
+
+/* Divider vertical */
+.divider-v {
+    background-color: var(--border-light);
+    height: 100%;
+}
+
+/* =========================
+   MODALES DE ESTADO (FIX)
+   ========================= */
+#estado-exito .modal-body,
+#estado-error .modal-body,
+#estado-loading .modal-body {
     display: flex;
     flex-direction: column;
-  }
+    align-items: center;
 
-  /* Inputs limpios */
-  .alegra-input {
-    background: #f9fafb;
-    border: 1px solid #e6e8ee;
-    box-shadow: none;
-  }
+    /* 🔥 RESETS CRÍTICOS */
+    gap: 0;
+    margin-top: 0;
+    padding-top: 24px;
+    padding-bottom: 24px;
+}
 
-  /* Medios de pago grandes */
-  .pago-card-lg {
-    background: #f9fafb;
-    border: 1px solid #e6e8ee;
-    border-radius: 6px;
-    padding: 14px 8px;
+/* Control fino icono → texto */
+#estado-exito .modal-body > div:first-child,
+#estado-error .modal-body > div:first-child {
+    margin-bottom: 8px;
+}
+
+#estado-exito h5,
+#estado-error h5 {
+    margin-bottom: 0;
+}
+
+/* =========================
+   MODAL TAMAÑOS
+   ========================= */
+#modalPago .modal-dialog {
+    max-width: none;
+    width: auto;
+}
+
+#modalPago .modal-content {
+    width: fit-content;
+    min-width: 360px;
+    margin: 0 auto;
+}
+
+/* Estado grande */
+#estado-formulario {
+    width: 800px;
+}
+
+/* Estados pequeños */
+#estado-loading,
+#estado-exito,
+#estado-error {
+    width: 420px;
+}
+
+/* =========================
+   INPUTS
+   ========================= */
+.modal-input {
+    width: 100%;
+    padding: 12px 15px !important;
+    border-radius: 12px !important;
+    font-size: 14px;
+    background-color: #fff;
+    box-sizing: border-box !important;
+    margin-bottom: 22px;
+}
+
+textarea {
+    height: 110px;
+    resize: none;
+}
+
+/* =========================
+   BOTONES RÁPIDOS
+   ========================= */
+.quick-btns {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.q-btn {
+    flex: 1;
+    padding: 12px 5px;
+    border: 1px solid var(--border-light);
+    background: white;
+    border-radius: 10px;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Header opciones rápidas */
+.quick-pay-header {
+    display: flex;
+    align-items: center;
     text-align: center;
-    cursor: default;
-  }
+    margin: 20px 0 12px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+}
 
-  .pago-card-lg i {
-    font-size: 22px;
-    display: block;
-    margin-bottom: 6px;
-    color: #365cf5;
-  }
+.quick-pay-header::before,
+.quick-pay-header::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid var(--border-light);
+}
 
-  .pago-card-lg span {
-    font-size: 12px;
-    font-weight: 500;
-  }
+.quick-pay-header span {
+    padding: 0 10px;
+}
 
-  /* Total limpio y firme */
-  .total-box-square {
+/* =========================
+   ESTADOS
+   ========================= */
+.estado-modal {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Error */
+.error-msg {
+    color: var(--error-red);
+    font-size: 11px;
+    margin-top: 6px;
+}
+
+/* =========================
+   TOTAL BOX
+   ========================= */
+.total-box-square {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -52,202 +188,92 @@
     background: #f4f6fb;
     border-radius: 6px;
     font-size: 14px;
-  }
+}
 
-  .table .btn-sm {
-    line-height: 1;
-  }
-
-  .table .lni-trash-can {
-    color: #8a8fa7;
-  }
-
-  .modal-content {
-    border-radius: 12px;
-  }
-
-  .modal-body .btn-light {
-    padding: 10px 12px;
-  }
-
-  .search-pos {
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  }
-
-  .search-pos .form-control:focus {
-    box-shadow: none;
-  }
-
-  .search-pos .input-group-text {
-    color: #8a8fa7;
-  }
-
-  /* Alerta del carrito pequeña y elegante */
-  #alerta-carrito {
-    padding: 8px 12px !important;
-    margin-bottom: 12px !important;
-    font-size: 13px !important;
-    border-radius: 6px !important;
-  }
-
-  #alerta-carrito .btn-close {
-    padding: 0.25rem !important;
-  }
-
-  /* Spinner del modal */
-  #estado-loading .spinner {
+/* =========================
+   SPINNER
+   ========================= */
+#estado-loading .spinner {
     width: 40px;
     height: 40px;
     border: 4px solid #f0f0f0;
     border-top-color: #365cf5;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
-  }
+}
 
-  @keyframes spin {
+@keyframes spin {
     to { transform: rotate(360deg); }
-  }
-  .caja-hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 48px;
-  padding: 48px 56px;
-  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-  position: relative;
-  overflow: hidden;
+}
+
+/* =========================
+   HERO / CAJA
+   ========================= */
+.caja-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 48px;
+    padding: 48px 56px;
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    position: relative;
+    overflow: hidden;
 }
 
 .caja-hero::before {
-  content: "";
-  position: absolute;
-  top: -100px;
-  right: -100px;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
+    content: "";
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(59,130,246,0.08), transparent 70%);
+    border-radius: 50%;
 }
 
 .caja-content {
-  flex: 1;
-  max-width: 500px;
-  z-index: 1;
-}
-
-.caja-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(147, 51, 234, 0.08));
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: 100px;
-  margin-bottom: 16px;
-}
-
-.caja-badge svg {
-  color: #3b82f6;
-}
-
-.caja-badge span {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+    flex: 1;
+    max-width: 500px;
+    z-index: 1;
 }
 
 .caja-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 12px;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+    font-size: 32px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+    line-height: 1.2;
 }
 
 .caja-subtitle {
-  font-size: 15px;
-  color: #64748b;
-  margin-bottom: 28px;
-  line-height: 1.5;
+    font-size: 15px;
+    color: #64748b;
+    margin-bottom: 28px;
 }
 
-.caja-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.caja-visual {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-}
-
-.caja-visual img {
-  width: 320px;
-  max-width: 100%;
-  height: auto;
-  filter: drop-shadow(0 20px 40px rgba(15, 23, 42, 0.12));
-}
-
-/* Responsive */
+/* =========================
+   RESPONSIVE
+   ========================= */
 @media (max-width: 992px) {
-  .caja-hero {
-    flex-direction: column;
-    text-align: center;
-    padding: 40px 32px;
-    gap: 32px;
-  }
-  
-  .caja-content {
-    max-width: 100%;
-  }
-  
-  .caja-actions {
-    justify-content: center;
-  }
-  
-  .caja-visual img {
-    width: 280px;
-  }
+    .caja-hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 40px 32px;
+        gap: 32px;
+    }
 }
 
 @media (max-width: 576px) {
-  .caja-hero {
-    padding: 32px 24px;
-  }
-  
-  .caja-title {
-    font-size: 26px;
-  }
-  
-  .caja-subtitle {
-    font-size: 14px;
-  }
-  
-  .caja-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .caja-actions button {
-    width: 100%;
-  }
-  
-  .caja-visual img {
-    width: 240px;
-  }
+    .caja-hero {
+        padding: 32px 24px;
+    }
+
+    .caja-title {
+        font-size: 26px;
+    }
 }
 </style>
+
 
 @if(!$cajaAbierta)
 <section class="section pt-30">
@@ -260,7 +286,7 @@
               <circle cx="6" cy="6" r="6" fill="currentColor" opacity="0.2"/>
               <circle cx="6" cy="6" r="3" fill="currentColor"/>
             </svg>
-            <span>Sistema POS</span>
+            <span>Caja Cerrada</span>
           </div>
           
           <h2 class="caja-title">Caja registradora</h2>
@@ -418,56 +444,53 @@
             
             <!-- Estado: Formulario -->
             <div id="estado-formulario" class="estado-modal">
-                <div class="modal-header border-0 pb-3">
-                    <h6 class="text-medium mb-0">Finalizar venta</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="summary"><br>
+                    <div class="total" id="modal-total">$0</div>
+                    <div class="pending">Por cobrar: <span id="modal-por-cobrar" style="color: #fb6a6a;">$0</span></div>
                 </div>
 
-                <div class="modal-body pt-0">
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <input type="text" id="cliente" class="form-control form-control-sm alegra-input-rounded" placeholder="Cliente" maxlength="25" oninput="validarCaracteres(this, 25, 'contador-cliente')" />
-                            <small class="text-muted" id="contador-cliente" style="font-size: 11px; display: none;"></small>
-                        </div>
-                        <div class="col-6">
-                            <input type="text" id="cliente_nit" class="form-control form-control-sm alegra-input-rounded" placeholder="NIT / Documento" maxlength="25" oninput="validarCaracteres(this, 25, 'contador-nit')" />
-                            <small class="text-muted" id="contador-nit" style="font-size: 11px; display: none;"></small>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <p class="text-xs text-gray mb-2">Método de pago</p>
-                        <div class="row g-3">
-                            <div class="col-4">
-                                <div class="pago-card-lg py-4" style="cursor: pointer; border: 2px solid transparent; text-align: center;" onclick="seleccionarPago('efectivo')" id="pago-efectivo">
-                                    <i class="lni lni-money-location mb-2" style="font-size: 24px; display: block;"></i>
-                                    <span>Efectivo</span>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="pago-card-lg py-4" style="cursor: pointer; border: 2px solid transparent; text-align: center;" onclick="seleccionarPago('tarjeta')" id="pago-tarjeta">
-                                    <i class="lni lni-credit-cards mb-2" style="font-size: 24px; display: block;"></i>
-                                    <span>Tarjeta</span>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="pago-card-lg py-4" style="cursor: pointer; border: 2px solid transparent; text-align: center;" onclick="seleccionarPago('transferencia')" id="pago-transferencia">
-                                    <i class="lni lni-apartment" style="font-size: 24px; display: block;"></i>
-                                    <span>Transferencia</span>
-                                </div>
-                            </div>
+                <div class="modal-body">
+                    <div class="col">
+                        <label>Total Pagado</label>
+                        <input type="text" id="total_pagado" maxlength="40" required class="modal-input form-control form-control-sm mb-2" placeholder="ingresa un valor" oninput="formatTotalPagadoInput(); calcularPorCobrar()" />
+                        <small class="text-muted" id="contador-totalpagado" style="font-size: 11px; display: none;"></small>
+                        <div id="error-totalpagado" class="error-msg" style="display: none;">Ingresa el total pagado por el cliente</div>
+                        
+                        
+                        
+                        <div class="quick-pay-header" style="margin-top: 20px;"><span>Método de pago</span></div>
+                        <div class="quick-btns" style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button type="button" class="q-btn" style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer;" onclick="seleccionarPago('efectivo')" id="pago-efectivo">
+                                <i class="lni lni-money-location" style="font-size: 20px; display: block; margin-bottom: 5px;"></i>
+                                <span style="font-size: 12px;">Efectivo</span>
+                            </button>
+                            <button type="button" class="q-btn" style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer;" onclick="seleccionarPago('tarjeta')" id="pago-tarjeta">
+                                <i class="lni lni-credit-cards" style="font-size: 20px; display: block; margin-bottom: 5px;"></i>
+                                <span style="font-size: 12px;">Tarjeta</span>
+                            </button>
+                            <button type="button" class="q-btn" style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer;" onclick="seleccionarPago('transferencia')" id="pago-transferencia">
+                                <i class="lni lni-apartment" style="font-size: 20px; display: block; margin-bottom: 5px;"></i>
+                                <span style="font-size: 12px;">Transferencia</span>
+                            </button>
                         </div>
                         <input type="hidden" id="forma_pago" value="efectivo" />
                     </div>
 
-                    <div class="total-box-square mt-3">
-                        <span>Total</span>
-                        <strong id="modal-total">$0</strong>
-                    </div>
-                </div>
+                    <div class="divider-v" style="width: 1px; background: #e0e0e0; margin: 0 20px;"></div>
 
-                <div class="modal-footer border-0 pt-3">
-                    <div class="d-flex gap-3 w-100">
+                    <div class="col">
+                        <label>Nombre del cliente</label>
+                        <input type="text" id="cliente" class="modal-input form-control form-control-sm mb-2" placeholder="Nombre del cliente" maxlength="40" oninput="validarCaracteres(this, 40, 'contador-cliente')" />
+                        <small class="text-muted" id="contador-cliente" style="font-size: 11px; display: none;"></small>
+                        <label>NIT / Documento</label>
+                        <input type="text" id="cliente_nit" class="modal-input form-control form-control-sm" placeholder="00000000" maxlength="40" oninput="validarCaracteres(this, 40, 'contador-nit')" />
+                        <small class="text-muted" id="contador-nit" style="font-size: 11px; display: none;"></small>
+              </div>
+
+                </div>
+                   
+                <div class="modal-footer" style="border-top: 1px solid #e0e0e0; padding: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                   <br> <div class="d-flex gap-3 w-100">
                         <button class="main-btn light-btn btn-hover flex-fill" data-bs-dismiss="modal">
                             Cancelar
                         </button>
@@ -477,7 +500,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Estado: Loading -->
             <div id="estado-loading" class="estado-modal d-none">
                 <div class="modal-body py-5 text-center">
@@ -538,6 +560,7 @@
 </div>
 
 <script>
+    
 // ========== VALIDACIÓN DE ELEMENTOS DOM AL INICIAR ==========
 function validarElementosDOM() {
     const elementos = {
@@ -549,13 +572,13 @@ function validarElementosDOM() {
         'mensaje': 'contenedor de mensajes',
         'modalPago': 'modal de pago',
         'cliente': 'input cliente',
+        'total_pagado': 'input total pagado',
         'cliente_nit': 'input NIT',
         'forma_pago': 'input forma de pago'
     };
 
     for (const [id, descripcion] of Object.entries(elementos)) {
         if (!document.getElementById(id)) {
-            console.error(`❌ Error crítico: Elemento "${descripcion}" (id="${id}") no encontrado en el DOM`);
             return false;
         }
     }
@@ -566,7 +589,6 @@ function validarElementosDOM() {
 function validarCSRFToken() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]');
     if (!csrfToken || !csrfToken.content) {
-        console.error('❌ Error crítico: Meta tag csrf-token no encontrado o sin contenido');
         return null;
     }
     return csrfToken.content;
@@ -587,6 +609,7 @@ const carritoDiv = document.getElementById('carrito-contenido');
 const totalSpan = document.getElementById('total');
 const btnFinalizar = document.getElementById('btn-finalizar');
 const mensajeDiv = document.getElementById('mensaje');
+const totalPagadoInput = document.getElementById('total_pagado');
 
 // Validar caracteres en tiempo real
 function validarCaracteres(input, limite, contadorId) {
@@ -652,6 +675,53 @@ function formatoPrecio(precio) {
     return '$' + Math.round(precio).toLocaleString('es-CO');
 }
 
+// ========== FORMATEO TIPO NEQUI PARA INPUTS (mientras se escribe) ==========
+function formatoNequiNumber(value) {
+    if (!value) return '';
+    // Mantener solo dígitos
+    const digits = String(value).replace(/\D/g, '');
+    if (digits === '') return '';
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function formatTotalPagadoInput() {
+    const input = document.getElementById('total_pagado');
+    if (!input) return;
+
+    // Guardar posición (se sitúa al final tras formato para simplicidad)
+    const raw = input.value || '';
+
+    // Si el usuario borra todo, permitir vacío
+    if (raw.trim() === '') {
+        input.value = '';
+        return;
+    }
+
+    // Remover puntos existentes y cualquier no-dígito
+    const unformatted = raw.replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9]/g, '');
+
+    input.value = formatoNequiNumber(unformatted);
+    // Poner el cursor al final para evitar saltos inesperados
+    // Mostrar contador de caracteres (mensaje) usando la misma función, pero
+    // evitar marcar borde rojo mientras se escribe: eliminar clase `border-danger`.
+    try { validarCaracteres(input, 40, 'contador-totalpagado'); input.classList.remove('border-danger'); } catch (e) {}
+    // Si ya tenía is-invalid (mensaje de intento previo), quitarlo al escribir
+    try { if (input.value.trim() !== '') input.classList.remove('is-invalid'); } catch (e) {}
+    // Ocultar el mensaje inline específico del campo cuando el usuario escribe
+    try { const err = document.getElementById('error-totalpagado'); if (err) err.style.display = 'none'; } catch (e) {}
+    try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) {}
+}
+
+function parseInputNumber(str) {
+    if (str === null || str === undefined) return 0;
+    const s = String(str).trim();
+    if (s === '') return 0;
+    // El formato Nequi usa '.' como separador de miles. Quitarlos.
+    const only = s.replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9.\-]/g, '');
+    const n = parseFloat(only);
+    return isNaN(n) ? 0 : n;
+}
+
 // Cargar todos los productos al iniciar
 async function cargarProductos() {
     try {
@@ -659,7 +729,6 @@ async function cargarProductos() {
         todosProductos = await res.json();
         actualizarTablaProductos();
     } catch (error) {
-        console.error('Error cargando productos:', error);
         tablaProductos.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #d9534f; padding: 20px;">Error al cargar productos</td></tr>';
     }
 }
@@ -813,7 +882,6 @@ function cambiarCantidad(index, nuevaCantidad) {
     
     // VALIDACIÓN 1: Verificar que el índice exista en el carrito
     if (index < 0 || index >= carrito.length) {
-        console.warn(`⚠️ Intento de acceso a índice inválido: ${index}. Carrito actual: ${carrito.length} items`);
         mostrarAlertaCarrito('Error al modificar cantidad. Por favor, intenta de nuevo.');
         return;
     }
@@ -846,6 +914,48 @@ function actualizarTotal() {
     }, 0);
     totalSpan.textContent = formatoPrecio(total);
     document.getElementById('modal-total').textContent = formatoPrecio(total);
+    // Guardar valor numérico para cálculos posteriores
+    window.totalVentaNumeric = total;
+    calcularPorCobrar();
+}
+
+// Calcula y muestra el por cobrar / cambio en el modal
+function calcularPorCobrar() {
+    const modalPorCobrar = document.getElementById('modal-por-cobrar');
+    if (!modalPorCobrar) return;
+
+    const totalVenta = window.totalVentaNumeric || 0;
+    let totalPagado = 0;
+    const input = document.getElementById('total_pagado');
+    if (input && input.value !== '') {
+        totalPagado = parseInputNumber(input.value);
+    }
+
+    const diferencia = totalPagado - totalVenta;
+    const absFormatted = formatoPrecio(Math.abs(diferencia));
+
+    // Determinar etiqueta y color
+    let label = 'Por cobrar';
+    let color = '#333';
+    if (diferencia > 0) {
+        label = 'Cambio';
+        color = '#1f7a1f';
+    } else if (diferencia < 0) {
+        label = 'Falta';
+        color = '#fb6a6a';
+    }
+
+    // Actualizar contenido: etiqueta + valor
+    const parent = modalPorCobrar.parentElement;
+    if (parent) {
+        parent.innerHTML = `${label}: <span id="modal-por-cobrar" style="color: ${color};">${absFormatted}</span>`;
+    } else {
+        modalPorCobrar.textContent = absFormatted;
+        modalPorCobrar.style.color = color;
+    }
+
+    // No bloquear el botón por diferencia de montos. El único bloqueo visual
+    // será cuando se intente finalizar y el campo esté vacío.
 }
 
 // Seleccionar método de pago
@@ -877,14 +987,12 @@ function confirmarVenta() {
 async function finalizarVenta() {
     // ========== VALIDACIÓN 1: PREVENIR RACE CONDITION ==========
     if (ventaEnProceso) {
-        console.warn('⚠️ Una venta ya está siendo procesada. Ignora este clic.');
         mostrarAlertaCarrito('La venta ya está siendo procesada. Por favor, espera...');
         return;
     }
 
     // ========== VALIDACIÓN 2: VERIFICAR CSRF TOKEN ==========
     if (!csrfTokenGlobal) {
-        console.error('❌ Error: CSRF token no disponible');
         mostrarMensaje('Error de seguridad. Por favor, recarga la página.', 'error');
         return;
     }
@@ -892,15 +1000,31 @@ async function finalizarVenta() {
     const cliente = document.getElementById('cliente').value.trim() || null;
     const cliente_nit = document.getElementById('cliente_nit').value.trim() || null;
     const forma_pago = document.getElementById('forma_pago').value;
+    const totalPagadoInput = document.getElementById('total_pagado');
+    // Validación visual: si está vacío al presionar Finalizar, mostrar sólo el mensaje inline del campo
+    if (!totalPagadoInput || totalPagadoInput.value.trim() === '') {
+        if (totalPagadoInput) {
+            totalPagadoInput.classList.add('is-invalid');
+            const err = document.getElementById('error-totalpagado');
+            if (err) { err.textContent = 'Ingresa el total pagado por el cliente'; err.style.display = 'block'; }
+        }
+        return;
+    }
+
+    const total_pagado = parseInputNumber(totalPagadoInput.value);
+    if (totalPagadoInput) totalPagadoInput.classList.remove('is-invalid');
+    // Asegurar que el mensaje inline esté oculto si el campo es válido
+    try { const err = document.getElementById('error-totalpagado'); if (err) err.style.display = 'none'; } catch (e) {}
+
 
     // ========== VALIDACIÓN 4: VALIDAR LONGITUD DE CARACTERES ==========
-    if (cliente && cliente.length > 25) {
-        mostrarMensaje('El nombre del cliente no puede exceder 25 caracteres', 'error');
+    if (cliente && cliente.length > 40) {
+        mostrarMensaje('El nombre del cliente no puede exceder 40 caracteres', 'error');
         return;
     }
     
-    if (cliente_nit && cliente_nit.length > 25) {
-        mostrarMensaje('El NIT/Documento no puede exceder 25 caracteres', 'error');
+    if (cliente_nit && cliente_nit.length > 40) {
+        mostrarMensaje('El NIT/Documento no puede exceder 40 caracteres', 'error');
         return;
     }
 
@@ -910,10 +1034,13 @@ async function finalizarVenta() {
         return;
     }
 
+    // Nota: NO se valida que total_pagado cubra el total de la venta. Se permite guardar incluso si es menor.
+
     const data = {
         cliente: cliente,
         cliente_nit: cliente_nit,
         forma_pago: forma_pago,
+        total_pagado: total_pagado,
         productos: carrito.map(item => ({
             id: item.id,
             cantidad: item.cantidad,
@@ -953,7 +1080,6 @@ async function finalizarVenta() {
         try {
             result = await res.json();
         } catch (e) {
-            console.error('Error al parsear respuesta JSON:', e);
             throw new Error('Respuesta inválida del servidor');
         }
 
@@ -974,7 +1100,6 @@ async function finalizarVenta() {
         // Cancelar timeout
         clearTimeout(loadingTimeout);
         
-        console.error('Error en venta:', error);
         const resultadoError = document.getElementById('resultado-error');
         if (resultadoError) {
             resultadoError.textContent = 'No se pudo procesar la venta. Por favor, intenta de nuevo.';
@@ -1081,8 +1206,15 @@ function mostrarAlertaCarrito(texto) {
 // Limpiar carrito cuando se cierra el modal
 document.getElementById('modalPago').addEventListener('hidden.bs.modal', function() {
     // ⚠️ IMPORTANTE: NO limpiamos el carrito aquí
-    // Solo volvemos al estado de formulario
-    // El carrito solo se limpia si la venta fue exitosa (en nuevaVenta())
+    // Si el estado de éxito está visible, recargar la página y no ejecutar
+    // ninguna otra lógica (permite limpiar todo y evitar estados inconsistentes).
+    var estadoExito = document.getElementById('estado-exito');
+    if (estadoExito && !estadoExito.classList.contains('d-none')) {
+        location.reload();
+        return;
+    }
+
+    // En cualquier otro caso, conservar comportamiento previo
     modalEstado('formulario');
     // Recargar productos para actualizar stock
     cargarProductos();
@@ -1092,7 +1224,6 @@ document.getElementById('modalPago').addEventListener('hidden.bs.modal', functio
 document.addEventListener('DOMContentLoaded', function() {
     // PASO 1: Validar todos los elementos del DOM
     if (!validarElementosDOM()) {
-        console.error('❌ Inicialización fallida: Faltan elementos esenciales en el HTML');
         mostrarMensaje('Error en la inicialización de la página. Por favor, recarga.', 'error');
         return;
     }
@@ -1100,7 +1231,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // PASO 2: Validar y guardar CSRF token
     csrfTokenGlobal = validarCSRFToken();
     if (!csrfTokenGlobal) {
-        console.error('❌ Inicialización fallida: No se pudo obtener el CSRF token');
         mostrarMensaje('Error de seguridad. Por favor, recarga la página.', 'error');
         return;
     }
@@ -1109,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarProductos();
     seleccionarPago('efectivo');
 
-    console.log('✅ Inicialización completada exitosamente');
+    
 });
 </script>
 

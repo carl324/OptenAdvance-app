@@ -10,24 +10,12 @@
     <div class="title-wrapper pt-30">
       <div class="row align-items-center">
         <div class="col-md-6">
-          <div class="title">
-            <h2>Configuración</h2>
-          </div>
+          
         </div>
         <!-- end col -->
         <div class="col-md-6">
           <div class="breadcrumb-wrapper">
-            <nav aria-label="breadcrumb">
-              <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                  <a href="#0">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item"><a href="#0">Páginas</a></li>
-                <li class="breadcrumb-item active" aria-current="page">
-                  Configuración
-                </li>
-              </ol>
-            </nav>
+           
           </div>
         </div>
         <!-- end col -->
@@ -45,12 +33,12 @@
           <div class="profile-header" onclick="toggleProfile()">
             <div class="profile-preview">
               <div class="profile-image-small">
-                <img src="assets/images/profile/profile-1.png" alt="" />
+                <img src="assets/images/profile/admin.png" alt="" />
               </div>
-              <div class="profile-info-compact">
-                <h6 class="mb-1">John Doe</h6>
-                <p class="text-sm text-gray mb-0">Administrador</p>
-              </div>
+                <div class="profile-info-compact">
+                  <h6 class="mb-1">{{ auth()->user()->name ?? 'Administrador' }}</h6>
+                  <p class="text-sm text-gray mb-0">Administrador</p>
+                </div>
             </div>
             <button class="toggle-btn" type="button">
               <i class="lni lni-chevron-down" id="toggle-icon"></i>
@@ -60,40 +48,33 @@
           <!-- Contenido expandible -->
           <div class="profile-content" id="profile-content" style="display: none;">
             <div class="profile-info">
-              <div class="d-flex align-items-center mb-30 mt-30">
-                <div class="profile-image">
-                  <img src="assets/images/profile/profile-1.png" alt="" />
-                  <div class="update-image">
-                    <input type="file" id="profile-upload" />
-                    <label for="profile-upload"><i class="lni lni-cloud-upload"></i></label>
-                  </div>
+              <div id="profile-alert" class="alert d-none" role="alert"></div>
+
+              <form id="form-perfil-admin" action="{{ route('perfil.admin.update') }}" method="POST">
+                @csrf
+                <div class="input-style-1">
+                  <label>Nombre</label>
+                  <input type="text" name="name" value="{{ auth()->user()->name ?? '' }}" />
                 </div>
-                <div class="profile-meta">
-                  <h5 class="text-bold text-dark mb-10">John Doe</h5>
-                  <p class="text-sm text-gray">Administrador</p>
+                <div class="input-style-1">
+                  <label>Usuario</label>
+                  <input type="text" name="username" value="{{ auth()->user()->username ?? '' }}" />
                 </div>
-              </div>
-              <div class="input-style-1">
-                <label>Email</label>
-                <input type="email" placeholder="admin@ejemplo.com" value="admin@ejemplo.com" />
-              </div>
-              <div class="input-style-1">
-                <label>Contraseña</label>
-                <input type="password" placeholder="••••••••" />
-              </div>
-              <div class="input-style-1">
-                <label>Teléfono</label>
-                <input type="text" placeholder="+57 300 000 0000" value="+57 300 000 0000" />
-              </div>
-              <div class="input-style-1">
-                <label>Bio</label>
-                <textarea placeholder="Escribe tu biografía aquí" rows="4">Administrador principal del sistema POS. Encargado de la gestión de ventas, inventario y reportes.</textarea>
-              </div>
-              <div class="mt-3">
-                <button class="main-btn primary-btn btn-hover w-100">
-                  <i class="lni lni-save"></i> Guardar cambios
-                </button>
-              </div>
+                <div class="input-style-1">
+                  <label>Email</label>
+                  <input type="email" name="email" value="{{ auth()->user()->email ?? '' }}" />
+                </div>
+                <div class="input-style-1">
+                  <label>Contraseña (actualizar)</label>
+                  <input type="text" name="password" placeholder="Dejar vacío para no cambiar" />
+                </div>
+
+                <div class="mt-3">
+                  <button type="button" id="btn-guardar-perfil" class="main-btn primary-btn btn-hover w-100">
+                    <i class="lni lni-save"></i> Guardar cambios
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
@@ -118,8 +99,8 @@
             <div class="row">
               <div class="col-12">
                 <div class="input-style-1">
-                  <label>Nombre completo</label>
-                  <input type="text" name="name" placeholder="Nombre completo" />
+                  <label>Nombre de Usuario</label>
+                  <input type="text" name="name" placeholder="Nombre de Usuario" />
                 </div>
               </div>
               <div class="col-12">
@@ -159,18 +140,16 @@
 
       <!-- Columna derecha: Lista de empleados -->
       <div class="col-lg-6">
-        <div class="title mb-30 d-flex justify-content-between align-items-center">
-          <h6>Empleados activos</h6>
-          <span class="badge-empleados">{{ $empleadosCount }} empleados</span>
-        </div>
-
+        
         @forelse($empleados as $empleado)
           <div class="card-style settings-card-1 mb-30">
             <div class="profile-header" onclick="toggleEmpleado({{ $empleado->id }})">
               <div class="profile-preview">
+                
                 <div class="profile-image-small">
-                  <img src="assets/images/profile/profile-2.png" alt="" />
-                  <span class="status-badge status-online"></span>
+                  
+                  <img src="assets/images/profile/empleado.png" alt="" />
+                  
                 </div>
                 <div class="profile-info-compact">
                   <h6 class="mb-1">{{ $empleado->name ?? $empleado->username }}</h6>
@@ -184,32 +163,25 @@
 
             <div class="profile-content" id="empleado-content-{{ $empleado->id }}" style="display: none;">
               <div class="profile-info">
-                <div class="d-flex align-items-center mb-30 mt-30">
-                  <div class="profile-image">
-                    <img src="assets/images/profile/profile-2.png" alt="" />
-                    <div class="update-image">
-                      <input type="file" id="empleado-upload-{{ $empleado->id }}" />
-                      <label for="empleado-upload-{{ $empleado->id }}"><i class="lni lni-cloud-upload"></i></label>
-                    </div>
-                  </div>
-                  <div class="profile-meta">
-                    <h5 class="text-bold text-dark mb-10">{{ $empleado->name ?? $empleado->username }}</h5>
-                    <p class="text-sm text-gray">Empleado</p>
-                  </div>
+                <div id="empleado-alert-{{ $empleado->id }}" class="alert d-none" role="alert"></div>
+
+                <div class="input-style-1">
+                  <label>Usuario</label>
+                  <input type="text" id="empleado-name-{{ $empleado->id }}" value="{{ $empleado->name ?? '' }}" />
                 </div>
                 <div class="input-style-1">
                   <label>Email</label>
-                  <input type="email" value="{{ $empleado->email ?? '' }}" />
+                  <input type="email" id="empleado-email-{{ $empleado->id }}" value="{{ $empleado->email ?? '' }}" />
                 </div>
                 <div class="input-style-1">
                   <label>Teléfono</label>
-                  <input type="text" value="{{ $empleado->phone ?? '' }}" />
+                  <input type="text" id="empleado-phone-{{ $empleado->id }}" value="{{ $empleado->phone ?? '' }}" />
                 </div>
                 <div class="d-flex gap-2 mt-3">
-                  <button class="main-btn light-btn btn-hover flex-fill">
+                  <button type="button" class="main-btn light-btn btn-hover flex-fill" onclick="saveEmpleado({{ $empleado->id }})" id="btn-guardar-{{ $empleado->id }}">
                     <i class="lni lni-save"></i> Guardar
                   </button>
-                  <button class="main-btn danger-btn btn-hover flex-fill">
+                  <button type="button" class="main-btn danger-btn btn-hover flex-fill" data-name="{{ $empleado->name ?? '' }}" onclick="openDeleteModal({{ $empleado->id }}, this.dataset.name)" id="btn-eliminar-{{ $empleado->id }}">
                     <i class="lni lni-trash-can"></i> Eliminar
                   </button>
                 </div>
@@ -468,6 +440,192 @@ if (formEmpleado) {
 }
 </script>
 
+<script>
+// AJAX para actualizar perfil de admin
+const formPerfil = document.getElementById('form-perfil-admin');
+const alertPerfil = document.getElementById('profile-alert');
+const btnGuardarPerfil = document.getElementById('btn-guardar-perfil');
 
+function mostrarMensajePerfil(tipo, texto) {
+  if (!alertPerfil) return;
+  alertPerfil.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning');
+  alertPerfil.classList.add(tipo === 'success' ? 'alert-success' : 'alert-danger');
+  alertPerfil.textContent = texto;
+  setTimeout(() => {
+    alertPerfil.classList.add('d-none');
+  }, 5000);
+}
+
+if (formPerfil && btnGuardarPerfil) {
+  btnGuardarPerfil.addEventListener('click', async (e) => {
+    e.preventDefault();
+    alertPerfil.classList.add('d-none');
+
+    const formData = new FormData(formPerfil);
+
+    btnGuardarPerfil.disabled = true;
+    btnGuardarPerfil.textContent = 'Guardando...';
+
+    try {
+      const res = await fetch(formPerfil.action, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+          'Accept': 'application/json'
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        const primerError = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
+        throw new Error(primerError || data?.message || 'No se pudo actualizar el perfil.');
+      }
+
+      mostrarMensajePerfil('success', data.message || 'Perfil actualizado.');
+
+      // Actualizar nombre en el header dinámicamente
+      if (data.user && data.user.name) {
+        const headerName = document.querySelector('.profile-info-compact h6');
+        if (headerName) headerName.textContent = data.user.name;
+      }
+
+    } catch (error) {
+      mostrarMensajePerfil('error', error.message || 'Ocurrió un problema al guardar.');
+    } finally {
+      btnGuardarPerfil.disabled = false;
+      btnGuardarPerfil.innerHTML = '<i class="lni lni-save"></i> Guardar cambios';
+    }
+  });
+}
+</script>
+
+<script>
+// Funciones AJAX para editar y eliminar empleados (sin recargar)
+function mostrarMensajeEmpleadoById(id, tipo, texto) {
+  const alertEl = document.getElementById('empleado-alert-' + id);
+  if (!alertEl) return;
+  alertEl.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning');
+  alertEl.classList.add(tipo === 'success' ? 'alert-success' : 'alert-danger');
+  alertEl.textContent = texto;
+  setTimeout(() => {
+    alertEl.classList.add('d-none');
+  }, 5000);
+}
+
+async function saveEmpleado(id) {
+  const btn = document.getElementById('btn-guardar-' + id);
+  const name = document.getElementById('empleado-name-' + id).value.trim();
+  const email = document.getElementById('empleado-email-' + id).value.trim();
+  const phone = document.getElementById('empleado-phone-' + id).value.trim();
+
+  if (!name || !email) {
+    mostrarMensajeEmpleadoById(id, 'error', 'El nombre y el email son requeridos.');
+    return;
+  }
+
+  btn.disabled = true;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = 'Guardando...';
+
+  try {
+    const res = await fetch(`/empleados/${id}/update`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ name, email, phone })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      const primerError = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
+      throw new Error(primerError || data?.message || 'No se pudo actualizar el empleado.');
+    }
+
+    mostrarMensajeEmpleadoById(id, 'success', data.message || 'Empleado actualizado.');
+    // actualizar nombre visible en la card
+    const header = document.querySelector('#empleado-content-' + id).closest('.card-style').querySelector('.profile-info-compact h6');
+    if (header) header.textContent = name;
+  } catch (error) {
+    mostrarMensajeEmpleadoById(id, 'error', error.message || 'Error al guardar.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+let pendingDeleteId = null;
+
+function openDeleteModal(id, name) {
+  pendingDeleteId = id;
+  const msgEl = document.getElementById('confirm-delete-message');
+  if (msgEl) msgEl.textContent = `¿Eliminar al empleado "${name}"? Esta acción no se puede deshacer.`;
+  const modal = document.getElementById('confirm-delete-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeDeleteModal() {
+  pendingDeleteId = null;
+  const modal = document.getElementById('confirm-delete-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function confirmDeleteEmpleado() {
+  const id = pendingDeleteId;
+  if (!id) return closeDeleteModal();
+
+  const btn = document.getElementById('confirm-delete-btn');
+  btn.disabled = true;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = 'Eliminando...';
+
+  try {
+    const res = await fetch(`/empleados/${id}/delete`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json'
+      }
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data?.message || 'No se pudo eliminar.');
+    }
+
+    // remover la tarjeta del DOM
+    const content = document.getElementById('empleado-content-' + id);
+    const card = content ? content.closest('.card-style') : null;
+    if (card) card.remove();
+    closeDeleteModal();
+  } catch (error) {
+    mostrarMensajeEmpleadoById(id, 'error', error.message || 'Error al eliminar.');
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+</script>
 
 @endsection
+
+<!-- Modal simple de confirmación de eliminación -->
+<style>
+#confirm-delete-modal{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);z-index:1050;
+}
+#confirm-delete-modal .modal-box{background:#fff;padding:20px;border-radius:8px;max-width:420px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+</style>
+<div id="confirm-delete-modal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <p id="confirm-delete-message">¿Eliminar este empleado? Esta acción no se puede deshacer.</p>
+    <div class="d-flex gap-2 mt-3">
+      <button type="button" class="main-btn light-btn btn-hover flex-fill" onclick="closeDeleteModal()">Cancelar</button>
+      <button type="button" id="confirm-delete-btn" class="main-btn danger-btn btn-hover flex-fill" onclick="confirmDeleteEmpleado()">Eliminar</button>
+    </div>
+  </div>
+</div>

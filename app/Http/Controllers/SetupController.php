@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class SetupController extends Controller
 {
     public function show()
     {
-        if (User::count() > 0) {
+        // Si ya existe un administrador, redirigir al login
+        if (User::where('role', 'admin')->exists()) {
             return redirect('/login');
         }
 
@@ -19,21 +22,45 @@ class SetupController extends Controller
 
     public function store(Request $request)
     {
-        if (User::count() > 0) {
+        // Evitar doble registro de administrador
+        if (User::where('role', 'admin')->exists()) {
             return redirect('/login');
         }
 
         $data = $request->validate([
-            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
-            'password' => ['required', 'string', 'confirmed', 'min:6'],
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'min:3', 'max:255', 'unique:users,username'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8'],
         ]);
 
-        User::create([
-            'username' => $data['username'],
-            'password' => Hash::make($data['password']),
-            'role' => 'admin',
-        ]);
+        try {
+            $user = null;
+            DB::transaction(function() use ($data, &$user) {
+                // Re-check inside transaction to avoid race conditions
+                if (User::where('role', 'admin')->exists()) {
+                    throw new \RuntimeException('Administrator already exists');
+                }
 
-        return redirect('/login');
+                $user = User::create([
+                    'name' => $data['name'],
+                    'username' => $data['username'],
+                    'email' => $data['email'],
+                    'password' => Hash::make($data['password']),
+                    'role' => 'admin',
+                ]);
+            });
+
+            // Login the newly created admin and redirect to dashboard
+            if ($user) {
+                Auth::login($user);
+                return redirect('/productos');
+            }
+
+            return redirect('/login');
+        } catch (\Throwable $e) {
+            // Do not expose internal error details or passwords
+            return back()->withErrors(['setup' => 'No se pudo crear el administrador.']);
+        }
     }
 }

@@ -1,21 +1,168 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f5f5f5; }
-        .login-wrap { max-width: 360px; margin: 8vh auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .field { margin-bottom: 14px; }
-        label { display: block; font-size: 14px; margin-bottom: 6px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-        button { width: 100%; padding: 10px; border: 0; border-radius: 6px; background: #111827; color: #fff; font-weight: 600; }
-        .error { color: #b91c1c; font-size: 12px; margin-top: 6px; }
-    </style>
+  <meta charset="UTF-8">
+  <title>@yield('title', 'POS')</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Meta CSRF centralizado -->
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <!-- CSS global y navbar simple (offline, sin librerías) -->
+  <link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/assets/css/lineicons.css" />
+  <link rel="stylesheet" href="/assets/css/materialdesignicons.min.css" />
+  <link rel="stylesheet" href="/assets/css/fullcalendar.css" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
+
+<style>
+.input-group-password {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.input-group-password:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-group-password .form-control {
+  border: none !important;
+  background: #f9fafb;
+  padding: 12px 16px;
+  font-size: 14px;
+  box-shadow: none !important;
+}
+
+.input-group-password .form-control:focus {
+  background: #ffffff;
+}
+
+.btn-password-toggle {
+  border: none !important;
+  background: #f9fafb !important;
+  color: #64748b !important;
+  padding: 0 16px !important;
+  transition: all 0.2s ease !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-password-toggle:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.btn-password-toggle:active {
+  transform: scale(0.95);
+}
+
+.btn-password-toggle i {
+  font-size: 20px;
+}
+</style>
 </head>
 <body>
-    <div class="login-wrap">
+  <!-- ======== main-wrapper start =========== -->
+    <section class="signin-section">
+        <div class="container-fluid">
+          <!-- ========== title-wrapper start ========== -->
+          
+          <!-- ========== title-wrapper end ========== -->
+
+          <div class="row g-0 auth-row">
+            <div class="col-lg-6">
+              <div class="auth-cover-wrapper bg-primary-100">
+                <div class="auth-cover">
+                  
+                  <div class="cover-image">
+                    <img src="assets/images/auth/login.png" alt="" />
+                  </div>
+                  <div class="shape-image">
+                    <img src="assets/images/auth/shape.svg" alt="" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- end col -->
+            <div class="col-lg-6">
+              <div class="signin-wrapper">
+                <div class="form-wrapper">
+                  <h6 class="mb-15">Formulario de inicio de sesión</h6>
+                  <p class="text-sm mb-25">
+                    Ingresa tus credenciales para acceder al sistema.
+                  </p>
+                  <form method="POST" action="{{ route('login.submit') }}">
+                    @csrf
+                    <div class="row">
+
+                      @if($errors->has('auth'))
+                        <div class="col-12">
+                          <div class="alert alert-danger" role="alert">{{ $errors->first('auth') }}</div>
+                        </div>
+                      @endif
+
+                        <div class="col-12">
+                        <div class="input-style-1">
+                          <label>Nombre de usuario</label>
+                          <input type="text" name="username" value="{{ old('username') }}" placeholder="Nombre de usuario" />
+                          @error('username')
+                            <div class="text-danger" style="font-size:13px; margin-top:6px;">{{ $message }}</div>
+                          @enderror
+                        </div>
+                      </div>
+                      
+                      
+                      <!-- end col -->
+                      <div class="col-12">
+                        <div class="mb-3">
+  <label class="form-label fw-semibold" style="color: #0f172a; font-size: 14px;">Contraseña</label>
+  <div class="input-group input-group-password">
+    <input type="password" name="password" id="password-input" class="form-control" placeholder="Ingresa tu contraseña" style="border-right: none; padding-right: 12px;" />
+   
+  </div>
+  
+  @error('password') 
+  <div class="text-danger small mt-2">{{ $message }}</div> 
+  @enderror 
+</div>
+
+
+
+
+                      </div>
+                      
+                      <!-- end col -->
+                      
+                      <!-- end col -->
+                     
+                      <!-- end col -->
+                      <div class="col-12"><br><br>
+                        <div class="button-group d-flex justify-content-center flex-wrap">
+                          <button class="main-btn primary-btn btn-hover w-100 text-center">
+                            Iniciar Sesión
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- end row -->
+                  </form>
+                </div>
+              </div>
+            </div>
+            <!-- end col -->
+          </div>
+          
+          <!-- end row -->
+        </div>
+    </section>
+
+   <!-- <div class="login-wrap">
         <form method="POST" action="{{ route('login.submit') }}">
             @csrf
             <div class="field">
@@ -34,6 +181,51 @@
             </div>
             <button type="submit">Entrar</button>
         </form>
-    </div>
-</body>
+    </div> -->
+
+ <script src="/assets/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/Chart.min.js"></script>
+  <script src="/assets/js/dynamic-pie-chart.js"></script>
+  <script src="/assets/js/moment.min.js"></script>
+  <script src="/assets/js/fullcalendar.js"></script>
+  <script src="/assets/js/jvectormap.min.js"></script>
+  <script src="/assets/js/world-merc.js"></script>
+  <script src="/assets/js/polyfill.js"></script>
+  <script src="/assets/js/main.js"></script>
+  
+<script> 
+(function(){ 
+  var btn = document.getElementById('togglePassword'); 
+  var icon = document.getElementById('eye-icon');
+  var pwd = document.getElementById('password-input');
+  if(!btn || !icon || !pwd) return; 
+  
+  btn.addEventListener('click', function(){ 
+    if(pwd.type === 'password'){ 
+      // Mostrar contraseña → cambiar a ojo CERRADO
+      pwd.type = 'text'; 
+      
+      // ========== OPCIÓN 1: MDI (Material Design Icons) ==========
+      icon.className = 'mdi mdi-eye-off'; // Ojo tachado/cerrado
+      
+      // ========== OPCIÓN 2: LineIcons ==========
+      // icon.className = 'lni lni-lock'; // Candado (alternativa porque LineIcons no tiene eye-off)
+      
+      this.setAttribute('aria-label','Ocultar contraseña'); 
+    } else { 
+      // Ocultar contraseña → cambiar a ojo ABIERTO
+      pwd.type = 'password'; 
+      
+      // ========== OPCIÓN 1: MDI (Material Design Icons) ==========
+      icon.className = 'mdi mdi-eye'; // Ojo abierto
+      
+      // ========== OPCIÓN 2: LineIcons ==========
+      // icon.className = 'lni lni-eye'; // Ojo abierto
+      
+      this.setAttribute('aria-label','Mostrar contraseña'); 
+    } 
+  }); 
+})(); 
+</script>
+  </body>
 </html>

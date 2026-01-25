@@ -131,8 +131,8 @@
                     );
                   @endphp
                   <div class="action-buttons">
-                    <a href="{{ route('ventas.factura', $venta) }}" target="_blank" class="btn-action btn-print">
-                      <i class="mdi mdi-file-document-outline"></i> Factura
+                    <a href="{{ route('ventas.detalle', $venta) }}" class="btn-action btn-print">
+                      <i class="mdi mdi-file-document-outline"></i> Detalles
                     </a>
                     @if($puedeAnular)
                       <button class="btn-action btn-cancel btn-anular" 
@@ -982,7 +982,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Acciones
       let acciones = '<div class="action-buttons">';
-      acciones += '<a href="/ventas/' + item.id + '/factura" target="_blank" class="btn-action btn-print"><i class="mdi mdi-file-document-outline"></i> Factura</a>';
+      acciones += '<a href="/ventas/' + item.id + '/detalle"  class="btn-action btn-print"><i class="mdi mdi-file-document-outline"></i> Detalles</a>';
       if (item.puede_anular) {
         acciones += '<button class="btn-action btn-cancel btn-anular" data-url="/ventas/' + item.id + '/devolucion" data-invoice="' + numeroFactura + '"><i class="lni lni-close"></i> Anular</button>';
       } else {

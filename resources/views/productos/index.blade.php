@@ -391,6 +391,12 @@
       color: #475569;
     }
 
+    /* Cuando el usuario no tiene acciones (empleado), aumentar altura de filas */
+    .table.table-rows-tall td {
+      padding-top: 18px;
+      padding-bottom: 18px;
+    }
+
     .table td.min-width {
       white-space: nowrap;
       max-width: 150px;
@@ -763,6 +769,7 @@
                 <div class="col-lg-12 px-0">
                     <div class="inventory-section">
                         <div class="row">
+                            @if(auth()->user()->role === 'admin')
                             <!-- Formulario Agregar Producto -->
                             <div class="col-lg-6">
                                 <div class="product-form-card">
@@ -916,11 +923,12 @@
                                         </table>
                                     </div>
                                 </div>
+                              </div>
                             </div>
+                          </div>
                         </div>
-                    </div>
-                </div>
-            </div>
+                      </div>
+                      @endif
 
             <!-- Tabla de Productos -->
             <div class="row">
@@ -955,7 +963,7 @@
 </div>
 
                         <div class="table-wrapper table-responsive">
-                            <table class="table">
+                            <table class="table {{ auth()->user()->role !== 'admin' ? 'table-rows-tall' : '' }}">
                                 <thead>
                                     <tr>
                                         <th><h6 style="margin: 0;">ID</h6></th>
@@ -966,11 +974,13 @@
                                             <th><h6 style="margin: 0;">Precio final</h6></th>
                                         @endif
                                         <th><h6 style="margin: 0;">Stock</h6></th>
-                                        <th><h6 style="margin: 0;">Acciones</h6></th>
+                                        @if(auth()->user()->role === 'admin')
+                                          <th><h6 style="margin: 0;">Acciones</h6></th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody id="productos-tbody">
-                                    @include('productos._table', ['productos' => $productos, 'empresa' => $empresa])
+                                      @include('productos._table', ['productos' => $productos, 'empresa' => $empresa, 'showActions' => (auth()->user()->role === 'admin')])
                                 </tbody>
                             </table>
                         </div>

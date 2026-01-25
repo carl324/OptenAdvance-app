@@ -231,70 +231,105 @@
     </div>
     <nav class="sidebar-nav">
       <ul class="d-flex flex-column gap-1">
+        @php $role = Auth::user()->role ?? 'empleado'; @endphp
+        @if($role === 'admin')
+          <li class="nav-item {{ activeRoute('ventas.create') }}">
+            <a href="{{ route('ventas.create') }}" class="d-flex align-items-center px-3 py-3 rounded">
+              <span class="icon fs-4 me-3">
+                <i class="lni lni-wallet"></i>
+              </span>
+              <span class="text fw-semibold">Caja</span>
+            </a>
+          </li>
 
-        <li class="nav-item {{ activeRoute('ventas.create') }}">
-          <a href="{{ route('ventas.create') }}" class="d-flex align-items-center px-3 py-3 rounded">
-            <span class="icon fs-4 me-3">
-              <i class="lni lni-wallet"></i>
-            </span>
-            <span class="text fw-semibold">Caja</span>
-          </a>
-        </li>
+          <li class="nav-item {{ activeRoute(['ventas.index', 'ventas.show', 'ventas.devolucion', 'ventas.factura*']) }}">
+            <a href="{{ route('ventas.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
+              <span class="icon fs-4 me-3">
+                <i class="lni lni-revenue"></i>
+              </span>
+              <span class="text fw-semibold">Ventas</span>
+            </a>
+          </li>
 
-        <li class="nav-item {{ activeRoute(['ventas.index', 'ventas.show', 'ventas.devolucion', 'ventas.factura*']) }}">
-          <a href="{{ route('ventas.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-            <span class="icon fs-4 me-3">
-              <i class="lni lni-revenue"></i>
-            </span>
-            <span class="text fw-semibold">Ventas</span>
-          </a>
-        </li>
+          <li class="nav-item {{ activeRoute(['productos.index', 'productos.create']) }}">
+            <a href="{{ route('productos.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
+              <span class="icon fs-4 me-3">
+                <i class="lni lni-package"></i>
+              </span>
+              <span class="text fw-semibold">Productos</span>
+            </a>
+          </li>
+          <span class="divider"><hr /></span>
+          <li class="nav-item {{ activeRoute('reportes.index') }}">
+            <a href="{{ route('reportes.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
+              <span class="icon fs-4 me-3">
+                <i class="lni lni-bar-chart"></i>
+              </span>
+              <span class="text fw-semibold">Reportes</span>
+            </a>
+          </li>
+          <li class="nav-item {{ activeRoute('personal.index') }}">
+            <a href="{{ route('personal.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
+              <span class="icon fs-4 me-3">
+                <i class="mdi mdi-briefcase-account"></i>
+              </span>
+              <span class="text fw-semibold">Personal</span>
+            </a>
+          </li>
+          <li class="nav-item {{ activeRoute(['empresa.index', 'empresa.edit']) }}">
+            <a href="{{ route('empresa.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
+              <span class="icon fs-4 me-3">
+                <i class="lni lni-apartment"></i>
+              </span>
+              <span class="text fw-semibold">Empresa</span>
+            </a>
+          </li>
+          <span class="divider"><hr /></span>
+          <li class="nav-item {{ activeRoute('soporte.index') }}">
+            <a href="{{ route('soporte.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
+              <span class="icon fs-4 me-3">
+                <i class="lni lni-cogs"></i>
+              </span>
+              <span class="text fw-semibold">Soporte</span>
+            </a>
+          </li>
+        @else
+          <li class="nav-item {{ activeRoute('ventas.create') }}">
+            <a href="{{ route('ventas.create') }}" class="d-flex align-items-center px-3 py-3 rounded">
+              <span class="icon fs-4 me-3">
+                <i class="lni lni-wallet"></i>
+              </span>
+              <span class="text fw-semibold">Caja</span>
+            </a>
+          </li>
 
-        <li class="nav-item {{ activeRoute(['productos.index', 'productos.create']) }}">
-          <a href="{{ route('productos.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-            <span class="icon fs-4 me-3">
-              <i class="lni lni-package"></i>
-            </span>
-            <span class="text fw-semibold">Productos</span>
-          </a>
-        </li>
-         <span class="divider"><hr /></span>
-        <li class="nav-item {{ activeRoute('reportes.index') }}">
-          <a href="{{ route('reportes.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-            <span class="icon fs-4 me-3">
-              <i class="lni lni-bar-chart"></i>
-            </span>
-            <span class="text fw-semibold">Reportes</span>
-          </a>
-        </li>
-        <li class="nav-item {{ activeRoute('personal.index') }}">
-          <a href="{{ route('personal.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-            <span class="icon fs-4 me-3">
-              <i class="mdi mdi-briefcase-account"></i>
+          <li class="nav-item {{ activeRoute(['ventas.index', 'ventas.show', 'ventas.devolucion', 'ventas.factura*']) }}">
+            <a href="{{ route('ventas.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
+              <span class="icon fs-4 me-3">
+                <i class="lni lni-revenue"></i>
+              </span>
+              <span class="text fw-semibold">Ventas</span>
+            </a>
+          </li>
 
-            </span>
-            <span class="text fw-semibold">Personal</span>
-          </a>
-        </li>
-        <li class="nav-item {{ activeRoute(['empresa.index', 'empresa.edit']) }}">
-          <a href="{{ route('empresa.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-            <span class="icon fs-4 me-3">
-              <i class="lni lni-apartment"></i>
-            </span>
-            <span class="text fw-semibold">Empresa</span>
-          </a>
-        </li>
-        <span class="divider"><hr /></span>
-        <li class="nav-item {{ activeRoute('soporte.index') }}">
-          <a href="{{ route('soporte.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-            <span class="icon fs-4 me-3">
-              <i class="lni lni-cogs"></i>
-
-            </span>
-            <span class="text fw-semibold">Soporte</span>
-          </a>
-        </li>
-
+          <li class="nav-item {{ activeRoute(['productos.index', 'productos.create']) }}">
+            <a href="{{ route('productos.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
+              <span class="icon fs-4 me-3">
+                <i class="lni lni-package"></i>
+              </span>
+              <span class="text fw-semibold">Productos</span>
+            </a>
+          </li>
+          <span class="divider"><hr /></span>
+          <li class="nav-item {{ activeRoute('soporte.index') }}">
+            <a href="{{ route('soporte.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
+              <span class="icon fs-4 me-3">
+                <i class="lni lni-cogs"></i>
+              </span>
+              <span class="text fw-semibold">Soporte</span>
+            </a>
+          </li>
+        @endif
       </ul>
     </nav>
 
@@ -324,9 +359,11 @@
                   <button class="dropdown-toggle" type="button" id="message" data-bs-toggle="dropdown"
                     aria-expanded="false">
                     <i class="mdi mdi-cash-register" style="font-size: 32px;"></i>
-
-
-                    <span></span>
+                    @if($cajaAbierta)
+                      <span style="background-color: #10b981; color: #fff;   "></span>
+                    @else
+                      <span style="background-color: #f32035; color: #fff;   "></span>
+                    @endif
                   </button>
                   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="message">
                     <!-- Estado de la caja -->
@@ -395,43 +432,44 @@
                 <!-- message end -->
                 <!-- profile start -->
                 <div class="profile-box ml-15">
+                  @php
+                    $user = auth()->user();
+                    $userName = $user->name ?? $user->username ?? 'Usuario';
+                    $userRole = $user->role ?? 'empleado';
+                    $profileImage = $userRole === 'admin'
+                      ? '/assets/images/profile/admin.png'
+                      : '/assets/images/profile/empleado.png';
+                  @endphp
                   <button class="dropdown-toggle bg-transparent border-0" type="button" id="profile"
                     data-bs-toggle="dropdown" aria-expanded="false">
                     <div class="profile-info">
                       <div class="info">
                         <div class="image">
-                          <img src="assets/images/profile/profile-image.png" alt="" />
+                          <img src="{{ $profileImage }}" alt="" />
                         </div>
                         <div>
-                          <h6 class="fw-500">Adam Joe</h6>
-                          <p>Admin</p>
+                          <h6 class="fw-500">{{ $userName }}</h6>
+                          <p>{{ ucfirst($userRole) }}</p>
                         </div>
                       </div>
                     </div>
                   </button>
                   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profile">
-                    
                     <li>
-                      <a href="#0">
-                        <i class="lni lni-user"></i> View Profile
+                      <a href="{{ route('soporte.index') }}">
+                        <i class="lni lni-cog"></i> Soporte
                       </a>
                     </li>
-                    <li>
-                      <a href="#0">
-                        <i class="lni lni-alarm"></i> Notifications
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#0"> <i class="lni lni-inbox"></i> Messages </a>
-                    </li>
-                    <li>
-                      <a href="#0"> <i class="lni lni-cog"></i> Settings </a>
-                    </li>
+                    @if($userRole === 'admin')
+                      <li>
+                        <a href="{{ route('empresa.index') }}"> <i class="lni lni-apartment"></i> Empresa </a>
+                      </li>
+                    @endif
                     <li class="divider"></li>
                     <li>
-                      <form method="POST" action="{{ route('logout') }}" class="m-0">
+                      <form method="POST" action="{{ route('logout') }}" >
                         @csrf
-                        <button type="submit" class="dropdown-item">
+                        <button type="submit" >
                           <i class="lni lni-exit"></i> Sign Out
                         </button>
                       </form>

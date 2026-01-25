@@ -16,23 +16,30 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $data = $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('username', $credentials['username'])->first();
+        $login = $data['username'];
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        // Determinar si el valor es un email o un username
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        $credentials = [$field => $login, 'password' => $data['password']];
+
+        // Intentar autenticación; recordar sesión por defecto (cookie persistente)
+        $remember = true;
+
+        if (!Auth::attempt($credentials, $remember)) {
             return back()
-                ->withErrors(['username' => 'Credenciales inválidas.'])
+                ->withErrors(['auth' => 'Credenciales inválidas.'])
                 ->withInput($request->only('username'));
         }
 
-        Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('ventas.index');
+        return redirect('/ventas/nueva');
     }
 
     public function logout(Request $request)

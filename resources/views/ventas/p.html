@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalle de Venta | Sistema POS</title>
+    <link rel="stylesheet" href="../../../public/assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../../../public/assets/css/lineicons.css" />
+    <link rel="stylesheet" href="../../../public/assets/css/main.css" />
+</head>
+<body>
+    <!-- ======== Preloader =========== -->
+    <div id="preloader">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- ======== sidebar-nav start =========== -->
+    <aside class="sidebar-nav-wrapper">
+        <div class="navbar-logo">
+            <a href="index.html">
+                <img src="../../../public/assets/images/logo/logo.svg" alt="logo" />
+            </a>
+        </div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="nav-item">
+                    <a href="index.html">
+                        <span class="icon">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8.74999 18.3333C12.2376 18.3333 15.1364 15.8128 15.7244 12.4941C15.8448 11.8143 15.2737 11.25 14.5833 11.25H9.99999C9.30966 11.25 8.74999 10.6903 8.74999 10V5.41666C8.74999 4.7263 8.18563 4.15512 7.50586 4.27556C4.18711 4.86357 1.66666 7.76243 1.66666 11.25C1.66666 15.162 4.83797 18.3333 8.74999 18.3333Z" />
+                                <path d="M17.0833 10C17.7737 10 18.3432 9.43708 18.2408 8.75433C17.7005 5.14918 14.8508 2.29947 11.2457 1.75912C10.5629 1.6568 10 2.2263 10 2.91665V9.16666C10 9.62691 10.3731 10 10.8333 10H17.0833Z" />
+                            </svg>
+                        </span>
+                        <span class="text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="ventas.html" class="active">
+                        <span class="icon">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3.33334 3.35442C3.33334 2.4223 4.07954 1.66666 5.00001 1.66666H15C15.9205 1.66666 16.6667 2.4223 16.6667 3.35442V16.8565C16.6667 17.5519 15.8827 17.9489 15.3333 17.5317L13.8333 16.3924C13.537 16.1673 13.1297 16.1673 12.8333 16.3924L10.5 18.1646C10.2037 18.3896 9.79634 18.3896 9.50001 18.1646L7.16668 16.3924C6.87038 16.1673 6.46298 16.1673 6.16668 16.3924L4.66668 17.5317C4.11731 17.9489 3.33334 17.5519 3.33334 16.8565V3.35442Z" />
+                            </svg>
+                        </span>
+                        <span class="text">Ventas</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+    <div class="overlay"></div>
+
+    <!-- ======== main-wrapper start =========== -->
+    <main class="main-wrapper">
+        <!-- ========== header start ========== -->
+        <header class="header">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-5 col-md-5 col-6">
+                        <div class="header-left d-flex align-items-center">
+                            <div class="menu-toggle-btn mr-15">
+                                <button id="menu-toggle" class="main-btn primary-btn btn-hover">
+                                    <i class="lni lni-chevron-left me-2"></i> Menu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-7 col-md-7 col-6">
+                        <div class="header-right">
+                            <div class="profile-box ml-15">
+                                <button class="dropdown-toggle bg-transparent border-0" type="button" id="profile" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="profile-info">
+                                        <div class="info">
+                                            <div class="image">
+                                                <img src="../../../public/assets/images/profile/profile-image.png" alt="" />
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-500">Cajero</h6>
+                                                <p>Activo</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ========== section start ========== -->
+        <section class="section">
+            <div class="container-fluid">
+                <!-- ========== Header compacto ========== -->
+                <!-- ========== Header compacto ========== -->
+                <div class="title-wrapper pt-30">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="title mb-30">
+                               
+                                <div class="d-flex align-items-center gap-4 flex-wrap">
+                                    <div class="d-flex align-items-center gap-2" style="background: white; padding: 8px 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                                        <i class="lni lni-calendar" style="color: #4A6CF7; font-size: 16px;"></i>
+                                        <span class="text-sm fw-500" style="color: #364a63;">15 enero 2026, 14:32</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2" style="background: white; padding: 8px 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                                        <i class="lni lni-wallet" style="color: #0f9e5a; font-size: 16px;"></i>
+                                        <span class="text-sm fw-500" style="color: #364a63;">Efectivo</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2" >
+                                        <span class="status-btn success-btn">Completada</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                                <button class="main-btn primary-btn btn-hover btn-sm">
+                                    <i class="lni lni-printer"></i> Factura
+                                </button>
+                                <a href="ventas.html" class="main-btn deactive-btn btn-hover btn-sm">
+                                    <i class="lni lni-arrow-left"></i> Volver
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <!-- ========== Productos ========== -->
+                    <div class="col-lg-8">
+                        <div class="card-style mb-30">
+                            <div class="d-flex justify-content-between align-items-center mb-20">
+                                <h6 class="mb-0">Productos (6 items)</h6>
+                            </div>
+                            <div class="table-wrapper table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th><span class="text-sm">Producto</span></th>
+                                            <th class="text-center"><span class="text-sm">Cant.</span></th>
+                                            <th class="text-end"><span class="text-sm">Precio</span></th>
+                                            <th class="text-end"><span class="text-sm">IVA</span></th>
+                                            <th class="text-end"><span class="text-sm">Subtotal</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <p class="text-sm fw-500 mb-0">Coca Cola 600ml</p>
+                                                    <span class="text-sm text-gray">Bebidas</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="status-btn close-btn">2</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm">$2.500</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm text-gray">$380</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm fw-500">$5.000</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <p class="text-sm fw-500 mb-0">Pan integral tajado</p>
+                                                    <span class="text-sm text-gray">Panadería</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="status-btn close-btn">1</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm">$4.200</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm text-gray">$320</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm fw-500">$4.200</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <p class="text-sm fw-500 mb-0">Leche entera 1L</p>
+                                                    <span class="text-sm text-gray">Lácteos</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="status-btn close-btn">3</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm">$3.800</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm text-gray">$0</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm fw-500">$11.400</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <p class="text-sm fw-500 mb-0">Arroz Diana 500g</p>
+                                                    <span class="text-sm text-gray">Despensa</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="status-btn close-btn">2</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm">$2.900</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm text-gray">$0</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm fw-500">$5.800</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <p class="text-sm fw-500 mb-0">Aceite Girasol 900ml</p>
+                                                    <span class="text-sm text-gray">Despensa</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="status-btn close-btn">1</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm">$8.500</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm text-gray">$0</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm fw-500">$8.500</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <p class="text-sm fw-500 mb-0">Pasta Doria 500g</p>
+                                                    <span class="text-sm text-gray">Despensa</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="status-btn close-btn">4</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm">$2.100</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm text-gray">$0</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-sm fw-500">$8.400</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                     <!-- ========== Cliente ========== -->
+                    <div class="col-lg-4">
+                        <div class="card-style mb-30">
+                            <div class="d-flex align-items-center mb-20">
+                                <div class="icon-box me-3" style="width: 48px; height: 48px; background: #f3f6f9; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="lni lni-user" style="font-size: 24px; color: #4A6CF7;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">María González Pérez</h6>
+                                    <p class="text-sm text-gray mb-0">CC 1234567890</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center mb-20">
+                                <div class="icon-box me-3" style="width: 48px; height: 48px; background: #f3f6f9; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="lni lni-briefcase" style="font-size: 24px; color: #4A6CF7;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">María González Pérez</h6>
+                                    <p class="text-sm text-gray mb-0">Vendedor</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ========== Resumen compacto ========== -->
+                        <div class="card-style mb-30">
+                            <h6 class="mb-20">Resumen</h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-sm text-gray">Subtotal</span>
+                                    <span class="text-sm">$19.900</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-sm text-gray">IVA</span>
+                                    <span class="text-sm">$700</span>
+                                </div>
+                            </div>
+                            <div class="pt-3 border-top mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-500">Total</span>
+                                    <h5 class="mb-0 fw-bold">$20.600</h5>
+                                </div>
+                            </div>
+                            <div class="pt-3 border-top">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-sm text-gray">Pagado</span>
+                                    <span class="text-sm fw-500">$25.000</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-sm fw-500">Cambio</span>
+                                    <span class="text-sm fw-bold" style="color: #0f9e5a;">$4.400</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========== footer start =========== -->
+        <footer class="footer">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6 order-last order-md-first">
+                        <div class="copyright text-center text-md-start">
+                            <p class="text-sm">Sistema POS © 2026</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="terms d-flex justify-content-center justify-content-md-end">
+                            <a href="#0" class="text-sm">Soporte</a>
+                            <a href="#0" class="text-sm ml-15">Ayuda</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- ========= Scripts ======== -->
+    <script src="../../../public/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../../../public/assets/js/main.js"></script>
+</body>
+</html>

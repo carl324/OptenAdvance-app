@@ -1,3 +1,10 @@
+@php
+    $showActions = isset($showActions) ? (bool)$showActions : true;
+    $colspan = 4; // id, nombre, precio, stock
+    if(isset($empresa) && $empresa && $empresa->cobra_iva) $colspan += 2; // IVA + precio final
+    if($showActions) $colspan += 1;
+@endphp
+
 @forelse($productos as $producto)
     <tr id="producto-{{ $producto->id }}">
         <td class="min-width">
@@ -50,6 +57,7 @@
           </span>
           <input class="edit stock_input" data-field="stock" type="text" value="{{ $producto->stock }}" data-original-stock="{{ $producto->stock }}" hidden>
         </td>
+        @if($showActions)
         <td>
             <div class="action">
                 <button type="button" class="icon-yelow" onclick="editarProducto({{ $producto->id }})" data-bs-toggle="tooltip" data-bs-title="Editar">
@@ -67,10 +75,11 @@
             </div>
             <span class="msg"></span>
         </td>
+        @endif
     </tr>
 @empty
     <tr>
-        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
+        <td colspan="{{ $colspan }}" style="text-align: center; padding: 40px; color: #999;">
             <i class="lni lni-inbox" style="font-size: 32px; margin-bottom: 10px;"></i>
             <p>No hay productos registrados</p>
         </td>

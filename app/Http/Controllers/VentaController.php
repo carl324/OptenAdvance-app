@@ -76,15 +76,19 @@ class VentaController extends Controller
             ]);
 
             $data = $request->validate([
-                'cliente'        => 'nullable|string|max:100',
-                'cliente_nit'    => 'nullable|string|max:20',
+                'cliente'        => 'nullable|string|max:40',
+                'cliente_nit'    => 'nullable|string|max:40',
                 'forma_pago'     => 'sometimes|in:efectivo,transferencia,tarjeta',  // Bug #23: cambio a 'sometimes' para permitir default
+                // Solo validar existencia; no validar montos
+                'total_pagado'   => 'required',
                 'productos'      => 'required|array|min:1',
                 'productos.*.id' => 'required|exists:productos,id',
                 'productos.*.cantidad' => 'required|integer|min:1',
                 'productos.*.precio'   => 'required|numeric|min:0',
                 'productos.*.iva'      => 'nullable|numeric|min:0|max:100',
             ]);
+
+            // Nota: no se normaliza aquí para no imponer validación de montos.
 
             $caja = Caja::where('estado', 'abierta')->first();
             if (!$caja) {
@@ -155,6 +159,8 @@ class VentaController extends Controller
             }
             $totalFinal = $totalNeto + $totalIva;
 
+            // Nota: Se permite guardar aunque `total_pagado` sea menor que `totalFinal`.
+
             // Venta
             $venta = Venta::create([
                 'cliente' => $data['cliente'] ?? null,
@@ -199,6 +205,7 @@ class VentaController extends Controller
                     'precio_unitario' => $calc['precioBase'],
                     'iva'             => $calc['iva'],
                     'subtotal'        => $calc['final'],
+                    'total_pagado'    => $data['total_pagado'],
                 ]);
 
                 InventarioMovimiento::salida(
@@ -355,6 +362,61 @@ class VentaController extends Controller
 
         $empresa = Empresa::first();
         return view('ventas.show', compact('venta', 'factura', 'empresa'));
+    }
+
+    // Mostrar detalle de venta (nueva vista)
+    public function detalle(Venta $venta)
+    {
+        $venta->load('detalles.producto', 'factura');
+        $factura = $venta->factura;
+        $empresa = Empresa::first();
+
+        // Preparar totales simples para evitar lógica pesada en la vista
+        $detalles = $venta->detalles;
+
+        // Subtotal neto (precio_unitario * cantidad)
+        $subtotal = $detalles->sum(function ($d) {
+            return ($d->precio_unitario * $d->cantidad);
+        });
+
+        // IVA total (si está guardado por detalle)
+        $totalIva = $detalles->sum('iva');
+
+        // Total final (usar factura->total si existe, sino calcular)
+        $total = $factura->total ?? $venta->total ?? ($subtotal + $totalIva);
+
+        // Total pagado (si se guardó en los detalles, buscar el primer valor no nulo)
+        $totalPagado = null;
+        if ($detalles->isNotEmpty()) {
+            $totalPagado = $detalles->first()->total_pagado ?? null;
+        }
+
+        // Calcular cambio o saldo (null si no hay info de pago)
+        $cambio = null;
+        if (!is_null($totalPagado)) {
+            $cambio = $totalPagado - $total;
+        }
+
+        // Obtener nombre del vendedor si es posible (evitar consultas innecesarias)
+        $vendedorNombre = '-';
+        if ($venta->user_id) {
+            $user = \App\Models\User::find($venta->user_id);
+            if ($user) {
+                $vendedorNombre = $user->name ?? ($user->nombre ?? $user->email ?? ('Usuario #' . $user->id));
+            }
+        }
+
+        return view('ventas.detalle', compact(
+            'venta',
+            'factura',
+            'empresa',
+            'subtotal',
+            'totalIva',
+            'total',
+            'totalPagado',
+            'cambio',
+            'vendedorNombre'
+        ));
     }
 
     // Mostrar formulario de anulación (modal)

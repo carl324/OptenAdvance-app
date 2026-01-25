@@ -2899,7 +2899,7 @@ h6,
   display: flex;
   justify-content: flex-end;
 }
-.header .header-right button {
+.header .header-right button:not(.main-btn) {
   border: 1px solid #F6F6F6;
   background: #F6F6F6;
   border-radius: 50%;
@@ -2911,6 +2911,7 @@ h6,
   position: relative;
   color: #1A2142;
 }
+
 .header .header-right button svg {
   fill: currentColor;
 }
@@ -3343,6 +3344,7 @@ h6,
   background: #fff;
   border-radius: 4px;
   overflow: hidden;
+  min-height: 100vh;
 }
 
 .auth-cover-wrapper {
@@ -3468,7 +3470,7 @@ h6,
   margin: auto;
 }
 .auth-cover-wrapper .auth-cover .cover-image img {
-  width: 100%;
+  width: 90%;
 }
 .auth-cover-wrapper .auth-cover .shape-image {
   position: absolute;
