@@ -213,6 +213,187 @@
   border-radius: 12px;
   overflow: hidden;
 }
+
+ .modal-alegra-final {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .modal-alegra-final .modal-content {
+        border: none;
+        border-radius: 24px;
+        background-color: #ffffff;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    @media (min-width: 992px) {
+        .modal-alegra-width { max-width: 820px !important; }
+    }
+
+    .cierre-wrapper {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 0;
+    }
+
+    /* Columna de Información (Izquierda) */
+    .cierre-sidebar {
+        padding: 45px;
+        background-color: #f9fbff; /* Un azul casi imperceptible */
+        border-right: 1px solid #edf2f7;
+    }
+
+    .cierre-main-action {
+        padding: 45px;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* Etiquetas y Textos */
+    .text-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: #94a3b8;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .total-amount {
+        font-size: 32px;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .total-amount::before {
+        content: '';
+        width: 4px;
+        height: 24px;
+        background: #3b82f6; /* Acento azul sutil */
+        border-radius: 10px;
+    }
+
+    /* Grid de Métodos */
+    .grid-methods {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+    }
+
+    .method-card-minimal {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .method-card-minimal .m-title {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+
+    .method-card-minimal .m-price {
+        font-size: 16px;
+        font-weight: 700;
+        color: #334155;
+    }
+
+    /* Inputs Refinados */
+    .group-input {
+        margin-bottom: 25px;
+    }
+
+    .input-clean {
+        width: 100%;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 14px 20px;
+        font-size: 15px;
+        font-weight: 500;
+        color: #1e293b;
+        transition: all 0.3s ease;
+        background-color: #ffffff;
+    }
+
+    .input-clean:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background-color: #fff;
+        box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.08);
+    }
+
+    .input-focus-blue {
+        border-color: #3b82f6;
+        font-size: 24px;
+        font-weight: 800;
+        color: #059669;
+        text-align: center;
+    }
+
+    /* Diferencia con color sutil */
+    .badge-diff {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #64748b;
+        padding: 4px 12px;
+        border-radius: 8px;
+        background: #f1f5f9;
+    }
+
+    /* Botones */
+    .btn-finalizar {
+        background-color: #2e6cff;
+        color: white;
+        border: none;
+        padding: 18px;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 700;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 15px -3px rgba(0, 76, 255, 0.1);
+    }
+
+    .btn-finalizar:hover {
+        background-color: #0f6bff;
+        transform: translateY(-2px);
+        box-shadow: 0 15px 20px -3px rgba(0, 59, 196, 0.15);
+    }
+
+    .btn-exit {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 14px;
+        font-weight: 600;
+        margin-top: 20px;
+        width: 100%;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .btn-exit:hover { color: #64748b; }
+
+    /* Checkbox estilo Switch sutil */
+    .custom-switch {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        user-select: none;
+        font-size: 13px;
+        color: #64748b;
+    }
   </style>
 </head>
 
@@ -236,7 +417,7 @@
           <li class="nav-item {{ activeRoute('ventas.create') }}">
             <a href="{{ route('ventas.create') }}" class="d-flex align-items-center px-3 py-3 rounded">
               <span class="icon fs-4 me-3">
-                <i class="lni lni-wallet"></i>
+                <i class="mdi mdi-cash-register"></i>
               </span>
               <span class="text fw-semibold">Caja</span>
             </a>
@@ -368,14 +549,14 @@
                   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="message">
                     <!-- Estado de la caja -->
                     <li class="caja-estado-item">
-                      <div class="caja-estado-header">
+                        <div class="caja-estado-header">
                         <div class="estado-badge {{ $cajaAbierta ? 'estado-abierta' : 'estado-cerrada' }}">
                           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                             <circle cx="5" cy="5" r="5" fill="currentColor"/>
                           </svg>
                           <span>{{ $cajaAbierta ? 'Caja Abierta' : 'Caja Cerrada' }}</span>
                         </div>
-                        <span class="estado-hora">{{ $cajaHoraApertura ?? '--:--' }}</span>
+                        <span class="estado-hora">{{ formatoHoraInteligente($cajaHoraApertura) ?? '--:--' }}</span>
                       </div>
                     </li>
 
@@ -403,7 +584,7 @@
                         <div class="resumen-info">
                           <span class="resumen-label">Ingresos totales</span>
                           <strong class="resumen-valor">
-                            {{ $cajaAbierta ? '$ ' . number_format($ingresosHoy ?? 0, 2, ',', '.') : '--' }}
+                            {{ $cajaAbierta ? '$ ' . number_format(round($ingresosHoy ?? 0), 0, ',', '.') : '--' }}
                           </strong>
                         </div>
                       </div>
@@ -467,13 +648,17 @@
                     @endif
                     <li class="divider"></li>
                     <li>
-                      <form method="POST" action="{{ route('logout') }}" >
-                        @csrf
-                        <button type="submit" >
-                          <i class="lni lni-exit"></i> Sign Out
-                        </button>
-                      </form>
-                    </li>
+  <form method="POST" action="{{ route('logout') }}">
+    @csrf
+    <button type="submit" 
+        style="background: none; border: none; padding: 0; margin: 0 0 0 8px; font: inherit; color: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;"
+        onmouseover="this.style.textDecoration='none';" 
+        onmouseout="this.style.textDecoration='none';">
+      <i class="lni lni-exit"></i> Salir
+    </button>
+  </form>
+</li>
+
                   </ul>
                 </div>
             </div>
@@ -494,73 +679,120 @@
     @yield('content')
 
     @if($cajaAbierta)
-    <div class="modal fade" id="modalCerrarCaja" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="false">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content alegra-modal-square px-2">
-          <div class="modal-header border-0 pb-3">
-            <h6 class="text-medium mb-0">Cierre de caja</h6>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body pt-0">
-            <div id="cierre-error" class="alert alert-danger d-none mb-3" role="alert"></div>
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label text-xs text-gray">Total de ventas del día</label>
-                <input type="text" class="form-control form-control-sm alegra-input" id="cierre-total-ventas" readonly>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label text-xs text-gray">Total ingresos del día</label>
-                <input type="text" class="form-control form-control-sm alegra-input" id="cierre-total-ingresos" readonly>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label text-xs text-gray">Total efectivo</label>
-                <input type="text" class="form-control form-control-sm alegra-input" id="cierre-total-efectivo" readonly>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label text-xs text-gray">Total tarjeta</label>
-                <input type="text" class="form-control form-control-sm alegra-input" id="cierre-total-tarjeta" readonly>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label text-xs text-gray">Total transferencias</label>
-                <input type="text" class="form-control form-control-sm alegra-input" id="cierre-total-transferencia" readonly>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label text-xs text-gray">Total otros métodos</label>
-                <input type="text" class="form-control form-control-sm alegra-input" id="cierre-total-otros" readonly>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label text-xs text-gray">Monto cierre calculado</label>
-                <input type="text" class="form-control form-control-sm alegra-input" id="cierre-monto-calculado" readonly>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label text-xs text-gray">Monto cierre real</label>
-                <input type="number" step="0.01" min="0" class="form-control form-control-sm alegra-input" id="cierre-monto-real" required>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label text-xs text-gray">Diferencia</label>
-                <input type="text" class="form-control form-control-sm alegra-input" id="cierre-diferencia" readonly>
-              </div>
-              <div class="col-12">
-                <label class="form-label text-xs text-gray">Nota de cierre (opcional)</label>
-                <textarea class="form-control form-control-sm alegra-input" id="cierre-nota" rows="2" maxlength="255"></textarea>
-              </div>
-              <div class="col-12">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="cierre-imprimir">
-                  <label class="form-check-label" for="cierre-imprimir">Imprimir reporte de cierre</label>
+  
+
+<div class="modal fade modal-alegra-final" id="modalCerrarCaja" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-alegra-width">
+        <div class="modal-content">
+            <div class="cierre-wrapper">
+                
+                <div class="cierre-sidebar">
+                    <span class="text-label">Reporte de Ventas</span>
+                    <div class="total-amount">$0</div>
+
+                    <div style="margin-bottom: 30px; padding: 12px 16px; background: #f1f5f9; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                      <span style="display: block; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Monto de Apertura</span>
+                      <span class="m-apertura" style="font-size: 16px; font-weight: 700; color: #475569;">$ 150.000</span>
+                    </div>
+                    <div class="grid-methods">
+                        <div class="method-card-minimal">
+                            <span class="m-title">Efectivo</span>
+                            <span class="m-price">$0</span>
+                        </div>
+                        <div class="method-card-minimal">
+                            <span class="m-title">Tarjetas</span>
+                            <span class="m-price">$0</span>
+                        </div>
+                        <div class="method-card-minimal">
+                            <span class="m-title">Transferencias</span>
+                            <span class="m-price">$0</span>
+                        </div>
+                        <div class="method-card-minimal">
+                            <span class="m-title">Ventas Totales</span>
+                            <span class="m-price">0 ventas</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 60px;">
+                        <div style="padding: 20px; background: #ffffff; border-radius: 16px; border: 1px solid #edf2f7; display: flex; align-items: center; gap: 15px;">
+                            <div class="status-dot" style="width: 10px; height: 10px; background: #3b82f6; border-radius: 50%;"></div>
+                            <div>
+                                <span style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Estado de Caja</span>
+                                <span style="font-size: 14px; font-weight: 600; color: #334155;">Pendiente</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
+
+                <div class="cierre-main-action">
+                    <div class="group-input">
+                        <label class="text-label">Efectivo Físico en Caja</label>
+                        <input type="text" inputmode="numeric" class="input-clean input-focus-blue" placeholder="0" autofocus data-raw="0">
+                        
+                        <div class="badge-diff">
+                            Diferencia detectada: <span style="color: #f43f5e;">$0</span>
+                        </div>
+                    </div>
+
+                    <div class="group-input">
+                        <label class="text-label">Observaciones de Cierre</label>
+                        <textarea class="input-clean" rows="2" placeholder="Notas sobre el turno..."></textarea>
+                    </div>
+
+                    <button class="btn-finalizar">Confirmar Cierre de Caja</button>
+                    <button class="btn-exit" data-bs-dismiss="modal">Regresar a Vender</button>
+                </div>
+
             </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalConfirmarCierreSesion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+    <div class="modal-content" style="border: none; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); overflow: hidden; background: #ffffff;">
+            
+     
+
+      <div class="modal-body" style="padding: 40px 30px 30px 30px;">
+        <div style="display: flex; gap: 20px; align-items: flex-start;">
+                    
+          <div style="flex-shrink: 0; width: 54px; height: 54px; background: #fff7ed; border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 1px solid #ffedd5;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
           </div>
-          <div class="modal-footer border-0 pt-3">
-            <div class="d-flex gap-3 w-100">
-              <button class="main-btn light-btn btn-hover flex-fill" type="button" data-bs-dismiss="modal">Cancelar</button>
-              <button class="main-btn danger-btn btn-hover flex-fill" type="button" id="btn-confirmar-cierre">Cerrar caja</button>
-            </div>
+
+          <div style="flex-grow: 1;">
+            <h5 style="font-weight: 800; color: #0f172a; margin: 0 0 8px 0; font-size: 19px; letter-spacing: -0.5px;">Caja Abierta</h5>
+            <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 0;">
+              Tu turno sigue activo. Cierra la caja antes de salir para evitar inconsistencias.
+            </p>
           </div>
+        </div>
+
+        <div style="margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px;">
+          <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
+          <span style="font-size: 13px; font-weight: 600; color: #475569;">Estado actual: Caja abierta con movimientos</span>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0" style="padding: 0 30px 30px 30px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;">
+          <button type="button" data-bs-dismiss="modal" 
+            style="padding: 14px; border-radius: 14px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;">
+            Regresar
+          </button>
+          <button class="main-btn" type="button" 
+            style="padding: 14px; border-radius: 14px; border: none; background: #2563EB; color: #ffffff; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" data-logout-confirm>
+            Cerrar sesion 
+          </button>
         </div>
       </div>
     </div>
+  </div>
+</div>
     @endif
     <footer class="footer">
   <div class="container-fluid">
@@ -593,118 +825,269 @@
   <script src="/assets/js/world-merc.js"></script>
   <script src="/assets/js/polyfill.js"></script>
   <script src="/assets/js/main.js"></script>
+  
+  <script>
+    // Flag desde backend: si el usuario tiene caja abierta
+    const CAJA_ABIERTA = @json((bool)($cajaAbierta ?? false));
+
+    document.addEventListener('DOMContentLoaded', function () {
+      // Buscar forms cuyo action contenga 'logout' (ruta de logout generada por Laravel)
+      const logoutForms = Array.from(document.querySelectorAll('form')).filter(f => {
+        const action = (f.getAttribute('action') || '').toLowerCase();
+        return action.includes('/logout') || action.endsWith('logout');
+      });
+
+      logoutForms.forEach(form => {
+        form.addEventListener('submit', function (ev) {
+          // Si la caja no está abierta, permitir submit normal
+          if (!CAJA_ABIERTA) return;
+
+          ev.preventDefault();
+          // Guardar referencia del form para usarla después
+          window._pendingLogoutForm = form;
+
+          const modalEl = document.getElementById('modalConfirmarCierreSesion');
+          if (!modalEl) {
+            // fallback: si no existe modal, enviar igualmente
+            form.submit();
+            return;
+          }
+
+          const modal = new bootstrap.Modal(modalEl);
+          modal.show();
+        });
+      });
+
+      // Botón del modal que confirma logout
+      const modalConfirm = document.querySelector('#modalConfirmarCierreSesion [data-logout-confirm]');
+      if (modalConfirm) {
+        modalConfirm.addEventListener('click', function () {
+          const f = window._pendingLogoutForm || document.querySelector('form[action*="logout"]');
+          if (f) f.submit();
+        });
+      }
+    });
+  </script>
 
   @if($cajaAbierta)
   <script>
-    const modalCerrarCaja = document.getElementById('modalCerrarCaja');
-    const cierreError = document.getElementById('cierre-error');
-    const cierreMontoReal = document.getElementById('cierre-monto-real');
-    const cierreDiferencia = document.getElementById('cierre-diferencia');
-    const btnConfirmarCierre = document.getElementById('btn-confirmar-cierre');
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    (function () {
+      const modal = document.getElementById('modalCerrarCaja');
+      if (!modal) return;
 
-    function formatoMoneda(valor) {
-      const numero = Number(valor || 0);
-      return '$' + numero.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-    function setCierreError(mensaje) {
-      cierreError.textContent = mensaje;
-      cierreError.classList.remove('d-none');
-    }
-
-    function limpiarCierreError() {
-      cierreError.classList.add('d-none');
-      cierreError.textContent = '';
-    }
-
-    async function cargarResumenCierre() {
-      limpiarCierreError();
-      try {
-        const res = await fetch('{{ route('caja.cierre.resumen') }}', {
-          headers: { 'Accept': 'application/json' }
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          throw new Error(data.message || 'No se pudo cargar el resumen de cierre');
-        }
-
-        document.getElementById('cierre-total-ventas').value = data.total_ventas_cantidad ?? 0;
-        document.getElementById('cierre-total-ingresos').value = formatoMoneda(data.total_ingresos);
-        document.getElementById('cierre-total-efectivo').value = formatoMoneda(data.total_efectivo);
-        document.getElementById('cierre-total-tarjeta').value = formatoMoneda(data.total_tarjeta);
-        document.getElementById('cierre-total-transferencia').value = formatoMoneda(data.total_transferencia);
-        document.getElementById('cierre-total-otros').value = formatoMoneda(data.total_otros);
-        document.getElementById('cierre-monto-calculado').value = formatoMoneda(data.monto_cierre_calculado);
-
-        cierreMontoReal.value = '';
-        cierreDiferencia.value = formatoMoneda(0);
-        cierreMontoReal.dataset.montoCalculado = data.monto_cierre_calculado;
-      } catch (error) {
-        setCierreError(error.message);
+      function fmtInt(v) {
+        const n = Math.round(Number(v || 0));
+        return n.toLocaleString('es-CO');
       }
-    }
 
-    function calcularDiferencia() {
-      const calculado = Number(cierreMontoReal.dataset.montoCalculado || 0);
-      const real = Number(cierreMontoReal.value || 0);
-      const diferencia = real - calculado;
-      cierreDiferencia.value = formatoMoneda(diferencia);
-    }
+      function formatMoneyNoDecimals(v) {
+        return '$ ' + fmtInt(v);
+      }
 
-    if (modalCerrarCaja) {
-      modalCerrarCaja.addEventListener('shown.bs.modal', cargarResumenCierre);
-    }
+      function cleanDigits(value) {
+        // remove all non-digits, but allow empty string
+        return String(value).replace(/\D+/g, '');
+      }
 
-    if (cierreMontoReal) {
-      cierreMontoReal.addEventListener('input', calcularDiferencia);
-    }
+      function formatThousandsFromDigits(digits) {
+        if (!digits) return '';
+        const n = String(Number(digits));
+        return n.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      }
 
-    if (btnConfirmarCierre) {
-      btnConfirmarCierre.addEventListener('click', async () => {
-        limpiarCierreError();
-        const montoReal = cierreMontoReal.value;
-        if (!montoReal) {
-          setCierreError('Debes ingresar el monto de cierre real');
+      function formatInputField(el) {
+        const rawSource = (el.value !== undefined && el.value !== null) ? el.value : (el.dataset.raw || '');
+        const digits = cleanDigits(rawSource);
+        el.dataset.raw = digits; // may be empty string
+        el.value = digits === '' ? '' : formatThousandsFromDigits(digits);
+      }
+
+      function showError(container, message) {
+        let err = container.querySelector('.ajax-error-msg');
+        if (!err) {
+          err = document.createElement('div');
+          err.className = 'alert alert-danger ajax-error-msg';
+          container.insertBefore(err, container.firstChild);
+        }
+        err.textContent = message;
+        err.classList.remove('d-none');
+      }
+
+      function clearError(container) {
+        const err = container.querySelector('.ajax-error-msg');
+        if (err) {
+          err.classList.add('d-none');
+          err.textContent = '';
+        }
+      }
+
+      async function loadResumen() {
+        const main = modal.querySelector('.cierre-main-action');
+        clearError(main);
+        try {
+          const res = await fetch('{{ route('caja.cierre.resumen') }}', { headers: { Accept: 'application/json' } });
+          const data = await res.json();
+          if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo cargar el resumen de cierre');
+
+          // Sidebar totals
+          const totalAmountEl = modal.querySelector('.total-amount');
+          if (totalAmountEl) totalAmountEl.textContent = formatMoneyNoDecimals(data.total_ingresos ?? 0);
+
+          const cards = modal.querySelectorAll('.grid-methods .method-card-minimal');
+          if (cards && cards.length >= 4) {
+            const ef = cards[0].querySelector('.m-price');
+            const ta = cards[1].querySelector('.m-price');
+            const tr = cards[2].querySelector('.m-price');
+            const vt = cards[3].querySelector('.m-price');
+            if (ef) ef.textContent = formatMoneyNoDecimals(data.total_efectivo ?? 0);
+            if (ta) ta.textContent = formatMoneyNoDecimals(data.total_tarjeta ?? 0);
+            if (tr) tr.textContent = formatMoneyNoDecimals(data.total_transferencia ?? 0);
+            if (vt) vt.textContent = (data.total_ventas_cantidad ?? 0) + ' Ventas';
+          }
+
+          // Use monto_apertura from backend (if provided) to compute monto_cierre_calculado
+          const montoApertura = Number(data.monto_apertura ?? data.monto_apertura_caja ?? 0);
+          const totalEfectivo = Number(data.total_efectivo ?? 0);
+          const devolucionesEfectivo = Number(data.devoluciones_efectivo ?? 0);
+          const montoCalculado = montoApertura + totalEfectivo - devolucionesEfectivo;
+
+          // Render monto apertura (solo lectura)
+          const aperturaEl = modal.querySelector('.m-apertura');
+          if (aperturaEl) aperturaEl.textContent = formatMoneyNoDecimals(montoApertura);
+
+          // Store monto calculado and apertura on modal for calculations
+          modal.dataset.montoCalculado = Number(montoCalculado);
+          modal.dataset.montoApertura = Number(montoApertura);
+
+          // Reset input and difference -> mark as pending (no value entered)
+          const inputEfectivo = modal.querySelector('.input-focus-blue');
+          const badgeDiff = modal.querySelector('.badge-diff');
+          if (inputEfectivo) {
+            inputEfectivo.value = '';
+            inputEfectivo.dataset.raw = '';
+          }
+          if (badgeDiff) badgeDiff.innerHTML = 'Diferencia detectada: <span style="color: #64748b;">$ 0</span>';
+
+          updateStatus(null);
+        } catch (err) {
+          const main = modal.querySelector('.cierre-main-action');
+          showError(main, err.message);
+        }
+      }
+
+      function updateStatus(diferencia) {
+        const badge = modal.querySelector('.badge-diff');
+        const statusDot = modal.querySelector('.status-dot');
+        const sidebar = modal.querySelector('.cierre-sidebar');
+
+        // Pending: no value entered
+        if (diferencia === null || diferencia === undefined) {
+          if (badge) badge.innerHTML = 'Diferencia detectada: <span style="color: #64748b;">$ 0</span>';
+          if (statusDot) statusDot.style.background = '#3b82f6'; // azul
+          if (sidebar) {
+            const spans = Array.from(sidebar.querySelectorAll('span'));
+            const statusSpan = spans.find(s => /(Balance|Sistema|Descuadre|Pendiente)/i.test(s.textContent)) || spans[spans.length - 1];
+            if (statusSpan) statusSpan.textContent = 'Pendiente';
+          }
           return;
         }
 
-        const nota = document.getElementById('cierre-nota').value || null;
-        const imprimir = document.getElementById('cierre-imprimir').checked;
-
-        try {
-          const res = await fetch('{{ route('caja.cerrar') }}', {
-            method: 'POST',
-            headers: {
-              'X-CSRF-TOKEN': csrfToken,
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-              monto_cierre_real: montoReal,
-              nota_cierre: nota,
-              imprimir: imprimir
-            })
-          });
-
-          const data = await res.json();
-          if (!res.ok || !data.success) {
-            throw new Error(data.message || 'No se pudo cerrar la caja');
-          }
-
-          if (data.print_url) {
-            window.open(data.print_url, '_blank');
-          }
-
-          const modalInstance = bootstrap.Modal.getInstance(modalCerrarCaja);
-          if (modalInstance) modalInstance.hide();
-
-          window.location.href = '{{ route('ventas.create') }}';
-        } catch (error) {
-          setCierreError(error.message);
+        // When a numeric value exists: zero -> green, non-zero -> red
+        const color = diferencia === 0 ? '#059669' : '#f43f5e';
+        if (badge) {
+          const formatted = '$ ' + fmtInt(Math.abs(diferencia));
+          badge.innerHTML = 'Diferencia detectada: <span style="color: ' + color + '">' + (diferencia < 0 ? '-' : '') + formatted + '</span>';
         }
+
+        if (statusDot) statusDot.style.background = diferencia === 0 ? '#10b981' : '#f43f5e';
+
+        if (sidebar) {
+          const spans = Array.from(sidebar.querySelectorAll('span'));
+          const statusSpan = spans.find(s => /(Balance|Sistema|Descuadre|Pendiente)/i.test(s.textContent)) || spans[spans.length - 1];
+          if (statusSpan) {
+            statusSpan.textContent = diferencia === 0 ? 'Balance correcto' : 'Descuadre';
+          }
+        }
+      }
+
+      function bindInputListener() {
+        const inputEfectivo = modal.querySelector('.input-focus-blue');
+        if (!inputEfectivo) return;
+        inputEfectivo.addEventListener('input', function () {
+          // format while typing and keep raw digits
+          formatInputField(this);
+          const raw = this.dataset.raw;
+          if (raw === '' || raw === null || raw === undefined) {
+            updateStatus(null);
+            return;
+          }
+          const real = Number(raw || 0);
+          const calculado = Number(modal.dataset.montoCalculado || 0);
+          const diferencia = real - calculado;
+          updateStatus(diferencia);
+        });
+      }
+
+      function bindConfirm() {
+        const btn = modal.querySelector('.btn-finalizar');
+        const main = modal.querySelector('.cierre-main-action');
+        if (!btn) return;
+        btn.addEventListener('click', async function () {
+          clearError(main);
+          btn.disabled = true;
+          try {
+            const inputEfectivo = modal.querySelector('.input-focus-blue');
+            const raw = inputEfectivo?.dataset.raw;
+            if (!inputEfectivo || raw === '' || raw === undefined) {
+              showError(main, 'Ingresa el monto de efectivo en caja');
+              btn.disabled = false;
+              return;
+            }
+            const montoReal = Number(raw || 0);
+
+            const nota = modal.querySelector('textarea')?.value || null;
+
+            const res = await fetch('{{ route('caja.cerrar') }}', {
+              method: 'POST',
+              headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({
+                monto_cierre_real: montoReal,
+                nota_cierre: nota
+              })
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+              throw new Error(data.message || 'No se pudo cerrar la caja');
+            }
+
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            if (modalInstance) modalInstance.hide();
+
+            // Refrescar página para actualizar estado de la UI
+            window.location.reload();
+          } catch (err) {
+            showError(main, err.message);
+            btn.disabled = false;
+          }
+        });
+      }
+
+      // Bind events
+      modal.addEventListener('shown.bs.modal', function () {
+        loadResumen();
       });
-    }
+
+      // Setup listeners once
+      bindInputListener();
+      bindConfirm();
+    })();
   </script>
   @endif
 

@@ -207,76 +207,168 @@ textarea {
 }
 
 /* =========================
-   HERO / CAJA
+   CAJA – HERO (SCOPED)
+   Solo afecta a .caja-scope
    ========================= */
-.caja-hero {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 48px;
-    padding: 48px 56px;
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    position: relative;
-    overflow: hidden;
+
+.caja-scope .caja-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+  padding: 48px 56px;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  position: relative;
+  overflow: hidden;
 }
 
-.caja-hero::before {
-    content: "";
-    position: absolute;
-    top: -100px;
-    right: -100px;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(59,130,246,0.08), transparent 70%);
-    border-radius: 50%;
+.caja-scope .caja-hero::before {
+  content: "";
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(59,130,246,0.08), transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
-.caja-content {
-    flex: 1;
-    max-width: 500px;
-    z-index: 1;
+/* Contenido */
+.caja-scope .caja-content {
+  flex: 1;
+  max-width: 520px;
+  position: relative;
+  z-index: 1;
 }
 
-.caja-title {
-    font-size: 32px;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 12px;
-    line-height: 1.2;
+/* Badge estado */
+.caja-scope .caja-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(59,130,246,0.08),
+    rgba(147,51,234,0.08)
+  );
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 100px;
+  margin-bottom: 16px;
 }
 
-.caja-subtitle {
-    font-size: 15px;
-    color: #64748b;
-    margin-bottom: 28px;
+.caja-scope .caja-badge svg {
+  color: #3b82f6;
+}
+
+.caja-scope .caja-badge span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Título y texto */
+.caja-scope .caja-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.caja-scope .caja-subtitle {
+  font-size: 15px;
+  color: #64748b;
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+/* Acciones */
+.caja-scope .caja-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Visual */
+.caja-scope .caja-visual {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.caja-scope .caja-visual img {
+  width: 320px;
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(0 20px 40px rgba(15,23,42,0.12));
 }
 
 /* =========================
    RESPONSIVE
    ========================= */
+
 @media (max-width: 992px) {
-    .caja-hero {
-        flex-direction: column;
-        text-align: center;
-        padding: 40px 32px;
-        gap: 32px;
-    }
+  .caja-scope .caja-hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 40px 32px;
+    gap: 32px;
+  }
+
+  .caja-scope .caja-content {
+    max-width: 100%;
+  }
+
+  .caja-scope .caja-actions {
+    justify-content: center;
+  }
+
+  .caja-scope .caja-visual img {
+    width: 280px;
+  }
 }
 
 @media (max-width: 576px) {
-    .caja-hero {
-        padding: 32px 24px;
-    }
+  .caja-scope .caja-hero {
+    padding: 32px 24px;
+  }
 
-    .caja-title {
-        font-size: 26px;
-    }
+  .caja-scope .caja-title {
+    font-size: 26px;
+  }
+
+  .caja-scope .caja-subtitle {
+    font-size: 14px;
+  }
+
+  .caja-scope .caja-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .caja-scope .caja-actions button {
+    width: 100%;
+  }
+
+  .caja-scope .caja-visual img {
+    width: 240px;
+  }
 }
+
+
 </style>
 
 
 @if(!$cajaAbierta)
-<section class="section pt-30">
+<section class="section pt-30 caja-scope">
   <div class="container-fluid">
     <div class="card-style mb-30 p-0 overflow-hidden">
       <div class="caja-hero">
@@ -313,30 +405,72 @@ textarea {
 </section>
 
 <div class="modal fade" id="modalAbrirCaja" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-        <div class="modal-content alegra-modal-square px-2">
-            <div class="modal-header border-0 pb-3">
-                <h6 class="text-medium mb-0">Apertura de caja</h6>
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+        <div class="modal-content" style="border: none; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden;">
+            
+            <div class="modal-header border-0" style="padding: 30px 30px 10px 30px;">
+                <h6 style="margin: 0; font-weight: 800; color: #1e293b; font-size: 18px;">Apertura de caja</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+
             <form method="POST" action="{{ route('caja.abrir') }}">
                 @csrf
-                <div class="modal-body pt-0">
-                    <div class="mb-3">
-                        <label for="monto_apertura" class="form-label text-xs text-gray">Monto de apertura</label>
-                        <input type="number" step="0.01" min="0" class="form-control form-control-sm alegra-input" id="monto_apertura" name="monto_apertura" required>
+                <div class="modal-body" style="padding: 10px 30px 20px 30px;">
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label for="monto_apertura" style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;">Monto inicial</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); font-weight: 700; color: #64748b;">$</span>
+                            <input
+  type="text"
+  id="monto_apertura"
+  name="monto_apertura"
+  inputmode="numeric"
+  placeholder="0"
+  autocomplete="off"
+  style="width: 100%; padding: 12px 15px 12px 35px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 18px; font-weight: 700; color: #1e293b; outline: none;"
+>
+<script>
+const inputMonto = document.getElementById('monto_apertura');
+
+inputMonto.addEventListener('input', () => {
+  // Quita todo lo que no sea número
+  let raw = inputMonto.value.replace(/\D/g, '');
+
+  // Evita valores vacíos
+  if (!raw) {
+    inputMonto.value = '';
+    return;
+  }
+
+  // Formato tipo Nequi: 1.234.567
+  inputMonto.value = raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+});
+
+// Limpia antes de enviar el form
+inputMonto.form?.addEventListener('submit', () => {
+  inputMonto.value = inputMonto.value.replace(/\./g, '');
+});
+</script>
+
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="nota_apertura" class="form-label text-xs text-gray">Nota (opcional)</label>
-                        <input type="text" class="form-control form-control-sm alegra-input" id="nota_apertura" name="nota_apertura" maxlength="255">
+
+                    <div style="margin-bottom: 10px;">
+                        <label for="nota_apertura" style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;">Nota de apertura</label>
+                        <textarea id="nota_apertura" name="nota_apertura" rows="3" maxlength="255"
+                            placeholder="Escribe aquí alguna observación sobre el inicio del turno..."
+                            style="width: 100%; padding: 15px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 14px; color: #475569; outline: none; resize: none; transition: border-color 0.2s;"
+                            onfocus="this.style.borderColor='#3b82f6';"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-3">
+
+                <div class="modal-footer border-0" style="padding: 10px 30px 30px 30px;">
                     <div class="d-flex gap-3 w-100">
-                        <button class="main-btn light-btn btn-hover flex-fill" type="button" data-bs-dismiss="modal">
+                        <button class="main-btn light-btn btn-hover flex-fill" type="button" data-bs-dismiss="modal" style="padding: 12px; border-radius: 10px;">
                             Cancelar
                         </button>
-                        <button class="main-btn primary-btn btn-hover flex-fill" type="submit">
+                        <button class="main-btn primary-btn btn-hover flex-fill" type="submit" style="padding: 12px; border-radius: 10px;">
                             Abrir caja
                         </button>
                     </div>
@@ -380,12 +514,14 @@ textarea {
                                 <tr>
                                     <th><h6 class="text-sm text-medium">Producto</h6></th>
                                     <th class="min-width"><h6 class="text-sm text-medium">Precio</h6></th>
+                                    @if($empresa && $empresa->cobra_iva)
                                     <th class="min-width"><h6 class="text-sm text-medium">IVA</h6></th>
+                                    @endif
                                     <th class="min-width"><h6 class="text-sm text-medium">Stock</h6></th>
                                 </tr>
                             </thead>
                             <tbody id="tabla-productos">
-                                <tr><td colspan="4" style="text-align: center; padding: 20px;">Cargando productos...</td></tr>
+                                <tr><td colspan="{{ ($empresa && $empresa->cobra_iva) ? 4 : 3 }}" style="text-align: center; padding: 20px;">Cargando productos...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -601,6 +737,8 @@ let todosProductos = [];
 let busquedaTimeout = null;
 let ventaEnProceso = false; // Flag para prevenir race condition
 let csrfTokenGlobal = null; // Almacenar token de forma segura
+// Flag desde servidor: si la empresa cobra IVA
+const COBRA_IVA = @json((bool)($empresa && $empresa->cobra_iva));
 
 // Obtener elementos DOM de forma segura
 const inputBuscar = document.getElementById('buscar-producto');
@@ -729,7 +867,7 @@ async function cargarProductos() {
         todosProductos = await res.json();
         actualizarTablaProductos();
     } catch (error) {
-        tablaProductos.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #d9534f; padding: 20px;">Error al cargar productos</td></tr>';
+        tablaProductos.innerHTML = `<tr><td colspan="${COBRA_IVA ? 4 : 3}" style="text-align: center; color: #d9534f; padding: 20px;">Error al cargar productos</td></tr>`;
     }
 }
 
@@ -743,7 +881,7 @@ function actualizarTablaProductos(filtrados = null) {
     }
     
     if (productos.length === 0) {
-        tablaProductos.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #999;">No hay productos</td></tr>';
+        tablaProductos.innerHTML = `<tr><td colspan="${COBRA_IVA ? 4 : 3}" style="text-align: center; padding: 20px; color: #999;">No hay productos</td></tr>`;
         return;
     }
 
@@ -761,13 +899,13 @@ function actualizarTablaProductos(filtrados = null) {
             <tr>
                 <td>
                     <div class="product">
-                        <p class="text-sm" style="cursor: pointer;" onclick="agregarAlCarrito({id: ${p.id}, nombre: '${escapeHtml(p.nombre)}', precio: ${p.precio}, stock: ${p.stock}, iva: ${p.iva || 0}})">
+                        <p class="text-sm" style="cursor: pointer;" onclick="agregarAlCarrito({id: ${p.id}, nombre: '${escapeHtml(p.nombre)}', precio: ${p.precio}, stock: ${p.stock}, iva: ${COBRA_IVA ? (p.iva || 0) : 0}})">
                             ${p.nombre}
                         </p>
                     </div>
                 </td>
                 <td><p class="text-sm">${formatoPrecio(p.precio)}</p></td>
-                <td><p class="text-sm">${p.iva || 0}%</p></td>
+                ${COBRA_IVA ? `<td><p class="text-sm">${p.iva || 0}%</p></td>` : ''}
                 <td><span class="status-btn ${statusClass}">${statusText}</span></td>
             </tr>
         `;

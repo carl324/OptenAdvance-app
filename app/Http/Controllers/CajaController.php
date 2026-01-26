@@ -20,24 +20,39 @@ class CajaController extends Controller
             ], 409);
         }
 
-        $cantidadVentas = Venta::where('caja_id', $caja->id)->count();
-        $totalIngresos = (float) Venta::where('caja_id', $caja->id)->sum('total');
+        // Considerar solo ventas válidas (no anuladas/canceladas) para totales
+        $ventasQuery = Venta::where('caja_id', $caja->id)
+            ->whereNotIn('estado', ['anulada', 'cancelada']);
 
+        $cantidadVentas = $ventasQuery->count();
+        $totalIngresos = (float) $ventasQuery->sum('total');
+
+        // Efectivo físico corresponde solo a pagos en efectivo y no anulados
         $totalEfectivo = (float) Venta::where('caja_id', $caja->id)
             ->where('forma_pago', 'efectivo')
+            ->whereNotIn('estado', ['anulada', 'cancelada'])
             ->sum('total');
 
         $totalTarjeta = (float) Venta::where('caja_id', $caja->id)
             ->where('forma_pago', 'tarjeta')
+            ->whereNotIn('estado', ['anulada', 'cancelada'])
             ->sum('total');
 
         $totalTransferencia = (float) Venta::where('caja_id', $caja->id)
             ->where('forma_pago', 'transferencia')
+            ->whereNotIn('estado', ['anulada', 'cancelada'])
             ->sum('total');
 
         $totalOtros = $totalIngresos - ($totalEfectivo + $totalTarjeta + $totalTransferencia);
 
-        $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
+        // Devoluciones en efectivo: ventas anuladas pagadas en efectivo (si existen)
+        $devolucionesEfectivo = (float) Venta::where('caja_id', $caja->id)
+            ->where('forma_pago', 'efectivo')
+            ->where('estado', 'anulada')
+            ->sum('total');
+
+        // monto_cierre_calculado = monto_apertura + total_efectivo - devoluciones_en_efectivo
+        $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo - $devolucionesEfectivo;
 
         return response()->json([
             'success' => true,
@@ -50,6 +65,7 @@ class CajaController extends Controller
             'total_otros' => $totalOtros,
             'monto_apertura' => (float) $caja->monto_apertura,
             'monto_cierre_calculado' => $montoCierreCalculado,
+            'devoluciones_efectivo' => $devolucionesEfectivo,
         ]);
     }
 
@@ -102,14 +118,27 @@ class CajaController extends Controller
             'imprimir' => ['nullable', 'boolean'],
         ]);
 
-        $totalVentas = (float) Venta::where('caja_id', $caja->id)->sum('total');
+        // Recalcular totales de forma consistente con resumenCierre
+        $ventasQuery = Venta::where('caja_id', $caja->id)
+            ->whereNotIn('estado', ['anulada', 'cancelada']);
+
+        $totalVentas = (float) $ventasQuery->sum('total');
+
         $totalEfectivo = (float) Venta::where('caja_id', $caja->id)
             ->where('forma_pago', 'efectivo')
+            ->whereNotIn('estado', ['anulada', 'cancelada'])
             ->sum('total');
 
-        $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
+        $devolucionesEfectivo = (float) Venta::where('caja_id', $caja->id)
+            ->where('forma_pago', 'efectivo')
+            ->where('estado', 'anulada')
+            ->sum('total');
+
+        $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo - $devolucionesEfectivo;
+
         $diferencia = (float) $data['monto_cierre_real'] - $montoCierreCalculado;
 
+        // No bloquear diferencias; permitir positivas o negativas
         $caja->update([
             'fecha_cierre' => now(),
             'total_ventas' => $totalVentas,

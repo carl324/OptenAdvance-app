@@ -26,8 +26,10 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layouts.app', function ($view) {
             $cajaActual = Caja::where('estado', 'abierta')->first();
             $cajaAbierta = (bool) $cajaActual;
+            // Pasar la fecha completa al view (Carbon) para que la presentación
+            // sea responsabilidad de la capa de vista / helpers.
             $cajaHoraApertura = $cajaActual
-                ? Carbon::parse($cajaActual->fecha_apertura)->format('h:i A')
+                ? Carbon::parse($cajaActual->fecha_apertura)
                 : null;
 
             $ventasHoy = null;
