@@ -97,7 +97,7 @@
                   <p class="text-sm mb-25">
                     Crea una cuenta de administrador para comenzar a usar el sistema.
                   </p>
-                  <form method="POST" action="{{ route('setup.store') }}">
+                  <form id="setup-form" data-endpoint="{{ route('setup.store') }}" novalidate>
                     @csrf
                     <div class="row">
 
@@ -124,7 +124,7 @@
                       <div class="col-12">
                         <div class="input-style-1">
                           <label>Email</label>
-                          <input type="email" name="email" value="{{ old('email') }}" placeholder="Email" />
+                          <input type="text" name="email" inputmode="email" autocomplete="email" value="{{ old('email') }}" placeholder="Email" />
                           @error('email')
                             <div class="text-danger" style="font-size:13px; margin-top:6px;">{{ $message }}</div>
                           @enderror
@@ -156,7 +156,7 @@
                       <!-- end col -->
                       <div class="col-12">
                         <div class="button-group d-flex justify-content-center flex-wrap">
-                          <button class="main-btn primary-btn btn-hover w-100 text-center">
+                          <button type="button" id="btn-create-account" class="main-btn primary-btn btn-hover w-100 text-center">
                             Crear Cuenta
                           </button>
                         </div>
@@ -218,6 +218,40 @@
     } 
   }); 
 })(); 
+</script>
+<script>
+// Envío AJAX seguro para setup-form (evitar validación nativa)
+(function(){
+  var form = document.getElementById('setup-form');
+  var btn = document.getElementById('btn-create-account');
+  if (!form || !btn) return;
+  form.noValidate = true;
+  form.addEventListener('submit', function(e){ e.preventDefault(); e.stopImmediatePropagation(); });
+  form.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); e.stopImmediatePropagation(); } });
+
+  btn.addEventListener('click', function(){
+    btn.disabled = true;
+    var fd = new FormData(form);
+    fetch(form.dataset.endpoint, {
+      method: 'POST',
+      body: fd,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    }).then(function(res){
+      if (res.ok) {
+        if (res.redirected) window.location.href = res.url; else window.location.reload();
+        return;
+      }
+      if (res.status === 422) return res.json().then(function(data){
+        alert('Errores: ' + Object.values(data.errors).map(function(v){ return v[0]; }).join('\n'));
+      });
+      alert('Ocurrió un error. Intente nuevamente.');
+    }).catch(function(){ alert('Ocurrió un error de red.'); })
+    .finally(function(){ btn.disabled = false; });
+  });
+})();
 </script>
   </body>
 </html>

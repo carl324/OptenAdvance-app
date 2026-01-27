@@ -180,6 +180,35 @@
         $hasIva = ((float) $impuestos) > 0;
         $subtotal = $total - $impuestos;
     @endphp
+@if($venta->estado === 'anulada')
+    <div style="
+        position: fixed;
+        top: 30%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-30deg);
+        width: 80mm; /* Ajustado a ancho de papel térmico */
+        max-width: 90%; /* Nunca más ancho que la página */
+        text-align: center;
+        z-index: 0;
+        pointer-events: none;
+    ">
+        <div style="
+            display: inline-block;
+            border: 4pt double #444; /* Borde doble estilo sello contable */
+            padding: 8pt 20pt;
+            color: #444;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 28pt; /* Ajustado para papel térmico */
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 4pt;
+            opacity: 0.12; /* Transparencia */
+            white-space: nowrap;
+        ">
+            Anulada
+        </div>
+    </div>
+@endif
 
     <!-- Header -->
     <div class="header">
@@ -215,7 +244,7 @@
         </div>
         @endif
     </div>
-
+       
     <!-- Ítems -->
     <div class="items">
         @foreach($venta->detalles as $detalle)

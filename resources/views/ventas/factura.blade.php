@@ -5,6 +5,50 @@
 
 @section('content')
 
+@if(strtolower($venta->estado ?? '') === 'anulada')
+<style>
+.invoice-wrapper { position: relative; }
+
+.invoice-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-25deg);
+
+    max-width: 98%; /* nunca más ancho que el contenedor */
+    white-space: nowrap;
+    
+    border: 6px double rgba(220, 38, 38, 0.15);
+    padding: 10px 30px;
+    border-radius: 12px;
+
+    font-size: 5em; /* tamaño relativo al contenedor */
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    color: rgba(220, 38, 38, 0.15);
+
+    pointer-events: none;
+    user-select: none;
+    z-index: 9999;
+
+    text-align: center;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+}
+
+@media print {
+    .invoice-watermark {
+        color: rgba(220, 38, 38, 0.18) !important;
+        border-color: rgba(220, 38, 38, 0.18) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+</style>
+@endif
+
 <section>
     <div class="container-fluid">
         <!-- ========== title-wrapper start ========== -->
@@ -22,6 +66,9 @@
 
         <!-- Invoice Wrapper Start -->
         <div class="invoice-wrapper">
+            @if(strtolower($venta->estado ?? '') === 'anulada')
+                <div class="invoice-watermark">VENTA ANULADA</div>
+            @endif
             <div class="row">
                 <div class="col-12">
                     <div class="invoice-card card-style mb-30">

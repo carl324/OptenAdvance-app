@@ -181,7 +181,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
+<div class="container">
     @php
         $factura = $venta->factura;
 
@@ -190,7 +190,33 @@
         $hasIva = ((float) $impuestos) > 0;
         $subtotal = $total - $impuestos;
     @endphp
-
+    @if($venta->estado === 'anulada')
+    <div style="
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-30deg);
+        width: 100%;
+        text-align: center;
+        z-index: 0;
+        pointer-events: none;
+    ">
+        <div style="
+            display: inline-block;
+            border: 6pt double #444; /* Borde doble estilo sello contable */
+            padding: 15pt 40pt;
+            color: #444;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 55pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 8pt;
+            opacity: 0.12; /* Transparencia ideal para no tapar los datos */
+        ">
+            Anulada
+        </div>
+    </div>
+@endif
     <!-- Header -->
      <h2 class="text-center">FACTURA COMERCIAL</h2>
      <br><br>

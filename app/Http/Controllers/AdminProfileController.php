@@ -13,7 +13,7 @@ class AdminProfileController extends Controller
     {
         $user = auth()->user();
 
-        $validator = Validator::make($request->all(), [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'username' => [
                 'required',
@@ -28,7 +28,17 @@ class AdminProfileController extends Controller
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
             'password' => ['nullable', 'string', 'min:8'],
-        ]);
+        ];
+
+        $messages = [
+            'required' => 'Este campo es obligatorio.',
+            'email' => 'El email no es válido.',
+            'password.min' => 'La contraseña es muy corta. Mínimo :min caracteres.',
+            'max' => 'Máximo :max caracteres permitidos.',
+            'unique' => 'El valor ya está en uso.'
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
             return response()->json([

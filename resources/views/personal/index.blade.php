@@ -50,23 +50,27 @@
             <div class="profile-info">
               <div id="profile-alert" class="alert d-none" role="alert"></div>
 
-              <form id="form-perfil-admin" action="{{ route('perfil.admin.update') }}" method="POST">
+              <form id="form-perfil-admin" data-endpoint="{{ route('perfil.admin.update') }}" novalidate>
                 @csrf
                 <div class="input-style-1">
                   <label>Nombre</label>
-                  <input type="text" name="name" value="{{ auth()->user()->name ?? '' }}" />
+                  <input type="text" name="name" value="{{ auth()->user()->name ?? '' }}" maxlength="100" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="profile-error-name"></div>
                 </div>
                 <div class="input-style-1">
                   <label>Usuario</label>
-                  <input type="text" name="username" value="{{ auth()->user()->username ?? '' }}" />
+                  <input type="text" name="username" value="{{ auth()->user()->username ?? '' }}" maxlength="100" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="profile-error-username"></div>
                 </div>
                 <div class="input-style-1">
                   <label>Email</label>
-                  <input type="email" name="email" value="{{ auth()->user()->email ?? '' }}" />
+                  <input type="text" name="email" value="{{ auth()->user()->email ?? '' }}" maxlength="150" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="profile-error-email"></div>
                 </div>
                 <div class="input-style-1">
                   <label>Contraseña (actualizar)</label>
-                  <input type="text" name="password" placeholder="Dejar vacío para no cambiar" />
+                  <input type="text" name="password" placeholder="Dejar vacío para no cambiar" maxlength="60" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="profile-error-password"></div>
                 </div>
 
                 <div class="mt-3">
@@ -94,31 +98,35 @@
             </button>
           </div>
           <div id="empleado-alert" class="alert d-none" role="alert"></div>
-          <form action="{{ route('personal.store') }}" method="POST" id="form-empleado">
+          <form id="form-empleado" data-endpoint="{{ route('personal.store') }}" novalidate>
             @csrf
             <div class="row">
               <div class="col-12">
                 <div class="input-style-1">
                   <label>Nombre de Usuario</label>
-                  <input type="text" name="name" placeholder="Nombre de Usuario" />
+                  <input type="text" name="name" placeholder="Nombre de Usuario" maxlength="100" />
+                  <div class="invalid-feedback d-none" id="error-name"></div>
                 </div>
               </div>
               <div class="col-12">
                 <div class="input-style-1">
                   <label>Email</label>
-                  <input type="email" name="email" placeholder="email@ejemplo.com" />
+                  <input type="text" name="email" placeholder="email@ejemplo.com" maxlength="150" />
+                  <div class="invalid-feedback d-none" id="error-email"></div>
                 </div>
               </div>
               <div class="col-12">
                 <div class="input-style-1">
                   <label>Teléfono</label>
-                  <input type="text" name="phone" placeholder="+57 300 000 0000" />
+                  <input type="text" name="phone" placeholder="+57 300 000 0000" maxlength="20" />
+                  <div class="invalid-feedback d-none" id="error-phone"></div>
                 </div>
               </div>
               <div class="col-12">
                 <div class="input-style-1">
                   <label>Contraseña inicial</label>
-                  <input type="password" name="password" placeholder="Mínimo 8 caracteres" />
+                  <input type="text" name="password" placeholder="Mínimo 5 caracteres" maxlength="60" />
+                  <div class="invalid-feedback d-none" id="error-password"></div>
                 </div>
               </div>
               <div class="col-12">
@@ -126,7 +134,7 @@
                   <button type="button" class="main-btn light-btn btn-hover flex-fill" onclick="toggleNuevoEmpleado()">
                     Cancelar
                   </button>
-                  <button type="submit" class="main-btn primary-btn btn-hover flex-fill" id="btn-crear-empleado">
+                  <button type="button" class="main-btn primary-btn btn-hover flex-fill" id="btn-crear-empleado">
                     <i class="lni lni-checkmark"></i> Crear empleado
                   </button>
                 </div>
@@ -167,22 +175,30 @@
 
                 <div class="input-style-1">
                   <label>Usuario</label>
-                  <input type="text" id="empleado-name-{{ $empleado->id }}" value="{{ $empleado->name ?? '' }}" />
+                  <input type="text" id="empleado-name-{{ $empleado->id }}" value="{{ $empleado->name ?? '' }}" maxlength="100" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="empleado-error-name-{{ $empleado->id }}"></div>
                 </div>
                 <div class="input-style-1">
                   <label>Email</label>
-                  <input type="email" id="empleado-email-{{ $empleado->id }}" value="{{ $empleado->email ?? '' }}" />
+                  <input type="text" id="empleado-email-{{ $empleado->id }}" value="{{ $empleado->email ?? '' }}" maxlength="150" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="empleado-error-email-{{ $empleado->id }}"></div>
                 </div>
                 <div class="input-style-1">
                   <label>Teléfono</label>
-                  <input type="text" id="empleado-phone-{{ $empleado->id }}" value="{{ $empleado->phone ?? '' }}" />
+                  <input type="text" id="empleado-phone-{{ $empleado->id }}" value="{{ $empleado->phone ?? '' }}" maxlength="20" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="empleado-error-phone-{{ $empleado->id }}"></div>
+                </div>
+                <div class="input-style-1 mt-2">
+                  <label>Contraseña (dejar vacío para no cambiar)</label>
+                  <input type="text" id="empleado-password-{{ $empleado->id }}" placeholder="Dejar vacío para no cambiar" maxlength="60" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="empleado-error-password-{{ $empleado->id }}"></div>
                 </div>
                 <div class="d-flex gap-2 mt-3">
-                  <button type="button" class="main-btn light-btn btn-hover flex-fill" onclick="saveEmpleado({{ $empleado->id }})" id="btn-guardar-{{ $empleado->id }}">
-                    <i class="lni lni-save"></i> Guardar
-                  </button>
                   <button type="button" class="main-btn danger-btn btn-hover flex-fill" data-name="{{ $empleado->name ?? '' }}" onclick="openDeleteModal({{ $empleado->id }}, this.dataset.name)" id="btn-eliminar-{{ $empleado->id }}">
                     <i class="lni lni-trash-can"></i> Eliminar
+                  </button>
+                  <button type="button" class="main-btn primary-btn btn-hover flex-fill" onclick="saveEmpleado({{ $empleado->id }})" id="btn-guardar-{{ $empleado->id }}">
+                    <i class="lni lni-save"></i> Guardar
                   </button>
                 </div>
               </div>
@@ -394,6 +410,13 @@ const formEmpleado = document.getElementById('form-empleado');
 const alertEmpleado = document.getElementById('empleado-alert');
 const btnCrearEmpleado = document.getElementById('btn-crear-empleado');
 
+// Garantizar que el navegador NO ejecute validación nativa
+if (formEmpleado) {
+  formEmpleado.noValidate = true; // refuerzo en runtime
+  formEmpleado.addEventListener('submit', (e) => e.preventDefault()); // bloqueo extra
+  formEmpleado.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); }); // evitar submit por Enter
+}
+
 function mostrarMensajeEmpleado(tipo, texto) {
   alertEmpleado.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning');
   alertEmpleado.classList.add(tipo === 'success' ? 'alert-success' : 'alert-danger');
@@ -401,9 +424,13 @@ function mostrarMensajeEmpleado(tipo, texto) {
 }
 
 if (formEmpleado) {
-  formEmpleado.addEventListener('submit', async (e) => {
+  // Prevenir cualquier envío nativo (Enter u otro trigger)
+  formEmpleado.addEventListener('submit', (e) => e.preventDefault());
+
+  btnCrearEmpleado.addEventListener('click', async (e) => {
     e.preventDefault();
     alertEmpleado.classList.add('d-none');
+    clearFieldErrors('create');
 
     const formData = new FormData(formEmpleado);
 
@@ -411,11 +438,13 @@ if (formEmpleado) {
     btnCrearEmpleado.textContent = 'Guardando...';
 
     try {
-      const res = await fetch(formEmpleado.action, {
+      const endpoint = formEmpleado.dataset.endpoint;
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
       });
@@ -423,8 +452,11 @@ if (formEmpleado) {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
+        if (data?.errors) {
+          renderFieldErrorsCreate(data.errors);
+        }
         const primerError = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
-        throw new Error(primerError || data?.message || 'Ups, no pude guardar el empleado.');
+        throw new Error(primerError || data?.message || 'No se pudo crear el empleado.');
       }
 
       mostrarMensajeEmpleado('success', data.message || 'Empleado creado correctamente.');
@@ -438,6 +470,45 @@ if (formEmpleado) {
     }
   });
 }
+
+function clearFieldErrors(scope, id = null) {
+  if (scope === 'create') {
+    ['name','email','phone','password'].forEach(k => {
+      const el = document.getElementById('error-' + k);
+      if (el) { el.classList.add('d-none'); el.textContent = ''; }
+      const input = document.querySelector('#form-empleado [name="' + k + '"]');
+      if (input) input.removeAttribute('aria-invalid');
+    });
+  }
+  if (scope === 'profile') {
+    ['name','username','email','password'].forEach(k => {
+      const el = document.getElementById('profile-error-' + k);
+      if (el) { el.classList.add('d-none'); el.textContent = ''; }
+      const input = document.querySelector('#form-perfil-admin [name="' + k + '"]');
+      if (input) input.removeAttribute('aria-invalid');
+    });
+  }
+  if (scope === 'empleado' && id) {
+    ['name','email','phone','password'].forEach(k => {
+      const el = document.getElementById('empleado-error-' + k + '-' + id);
+      if (el) { el.classList.add('d-none'); el.textContent = ''; }
+      const input = document.getElementById('empleado-' + k + '-' + id);
+      if (input) input.removeAttribute('aria-invalid');
+    });
+  }
+}
+
+function renderFieldErrorsCreate(errors) {
+  let firstEl = null;
+  Object.keys(errors).forEach(key => {
+    const el = document.getElementById('error-' + key);
+    const input = document.querySelector('#form-empleado [name="' + key + '"]');
+    const msg = errors[key][0];
+    if (el) { el.classList.remove('d-none'); el.textContent = msg; }
+    if (input) { input.setAttribute('aria-invalid', 'true'); if (!firstEl) firstEl = input; }
+  });
+  if (firstEl) firstEl.focus();
+}
 </script>
 
 <script>
@@ -445,6 +516,13 @@ if (formEmpleado) {
 const formPerfil = document.getElementById('form-perfil-admin');
 const alertPerfil = document.getElementById('profile-alert');
 const btnGuardarPerfil = document.getElementById('btn-guardar-perfil');
+
+// Garantizar que el navegador NO ejecute validación nativa en el formulario de perfil
+if (formPerfil) {
+  formPerfil.noValidate = true;
+  formPerfil.addEventListener('submit', (e) => e.preventDefault());
+  formPerfil.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
+}
 
 function mostrarMensajePerfil(tipo, texto) {
   if (!alertPerfil) return;
@@ -461,17 +539,20 @@ if (formPerfil && btnGuardarPerfil) {
     e.preventDefault();
     alertPerfil.classList.add('d-none');
 
+    clearFieldErrors('profile');
     const formData = new FormData(formPerfil);
 
     btnGuardarPerfil.disabled = true;
     btnGuardarPerfil.textContent = 'Guardando...';
 
     try {
-      const res = await fetch(formPerfil.action, {
+      const endpoint = formPerfil.dataset.endpoint;
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
       });
@@ -479,6 +560,7 @@ if (formPerfil && btnGuardarPerfil) {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
+        if (data?.errors) renderProfileFieldErrors(data.errors);
         const primerError = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
         throw new Error(primerError || data?.message || 'No se pudo actualizar el perfil.');
       }
@@ -498,6 +580,18 @@ if (formPerfil && btnGuardarPerfil) {
       btnGuardarPerfil.innerHTML = '<i class="lni lni-save"></i> Guardar cambios';
     }
   });
+}
+
+function renderProfileFieldErrors(errors) {
+  let first = null;
+  Object.keys(errors).forEach(key => {
+    const el = document.getElementById('profile-error-' + key);
+    const input = document.querySelector('#form-perfil-admin [name="' + key + '"]');
+    const msg = errors[key][0];
+    if (el) { el.classList.remove('d-none'); el.textContent = msg; }
+    if (input) { input.setAttribute('aria-invalid', 'true'); if (!first) first = input; }
+  });
+  if (first) first.focus();
 }
 </script>
 
@@ -519,6 +613,8 @@ async function saveEmpleado(id) {
   const name = document.getElementById('empleado-name-' + id).value.trim();
   const email = document.getElementById('empleado-email-' + id).value.trim();
   const phone = document.getElementById('empleado-phone-' + id).value.trim();
+  const passwordEl = document.getElementById('empleado-password-' + id);
+  const password = passwordEl ? passwordEl.value.trim() : '';
 
   if (!name || !email) {
     mostrarMensajeEmpleadoById(id, 'error', 'El nombre y el email son requeridos.');
@@ -528,26 +624,32 @@ async function saveEmpleado(id) {
   btn.disabled = true;
   const originalText = btn.innerHTML;
   btn.innerHTML = 'Guardando...';
+  clearFieldErrors('empleado', id);
 
-  try {
+    try {
+    const payload = { name, email, phone };
+    if (password) payload.password = password;
+
     const res = await fetch(`/empleados/${id}/update`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       },
-      body: JSON.stringify({ name, email, phone })
+      body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok || !data.success) {
-      const primerError = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
-      throw new Error(primerError || data?.message || 'No se pudo actualizar el empleado.');
-    }
+      if (!res.ok || !data.success) {
+        if (data?.errors) renderFieldErrorsEmpleado(id, data.errors);
+        const primerError = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
+        throw new Error(primerError || data?.message || 'No se pudo actualizar el empleado.');
+      }
 
-    mostrarMensajeEmpleadoById(id, 'success', data.message || 'Empleado actualizado.');
+      mostrarMensajeEmpleadoById(id, 'success', data.message || 'Empleado actualizado.');
     // actualizar nombre visible en la card
     const header = document.querySelector('#empleado-content-' + id).closest('.card-style').querySelector('.profile-info-compact h6');
     if (header) header.textContent = name;
@@ -575,6 +677,20 @@ function closeDeleteModal() {
   if (modal) modal.style.display = 'none';
 }
 
+function renderFieldErrorsEmpleado(id, errors) {
+  let first = null;
+  Object.keys(errors).forEach(key => {
+    const el = document.getElementById('empleado-error-' + key + '-' + id);
+    const input = document.getElementById('empleado-' + key + '-' + id) || document.getElementById('empleado-' + key + '-' + id);
+    const msg = errors[key][0];
+    if (el) { el.classList.remove('d-none'); el.textContent = msg; }
+    // input IDs follow pattern empleado-name-<id> etc.
+    const realInput = document.getElementById('empleado-' + (key === 'name' ? 'name' : key) + '-' + id) || document.getElementById('empleado-' + key + '-' + id);
+    if (realInput) { realInput.setAttribute('aria-invalid', 'true'); if (!first) first = realInput; }
+  });
+  if (first) first.focus();
+}
+
 async function confirmDeleteEmpleado() {
   const id = pendingDeleteId;
   if (!id) return closeDeleteModal();
@@ -589,7 +705,8 @@ async function confirmDeleteEmpleado() {
       method: 'DELETE',
       headers: {
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       }
     });
 

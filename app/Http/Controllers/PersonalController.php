@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 
 class PersonalController extends Controller
 {
@@ -29,12 +30,35 @@ class PersonalController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'password' => ['required', 'string', 'min:8'],
-        ]);
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'phone' => 'nullable|string|max:50',
+            'password' => 'required|string|min:8',
+        ];
+
+        $messages = [
+            'required' => 'Este campo es obligatorio.',
+            'email' => 'El email no es válido.',
+            'password.min' => 'La contraseña es muy corta. Mínimo :min caracteres.',
+            'max' => 'Máximo :max caracteres permitidos.',
+            'unique' => 'El valor ya está en uso.'
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        if ($validator->fails()) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $data = $validator->validated();
 
         $empleado = User::create([
             'name' => $data['name'],
@@ -68,21 +92,47 @@ class PersonalController extends Controller
         if (! $empleado) {
             return response()->json(['success' => false, 'message' => 'Empleado no encontrado.'], 404);
         }
-
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+        $rules = [
+            'name' => 'required|string|max:255',
             'email' => [
                 'required', 'email', 'max:255',
                 Rule::unique('users', 'email')->ignore($empleado->id),
             ],
-            'phone' => ['nullable', 'string', 'max:50'],
-        ]);
+            'phone' => 'nullable|string|max:50',
+            'password' => 'nullable|string|min:8',
+        ];
+
+        $messages = [
+            'required' => 'Este campo es obligatorio.',
+            'email' => 'El email no es válido.',
+            'password.min' => 'La contraseña es muy corta. Mínimo :min caracteres.',
+            'max' => 'Máximo :max caracteres permitidos.',
+            'unique' => 'El valor ya está en uso.'
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        if ($validator->fails()) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $data = $validator->validated();
 
         // Evitar cambios peligrosos (no permitir cambiar role aquí)
         $empleado->name = $data['name'];
         $empleado->email = $data['email'];
         $empleado->username = $data['email'];
         $empleado->phone = $data['phone'] ?? null;
+        if (!empty($data['password'])) {
+            $empleado->password = Hash::make($data['password']);
+        }
         $empleado->save();
 
         return response()->json([

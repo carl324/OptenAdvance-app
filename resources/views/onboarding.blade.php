@@ -43,7 +43,7 @@
 
             <!-- Formulario inline (oculto por defecto). Envía al controlador existente EmpresaController::update -->
             <div id="form-wrap" style="display:none">
-                <form id="onboard-form" method="POST" action="{{ route('empresa.update') }}" novalidate>
+                <form id="onboard-form" data-endpoint="{{ route('empresa.update') }}" novalidate>
                     @csrf
                     
                     @if($errors->any())
@@ -59,7 +59,7 @@
 
                     <div class="full field-group">
                         <label for="nombre">Nombre <span style="color:#dc2626">*</span></label>
-                        <input required id="nombre" name="nombre" type="text" class="{{ $errors->has('nombre') ? 'error-field' : '' }}" autocomplete="organization" placeholder="Ej: Mi Empresa S.A.S.">
+                        <input id="nombre" name="nombre" type="text" class="{{ $errors->has('nombre') ? 'error-field' : '' }}" autocomplete="organization" placeholder="Ej: Mi Empresa S.A.S.">
                         @if($errors->has('nombre'))
                         <div class="field-error show">{{ $errors->first('nombre') }}</div>
                         @endif
@@ -67,7 +67,7 @@
 
                     <div class="field-group">
                         <label for="nit">NIT</label>
-                        <input required id="nit" name="nit" type="text" class="{{ $errors->has('nit') ? 'error-field' : '' }}" placeholder="Ej: 123456789">
+                        <input id="nit" name="nit" type="text" class="{{ $errors->has('nit') ? 'error-field' : '' }}" placeholder="Ej: 123456789">
                         @if($errors->has('nit'))
                         <div class="field-error show">{{ $errors->first('nit') }}</div>
                         @endif
@@ -91,7 +91,7 @@
 
                     <div class="field-group">
                         <label for="telefono">Teléfono</label>
-                        <input required id="telefono" name="telefono" type="tel" class="{{ $errors->has('telefono') ? 'error-field' : '' }}" placeholder="Ej: 3001234567">
+                        <input id="telefono" name="telefono" type="text" class="{{ $errors->has('telefono') ? 'error-field' : '' }}" placeholder="Ej: 3001234567">
                         @if($errors->has('telefono'))
                         <div class="field-error show">{{ $errors->first('telefono') }}</div>
                         @endif
@@ -99,7 +99,7 @@
 
                     <div class="field-group">
                         <label for="email">Email</label>
-                        <input required id="email" name="email" type="email" class="{{ $errors->has('email') ? 'error-field' : '' }}" placeholder="contacto@miempresa.com">
+                        <input id="email" name="email" type="text" inputmode="email" autocomplete="email" class="{{ $errors->has('email') ? 'error-field' : '' }}" placeholder="contacto@miempresa.com">
                         @if($errors->has('email'))
                         <div class="field-error show">{{ $errors->first('email') }}</div>
                         @endif
@@ -108,13 +108,13 @@
                     <div class="full field-group">
                         <label style="font-weight:600">¿La empresa cobra IVA?</label>
                         <label for="cobra_iva" class="checkbox-label">
-                            <input required id="cobra_iva" type="checkbox" name="cobra_iva" value="1">
+                            <input id="cobra_iva" type="checkbox" name="cobra_iva" value="1">
                             <span>Sí, esta empresa cobra IVA</span>
                         </label>
                     </div>
 
                     <div style="display:flex;justify-content:flex-end;grid-column:1/-1;margin-top:8px">
-                        <button id="btn-submit" type="submit" class="primary">Guardar y comenzar</button>
+                        <button id="btn-submit" type="button" class="primary">Guardar y comenzar</button>
                     </div>
                 </form>
             </div>
@@ -148,9 +148,12 @@
             // Estado de envío
             var isSubmitting = false;
 
-            // Interceptar el submit del formulario y enviar con AJAX
+            // Forzar que el navegador NO haga validación nativa y bloquear envíos nativos
+            form.noValidate = true;
+            form.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); e.stopImmediatePropagation(); } });
             form.addEventListener('submit', function(e){
                 e.preventDefault();
+                e.stopImmediatePropagation();
 
                 var nombre = document.getElementById('nombre').value.trim();
                 
@@ -186,12 +189,14 @@
                 // Preparar FormData con los datos del formulario
                 var formData = new FormData(form);
 
-                // Enviar con fetch
-                fetch(form.action, {
+                // Enviar con fetch al endpoint controlado (sin action/method nativos)
+                var endpoint = form.dataset.endpoint;
+                fetch(endpoint, {
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
                     }
                 })
                 .then(function(response){
