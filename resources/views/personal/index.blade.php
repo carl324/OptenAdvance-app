@@ -57,11 +57,7 @@
                   <input type="text" name="name" value="{{ auth()->user()->name ?? '' }}" maxlength="100" aria-invalid="false" />
                   <div class="invalid-feedback d-none" id="profile-error-name"></div>
                 </div>
-                <div class="input-style-1">
-                  <label>Usuario</label>
-                  <input type="text" name="username" value="{{ auth()->user()->username ?? '' }}" maxlength="100" aria-invalid="false" />
-                  <div class="invalid-feedback d-none" id="profile-error-username"></div>
-                </div>
+                
                 <div class="input-style-1">
                   <label>Email</label>
                   <input type="text" name="email" value="{{ auth()->user()->email ?? '' }}" maxlength="150" aria-invalid="false" />
@@ -103,7 +99,7 @@
             <div class="row">
               <div class="col-12">
                 <div class="input-style-1">
-                  <label>Nombre de Usuario</label>
+                  <label>Nombre</label>
                   <input type="text" name="name" placeholder="Nombre de Usuario" maxlength="100" />
                   <div class="invalid-feedback d-none" id="error-name"></div>
                 </div>
@@ -174,7 +170,7 @@
                 <div id="empleado-alert-{{ $empleado->id }}" class="alert d-none" role="alert"></div>
 
                 <div class="input-style-1">
-                  <label>Usuario</label>
+                  <label>Nombre</label>
                   <input type="text" id="empleado-name-{{ $empleado->id }}" value="{{ $empleado->name ?? '' }}" maxlength="100" aria-invalid="false" />
                   <div class="invalid-feedback d-none" id="empleado-error-name-{{ $empleado->id }}"></div>
                 </div>
@@ -189,7 +185,7 @@
                   <div class="invalid-feedback d-none" id="empleado-error-phone-{{ $empleado->id }}"></div>
                 </div>
                 <div class="input-style-1 mt-2">
-                  <label>Contraseña (dejar vacío para no cambiar)</label>
+                  <label>Contraseña (Actualizar)</label>
                   <input type="text" id="empleado-password-{{ $empleado->id }}" placeholder="Dejar vacío para no cambiar" maxlength="60" aria-invalid="false" />
                   <div class="invalid-feedback d-none" id="empleado-error-password-{{ $empleado->id }}"></div>
                 </div>
@@ -481,7 +477,7 @@ function clearFieldErrors(scope, id = null) {
     });
   }
   if (scope === 'profile') {
-    ['name','username','email','password'].forEach(k => {
+    ['name','email','password'].forEach(k => {
       const el = document.getElementById('profile-error-' + k);
       if (el) { el.classList.add('d-none'); el.textContent = ''; }
       const input = document.querySelector('#form-perfil-admin [name="' + k + '"]');

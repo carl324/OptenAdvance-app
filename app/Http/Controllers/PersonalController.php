@@ -32,9 +32,16 @@ class PersonalController extends Controller
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->where(function ($query) {
+                    return $query->where('activo', 1);
+                }),
+            ],
             'phone' => 'nullable|string|max:50',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:4',
         ];
 
         $messages = [
@@ -42,7 +49,7 @@ class PersonalController extends Controller
             'email' => 'El email no es válido.',
             'password.min' => 'La contraseña es muy corta. Mínimo :min caracteres.',
             'max' => 'Máximo :max caracteres permitidos.',
-            'unique' => 'El valor ya está en uso.'
+            'unique' => 'Este correo ya está en uso por otro usuario.'
         ];
 
         $validator = Validator::make($request->all(), $rules, $messages);
@@ -62,7 +69,6 @@ class PersonalController extends Controller
 
         $empleado = User::create([
             'name' => $data['name'],
-            'username' => $data['email'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
             'password' => Hash::make($data['password']),
@@ -95,11 +101,15 @@ class PersonalController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'email' => [
-                'required', 'email', 'max:255',
-                Rule::unique('users', 'email')->ignore($empleado->id),
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($empleado->id)->where(function ($query) {
+                    return $query->where('activo', 1);
+                }),
             ],
             'phone' => 'nullable|string|max:50',
-            'password' => 'nullable|string|min:8',
+            'password' => 'nullable|string|min:4',
         ];
 
         $messages = [
@@ -107,7 +117,7 @@ class PersonalController extends Controller
             'email' => 'El email no es válido.',
             'password.min' => 'La contraseña es muy corta. Mínimo :min caracteres.',
             'max' => 'Máximo :max caracteres permitidos.',
-            'unique' => 'El valor ya está en uso.'
+            'unique' => 'Este correo ya está en uso por otro usuario.'
         ];
 
         $validator = Validator::make($request->all(), $rules, $messages);
@@ -128,7 +138,6 @@ class PersonalController extends Controller
         // Evitar cambios peligrosos (no permitir cambiar role aquí)
         $empleado->name = $data['name'];
         $empleado->email = $data['email'];
-        $empleado->username = $data['email'];
         $empleado->phone = $data['phone'] ?? null;
         if (!empty($data['password'])) {
             $empleado->password = Hash::make($data['password']);

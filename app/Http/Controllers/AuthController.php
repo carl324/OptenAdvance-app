@@ -16,25 +16,17 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $data = $request->validate([
-            'username' => ['required', 'string'],
-            'password' => ['required', 'string'],
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
         ]);
 
-        $login = $data['username'];
-
-        // Determinar si el valor es un email o un username
-        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-
-        $credentials = [$field => $login, 'password' => $data['password']];
-
-        // Intentar autenticación; recordar sesión por defecto (cookie persistente)
         $remember = true;
 
-        if (!Auth::attempt($credentials, $remember)) {
+        if (!Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']], $remember)) {
             return back()
                 ->withErrors(['auth' => 'Credenciales inválidas.'])
-                ->withInput($request->only('username'));
+                ->withInput($request->only('email'));
         }
 
         $request->session()->regenerate();
