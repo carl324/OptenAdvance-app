@@ -194,7 +194,7 @@
                   <div class="invalid-feedback d-none" id="empleado-error-password-{{ $empleado->id }}"></div>
                 </div>
                 <div class="d-flex gap-2 mt-3">
-                  <button type="button" class="main-btn danger-btn btn-hover flex-fill" data-name="{{ $empleado->name ?? '' }}" onclick="openDeleteModal({{ $empleado->id }}, this.dataset.name)" id="btn-eliminar-{{ $empleado->id }}">
+                  <button type="button" class="main-btn light-btn btn-hover flex-fill" data-name="{{ $empleado->name ?? '' }}" onclick="openDeleteModal({{ $empleado->id }}, this.dataset.name)" id="btn-eliminar-{{ $empleado->id }}">
                     <i class="lni lni-trash-can"></i> Eliminar
                   </button>
                   <button type="button" class="main-btn primary-btn btn-hover flex-fill" onclick="saveEmpleado({{ $empleado->id }})" id="btn-guardar-{{ $empleado->id }}">

@@ -334,7 +334,7 @@ class VentaController extends Controller
                 return [
                     'id' => $venta->id,
                     'numero_factura' => optional($venta->factura)->numero ?? null,
-                    'fecha' => optional($venta->fecha)->format('Y-m-d H:i') ?? null,
+                    'fecha' => formatoHoraInteligente($venta->fecha) ?? null,
                     'cliente' => optional($venta->factura)->cliente_nombre ?? 'Consumidor final',
                     'total' => $venta->total ?? 0,
                     'impuestos' => optional($venta->factura)->impuestos ?? 0,

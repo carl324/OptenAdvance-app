@@ -76,10 +76,11 @@
                 </td>
                 <td>
                   <span class="truncate truncate-medium"
-                        data-bs-toggle="tooltip"
-                        data-bs-title="{{ optional($venta->fecha)->format('Y-m-d H:i') ?? '-' }}">
-                    {{ optional($venta->fecha)->format('Y-m-d H:i') ?? '-' }}
-                  </span>
+      data-bs-toggle="tooltip"
+      data-bs-title="{{ formatoHoraInteligente($venta->fecha) ?? '--:--' }}">
+    {{ formatoHoraInteligente($venta->fecha) ?? '--:--' }}
+</span>
+
                 </td>
                 <td>
                   <span class="client-name truncate truncate-long"
@@ -172,7 +173,7 @@
 
 <!-- ========== Modal Anular start ========== -->
 <div class="modal-overlay" id="cancelModal">
-  <div class="modal-content">
+  <div class="modal-conten">
     <div class="modal-header">
       <div class="icon-warning">
         <i class="lni lni-warning"></i>
@@ -569,7 +570,7 @@ tbody tr:hover {
   display: flex;
 }
 
-.modal-content {
+.modal-conten {
   background: white;
   border-radius: 16px;
   max-width: 500px;

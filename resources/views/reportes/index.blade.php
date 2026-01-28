@@ -201,7 +201,7 @@
 
 <!-- ========== Modal Límite Exportación start ========== -->
 <div class="modal-overlay" id="exportLimitModal">
-  <div class="modal-content">
+  <div class="modal-conten">
     <div class="modal-header">
       <div class="icon-warning">
         <i class="lni lni-warning"></i>
@@ -1090,7 +1090,7 @@ function initializeTooltips() {
     display: flex;
   }
 
-  .modal-content {
+  .modal-conten {
     background: white;
     border-radius: 16px;
     max-width: 520px;

@@ -22,72 +22,104 @@ class EmpresaController extends Controller
     /** Actualizar datos de la empresa existente */
     public function update(Request $request)
     {
-        // Permitir actualización parcial vía AJAX para cualquier campo
-        if ($request->wantsJson()) {
-            $empresa = Empresa::first();
-            if (!$empresa) {
-                return response()->json(['success' => false, 'message' => 'No existe empresa para actualizar.'], 404);
+        // Si viene un campo específico, validar solo ese campo (AJAX por-campo)
+        if ($request->has('campo')) {
+            $campo = $request->input('campo');
+            $valor = $request->input('valor');
+
+            // Normalizar valor vacío a null para reglas nullable
+            if ($valor === '') {
+                $valor = null;
             }
-            $campos = [
-                'nombre' => 'string|max:255',
-                'nit' => 'required|string|min:5|max:100',
+
+            // Mapas de reglas por campo
+            $rulesMap = [
+                'email' => 'nullable|email|max:255',
+                'nit' => 'nullable|string|max:100',
+                'nombre' => 'nullable|string|max:255',
                 'direccion' => 'nullable|string|max:500',
                 'telefono' => 'nullable|string|max:50',
-                'email' => 'nullable|email|max:255',
-                'moneda' => 'string|max:10',
-                'cobra_iva' => 'nullable|boolean',
+                'moneda' => 'nullable|string|max:10',
+                'cobra_iva' => 'nullable|in:0,1',
             ];
-            $data = [];
-            foreach ($campos as $campo => $reglas) {
-                if ($request->has($campo)) {
-                    $data[$campo] = $request->input($campo);
-                }
+
+            $messagesMap = [
+                'email.email' => 'El correo no es válido.',
+                'email.max' => 'El correo es demasiado largo.',
+
+                'nit.string' => 'El NIT debe ser texto.',
+                'nit.max' => 'El NIT es demasiado largo (máximo 100 caracteres).',
+
+                'nombre.string' => 'El nombre debe ser texto válido.',
+                'nombre.max' => 'El nombre no debe exceder los 255 caracteres.',
+
+                'direccion.string' => 'La dirección debe ser texto.',
+                'direccion.max' => 'La dirección es demasiado larga.',
+
+                'telefono.string' => 'El teléfono debe ser texto.',
+                'telefono.max' => 'El teléfono es demasiado largo.',
+
+                'moneda.string' => 'La moneda debe ser texto (ej: COP, USD).',
+                'moneda.max' => 'La moneda no debe exceder 10 caracteres.',
+
+                'cobra_iva.in' => 'Valor inválido para cobrar IVA.',
+            ];
+
+            if (!array_key_exists($campo, $rulesMap)) {
+                return response()->json(['success' => false, 'message' => 'Campo no válido.'], 400);
             }
-            // Validar solo los campos presentes; mensajes claros para NIT
-            $messages = [
-                'nit.required' => 'El NIT es obligatorio.',
-                'nit.string' => 'El NIT debe ser un valor de texto.',
-                'nit.min' => 'El NIT es demasiado corto.',
-                'nit.max' => 'El NIT es demasiado largo.',
-            ];
-            $rules = array_intersect_key($campos, $data);
-            $validator = \Validator::make($data, $rules, $messages);
+
+            $validator = \Validator::make([$campo => $valor], [$campo => $rulesMap[$campo]], $messagesMap);
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error de validación',
                     'errors' => $validator->errors()
                 ], 422);
             }
-            // Asegurar que NIT sea tratado como string
-            if (array_key_exists('nit', $data)) {
-                $data['nit'] = (string) $data['nit'];
+
+            // Obtener o crear la empresa (primera fila)
+            $empresa = Empresa::firstOrCreate([]);
+
+            // Normalizar y guardar solo el campo recibido
+            if ($campo === 'cobra_iva') {
+                $empresa->cobra_iva = in_array($valor, [1, '1', true, 'true'], true) ? 1 : 0;
+            } else {
+                $empresa->{$campo} = $valor;
             }
-            // Normalizar checkbox
-            if (array_key_exists('cobra_iva', $data)) {
-                $data['cobra_iva'] = $request->input('cobra_iva') ? 1 : 0;
-            }
-            $empresa->fill($data);
             $empresa->save();
-            return response()->json(['success' => true, 'message' => 'Cambios guardados.']);
+
+            return response()->json(['success' => true, 'message' => 'Campo guardado.']);
         }
 
-        // Petición normal (no AJAX): validar todo
-        $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'nit' => 'required|string|min:5|max:100',
+        // Fallback: petición no por-campo -> validar todo y guardar
+        $input = $request->all();
+
+        $rules = [
+            'nombre' => 'nullable|string|max:255',
+            'nit' => 'nullable|string|max:100',
             'direccion' => 'nullable|string|max:500',
             'telefono' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
-            'moneda' => 'required|string|max:10',
-            'cobra_iva' => 'nullable|boolean',
-        ]);
-        $validated['cobra_iva'] = $request->has('cobra_iva') ? 1 : 0;
+            'moneda' => 'nullable|string|max:10',
+            'cobra_iva' => 'nullable|in:0,1',
+        ];
+
+        $messages = [
+            'email.email' => 'El email debe tener un formato válido.',
+            'email.max' => 'El email es demasiado largo.',
+            'nit.max' => 'El NIT es demasiado largo (máximo 100 caracteres).',
+            'nombre.max' => 'El nombre no debe exceder los 255 caracteres.',
+            'moneda.max' => 'La moneda no debe exceder 10 caracteres.',
+        ];
+
+        $validator = \Validator::make($input, $rules, $messages);
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $input['cobra_iva'] = $request->has('cobra_iva') ? 1 : 0;
         $existingId = Empresa::value('id');
-        Empresa::updateOrCreate(
-            ['id' => $existingId],
-            $validated
-        );
+        Empresa::updateOrCreate(['id' => $existingId], $input);
         return redirect()->route('empresa.index')->with('success', 'Los datos de la empresa se guardaron correctamente.');
     }
 }

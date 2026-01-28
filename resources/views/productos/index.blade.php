@@ -548,7 +548,7 @@
       display: flex;
     }
 
-    .modal-content {
+    .modal-conten {
       background: white;
       border-radius: 16px;
       max-width: 500px;
@@ -873,8 +873,8 @@
                                                         <td>
                                                             <span class="truncate truncate-xs" 
                                                                   data-bs-toggle="tooltip" 
-                                                                  data-bs-title="{{ $m->created_at ? \Carbon\Carbon::parse($m->created_at)->format('d/m/Y H:i') : '-' }}">
-                                                                {{ $m->created_at ? \Carbon\Carbon::parse($m->created_at)->format('d/m/Y H:i') : '-' }}
+                                                                 data-bs-title="{{ formatoHoraInteligente($m->created_at) ?? '-' }}">
+    {{ formatoHoraInteligente($m->created_at) ?? '-' }}
                                                             </span>
                                                         </td>
                                                         <td>
@@ -997,7 +997,7 @@
 
 <!-- Modal Eliminar Producto -->
 <div class="modal-overlay" id="deleteModal">
-  <div class="modal-content">
+  <div class="modal-conten">
     <div class="modal-header">
       <div class="icon-warning">
         <i class="lni lni-warning"></i>
@@ -1480,116 +1480,157 @@ function attachRecalculo(tr) {
 }
 
 async function guardarProducto(id) {
-    const tr = document.getElementById(`producto-${id}`);
-    const msg = tr.querySelector('.msg');
-    msg.innerText = 'Guardando...';
+  const tr = document.getElementById(`producto-${id}`);
+  const msg = tr.querySelector('.msg');
+  msg.innerText = 'Guardando...';
 
-    const data = {};
+  // Construir solo con campos modificados
+  const data = {};
 
-    tr.querySelectorAll('.edit').forEach(input => {
-        const field = input.dataset.field;
-        if (field === 'precio_con_iva') return;
-        if (field === 'precio') {
-            data.precio = parseCOP(input.value);
-            return;
-        }
-        if (field === 'iva') {
-            let ivaValue = parseFloat(input.value) || 0;
-            if (ivaValue < 0) ivaValue = 0;
-            if (ivaValue > 100) ivaValue = 100;
-            data.iva = ivaValue;
-            return;
-        }
-        if (field === 'stock') {
-            const cleanValue = input.value.replace(/\D/g, '');
-            data.stock = parseInt(cleanValue, 10) || 0;
-            return;
-        }
-        data[field] = input.value;
+  tr.querySelectorAll('.edit').forEach(input => {
+    const field = input.dataset.field;
+    if (!field) return;
+    if (field === 'precio_con_iva') return; // nunca enviar
+
+    const viewEl = tr.querySelector(`span.view[data-field="${field}"]`);
+
+    // Precio: comparar en formato numérico usando parseCOP
+    if (field === 'precio') {
+      const newVal = parseCOP(input.value);
+      const oldVal = viewEl ? parseCOP(viewEl.innerText) : 0;
+      if (String(newVal) !== String(oldVal)) {
+        data.precio = newVal;
+      }
+      return;
+    }
+
+    // IVA: comparar en float, eliminar '%'
+    if (field === 'iva') {
+      let newVal = parseFloat(input.value) || 0;
+      if (newVal < 0) newVal = 0;
+      if (newVal > 100) newVal = 100;
+      let oldRaw = viewEl ? String(viewEl.innerText).replace('%', '') : '0';
+      let oldVal = parseFloat(oldRaw) || 0;
+      if (String(newVal) !== String(oldVal)) {
+        data.iva = newVal;
+      }
+      return;
+    }
+
+    // Stock: comparar como entero, eliminar caracteres no numéricos
+    if (field === 'stock') {
+      const newVal = parseInt(String(input.value).replace(/\D/g, ''), 10) || 0;
+      const oldVal = parseInt((viewEl ? String(viewEl.innerText).replace(/\D/g, '') : ''), 10) || 0;
+      if (String(newVal) !== String(oldVal)) {
+        data.stock = newVal;
+      }
+      return;
+    }
+
+    // Otros campos (ej. nombre): comparar como string
+    const newRaw = String(input.value).trim();
+    const oldRaw = viewEl ? String(viewEl.innerText).trim() : '';
+    if (String(newRaw) !== String(oldRaw)) {
+      data[field] = newRaw;
+    }
+  });
+
+  // Si no hubo cambios, salir silenciosamente
+  if (Object.keys(data).length === 0) {
+    msg.innerText = '';
+    return;
+  }
+
+  // Si se envía precio, validar que sea mayor a 0
+  if (typeof data.precio !== 'undefined') {
+    const precioVal = Number(data.precio);
+    if (!precioVal || precioVal <= 0) {
+      msg.style.color = 'red';
+      msg.innerText = 'El precio debe ser mayor a 0.';
+      return;
+    }
+  }
+
+  if (tr.dataset.saving === '1') return;
+  tr.dataset.saving = '1';
+
+  disableRow(tr, true);
+
+  try {
+    const res = await fetch(`/productos/${id}`, {
+      method: 'PUT',
+      headers: {
+        'X-CSRF-TOKEN': csrf,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(data)
     });
 
-    const precioVal = typeof data.precio !== 'undefined' ? Number(data.precio) : 0;
-    if (!precioVal || precioVal <= 0) {
-        msg.style.color = 'red';
-        msg.innerText = 'El precio debe ser mayor a 0.';
-        return;
+    if (res.status === 419) {
+      msg.style.color = 'red';
+      msg.innerText = 'Sesión expirada.';
+      showAlert('Tu sesión ha expirado. Redirigiendo al inicio de sesión...', 'error');
+      setTimeout(() => {
+      window.location.href = '/login';
+      }, 1500);
+      return;
     }
 
-    if (tr.dataset.saving === '1') return;
-    tr.dataset.saving = '1';
+    const result = await res.json();
 
-    disableRow(tr, true);
+    if (!res.ok) throw result;
 
-    try {
-        const res = await fetch(`/productos/${id}`, {
-            method: 'PUT',
-            headers: {
-                'X-CSRF-TOKEN': csrf,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        if (res.status === 419) {
-          msg.style.color = 'red';
-          msg.innerText = 'Sesión expirada.';
-          showAlert('Tu sesión ha expirado. Redirigiendo al inicio de sesión...', 'error');
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 1500);
-          return;
-        }
-
-        const result = await res.json();
-
-        if (!res.ok) throw result;
-
-        if (data.nombre !== undefined) {
-            const nombreSpan = tr.querySelector('span.view[data-field="nombre"]');
-            if (nombreSpan) nombreSpan.innerText = data.nombre;
-        }
-
-        if (typeof data.precio !== 'undefined') {
-            const precioSpan = tr.querySelector('span.view[data-field="precio"]');
-            if (precioSpan) precioSpan.innerText = '$' + formatCOP(data.precio);
-        }
-
-        if (typeof data.iva !== 'undefined') {
-            const ivaSpan = tr.querySelector('span.view[data-field="iva"]');
-            if (ivaSpan) ivaSpan.innerText = data.iva + '%';
-        }
-
-        if (result.producto && typeof result.producto.precio_con_iva !== 'undefined') {
-            tr.querySelector('.precio_con_iva_span').innerText = '$' + formatCOP(result.producto.precio_con_iva);
-            const precioConIvaInput = tr.querySelector('input[data-field="precio_con_iva"]');
-            if (precioConIvaInput) precioConIvaInput.value = formatCOP(result.producto.precio_con_iva);
-        }
-
-        if (result.producto && typeof result.producto.stock !== 'undefined') {
-            const stockView = tr.querySelector('.stock_view');
-            const stockInput = tr.querySelector('.stock_input');
-            
-            stockView.innerText = result.producto.stock;
-            stockInput.value = result.producto.stock;
-            stockInput.dataset.originalStock = result.producto.stock;
-        }
-
-        msg.style.color = 'green';
-        msg.innerText = 'Guardado';
-        
-        setTimeout(() => {
-            cancelarEdicion(id);
-            msg.innerText = '';
-        }, 1500);
-
-    } catch (e) {
-        msg.style.color = 'red';
-        msg.innerText = 'Error al actualizar. Intenta de nuevo.';
-    } finally {
-        disableRow(tr, false);
-        tr.dataset.saving = '0';
+    // Actualizar vistas solo para campos que efectivamente enviamos
+    if (typeof data.nombre !== 'undefined') {
+      const nombreSpan = tr.querySelector('span.view[data-field="nombre"]');
+      if (nombreSpan) nombreSpan.innerText = data.nombre;
     }
+
+    if (typeof data.precio !== 'undefined') {
+      const precioSpan = tr.querySelector('span.view[data-field="precio"]');
+      if (precioSpan) precioSpan.innerText = '$' + formatCOP(data.precio);
+    }
+
+    if (typeof data.iva !== 'undefined') {
+      const ivaSpan = tr.querySelector('span.view[data-field="iva"]');
+      if (ivaSpan) ivaSpan.innerText = data.iva + '%';
+    }
+
+    if (result.producto && typeof result.producto.precio_con_iva !== 'undefined') {
+      const precioConIvaSpan = tr.querySelector('.precio_con_iva_span');
+      if (precioConIvaSpan) precioConIvaSpan.innerText = '$' + formatCOP(result.producto.precio_con_iva);
+      const precioConIvaInput = tr.querySelector('input[data-field="precio_con_iva"]');
+      if (precioConIvaInput) precioConIvaInput.value = formatCOP(result.producto.precio_con_iva);
+    }
+
+    if (result.producto && typeof result.producto.stock !== 'undefined') {
+      const stockView = tr.querySelector('.stock_view');
+      const stockInput = tr.querySelector('.stock_input');
+      if (stockView) stockView.innerText = result.producto.stock;
+      if (stockInput) {
+        stockInput.value = result.producto.stock;
+        stockInput.dataset.originalStock = result.producto.stock;
+      }
+    }
+
+    msg.style.color = 'green';
+    msg.innerText = 'Guardado';
+
+    setTimeout(() => {
+      cancelarEdicion(id);
+      msg.innerText = '';
+    }, 1500);
+
+  } catch (e) {
+    // Mantener manejo de errores existente
+    msg.style.color = 'red';
+    if (e && e.message) msg.innerText = e.message;
+    else msg.innerText = 'Error al actualizar. Intenta de nuevo.';
+  } finally {
+    disableRow(tr, false);
+    tr.dataset.saving = '0';
+  }
 }
 
 async function eliminarProducto(id) {

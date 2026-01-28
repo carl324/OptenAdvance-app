@@ -32,10 +32,13 @@ if (!function_exists('activeRoute')) {
 if (!function_exists('formatoHoraInteligente')) {
     /**
      * Presentación de hora inteligente para la UI (usa Carbon y translatedFormat)
+     * 
      * - Hoy: mostrar solo la hora (9:24 PM)
      * - Ayer: "Ayer 9:24 PM"
      * - Últimos 7 días: "Sábado 9:24 PM"
-     * - >7 días: "13 Ene 2026, 9:24 PM"
+     * - >7 días mismo año: "13 Ene 9:24 PM"
+     * - Año anterior: "13 Ene 2025, 9:24 PM"
+     * 
      * Retorna null si $datetime es null o inválido.
      *
      * @param \Carbon\Carbon|string|null $datetime
@@ -52,7 +55,7 @@ if (!function_exists('formatoHoraInteligente')) {
                 ? $datetime
                 : \Carbon\Carbon::parse($datetime);
 
-            // Asegurar locale español para translatedFormat
+            // Locale español
             \Carbon\Carbon::setLocale(config('app.locale', 'es') ?: 'es');
 
             $now = \Carbon\Carbon::now($dt->getTimezone());
@@ -67,18 +70,24 @@ if (!function_exists('formatoHoraInteligente')) {
                 return 'Ayer ' . $dt->translatedFormat('g:i A');
             }
 
-            // Últimos 7 días (excluye hoy y ayer por las comprobaciones anteriores)
+            // Últimos 7 días (excluye hoy y ayer)
             if ($dt->greaterThanOrEqualTo($now->copy()->subDays(7))) {
-                // Asegurar capitalización de día (ej: "Sábado 9:24 PM")
                 $dia = $dt->translatedFormat('l');
-                $diaCap = mb_strtoupper(mb_substr($dia, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($dia, 1, null, 'UTF-8');
+                $diaCap = mb_strtoupper(mb_substr($dia, 0, 1, 'UTF-8')) . mb_substr($dia, 1);
                 return $diaCap . ' ' . $dt->translatedFormat('g:i A');
             }
 
             // Mayor a 7 días
-            return $dt->translatedFormat('d M Y, g:i A');
+            if ($dt->year === $now->year) {
+                // Mismo año: mostrar día y mes sin año
+                return $dt->translatedFormat('d M') . ' ' . $dt->translatedFormat('g:i A');
+            } else {
+                // Año anterior o diferente: mostrar año completo
+                return $dt->translatedFormat('d M Y, g:i A');
+            }
         } catch (\Exception $e) {
             return null;
         }
     }
 }
+

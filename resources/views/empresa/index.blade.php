@@ -68,7 +68,7 @@
 
                                 <div class="input-style-2">
                                     <label for="email" class="text-dark mb-2 d-block">Email de contacto</label>
-                                    <input id="email" name="email" type="email" placeholder="Email de contacto" value="{{ old('email', $empresa->email ?? '') }}" />
+                                    <input id="email" name="email" type="text" placeholder="Email de contacto" value="{{ old('email', $empresa->email ?? '') }}" />
                                     <span class="icon"><i class="lni lni-envelope"></i></span>
                                 </div>
                             </div>
@@ -108,7 +108,7 @@
                                 <form method="POST" action="{{ route('backup.store') }}" id="backup-form">
                                     @csrf
                                     <label style="font-size:13px;color:#6b7280;display:flex;align-items:center;gap:8px;margin-bottom:10px">
-                                        <input type="checkbox" name="confirm_backup" id="confirm_backup_checkbox" required>
+                                        <input type="checkbox" name="confirm_backup" id="confirm_backup_checkbox">
                                         He leído y acepto que se generará un archivo en mi carpeta de Descargas.
                                     </label>
                                     <button type="button" id="btn-backup" class="main-btn primary-btn btn-hover w-100" onclick="handleBackupClick(event)">
@@ -377,25 +377,18 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
             modalAbierto = false;
         }
 
-        // Guardar todos los campos vía AJAX
+        // Guardar campo vía AJAX (enviar solo campo+valor)
         function guardarEmpresaAJAX(campo, valor) {
             // No tocar feedback del switch IVA ni backup
             if (campo !== 'cobra_iva') {
                 setFieldSaving(campo);
             }
 
-            // Recolectar todos los valores actuales
-            var data = {
+            var payload = {
                 _token: csrf,
-                id: empresaId
+                campo: campo,
+                valor: valor
             };
-            // Campos del formulario
-            ['nombre','nit','moneda','direccion','telefono','email'].forEach(function(name){
-                var el = document.getElementById(name);
-                if (el) data[name] = el.value;
-            });
-            // Switch cobra_iva
-            data['cobra_iva'] = (campo === 'cobra_iva') ? valor : (estadoCobraIVA ? 1 : 0);
 
             fetch("{{ route('empresa.update') }}", {
                 method: 'POST',
@@ -404,7 +397,7 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(payload)
             })
             .then(resp => {
                 if (resp.status === 419) {
@@ -415,15 +408,10 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
                 }
                 if (resp.status === 422) {
                     return resp.json().then(errData => {
-                        // Mostrar primer error válido o el mensaje general
                         var msg = errData.message || 'Error de validación';
-                        if (errData.errors) {
-                            for (var k in errData.errors) {
-                                if (errData.errors[k] && errData.errors[k].length) {
-                                    msg = errData.errors[k][0];
-                                    break;
-                                }
-                            }
+                        // Mostrar solo el error del campo validado
+                        if (errData.errors && errData.errors[campo] && errData.errors[campo].length) {
+                            msg = errData.errors[campo][0];
                         }
                         if (campo !== 'cobra_iva') {
                             setFieldError(campo, msg);
@@ -452,7 +440,6 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
             })
             .catch((err) => {
                 if (err.message === 'session_expired' || err.message === 'validation_error') {
-                    // ya mostrado
                     return;
                 }
                 if (campo !== 'cobra_iva') {

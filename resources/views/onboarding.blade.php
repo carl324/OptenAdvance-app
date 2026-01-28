@@ -4,322 +4,388 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Bienvenido</title>
-    <style>
-        /* Estilos mínimos y auto-contenidos */
-        :root{--bg:#f6f7fb;--card:#fff;--accent:#1f5fbf;--muted:#6b7280}
-        html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;background:var(--bg);color:#111}
-        .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-        .card{width:100%;max-width:780px;background:var(--card);box-shadow:0 6px 18px rgba(16,24,40,.06);border-radius:10px;padding:28px}
-        h1{margin:0 0 6px;font-size:20px}
-        p.lead{margin:0 0 18px;color:var(--muted)}
-        .actions{display:flex;gap:10px;flex-wrap:wrap}
-        button.primary{background:var(--accent);color:#fff;border:none;padding:10px 16px;border-radius:8px;font-weight:600;cursor:pointer;transition:opacity 0.2s}
-        button.primary:disabled{opacity:0.6;cursor:not-allowed}
-        button.secondary{background:transparent;border:1px solid #e6e9ef;padding:10px 14px;border-radius:8px;color:#374151;cursor:pointer}
-        .error-banner{background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:12px;margin-bottom:16px;color:#991b1b;font-size:13px}
-        .error-field{border-color:#dc2626 !important}
-        .field-error{color:#dc2626;font-size:12px;margin-top:4px;display:none}
-        .field-error.show{display:block}
-        .field-group{display:flex;flex-direction:column}
-        .checkbox-label{display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px;margin:-6px;user-select:none}
-        form{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
-        label{font-size:13px;font-weight:600;margin-bottom:6px;display:block}
-        input[type="text"],input[type="email"],select,textarea{width:100%;padding:10px;border:1px solid #e6e9ef;border-radius:8px}
-        .full{grid-column:1/-1}
-        .note{font-size:13px;color:var(--muted)}
-        @media (max-width:640px){form{grid-template-columns:1fr}}
-    </style>
-</head>
-<body>
-    <div class="wrap">
-        <div class="card">
-            <h1>Bienvenido, antes de comenzar a vender</h1>
-            <p class="lead">Configura los datos de tu empresa para emitir facturas correctamente. Puedes hacerlo ahora o saltar y empezar a usar el sistema.</p>
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/assets/css/lineicons.css" />
+<link rel="stylesheet" href="/assets/css/main.css" />
 
-            <div class="actions" style="margin-bottom:12px">
-                <button id="btn-show" class="primary">Configurar ahora</button>
-                <a href="{{ route('ventas.index') }}"><button class="secondary" type="button">Saltar por ahora</button></a>
+<style>
+    /* Usamos una fuente más limpia y moderna */
+    body { background: #f8fafc; font-family: 'Inter', 'Plus Jakarta Sans', sans-serif; }
+    
+    .onboarding-card {
+        border: none;
+        border-radius: 32px; /* Más redondeado para suavizar */
+        box-shadow: 0 20px 50px rgba(0, 76, 255, 0.04);
+        overflow: hidden;
+        background: #fff;
+        max-width: 850px; /* Un pelín más ancho para que los campos dobles respiren */
+        margin: 80px auto;
+    }
+
+    .onboarding-header {
+        padding: 60px 60px 30px 60px; /* Mucho más aire arriba y a los lados */
+        background: #fff;
+    }
+
+    .onboarding-header h1 {
+        font-weight: 850;
+        color: #000000;
+        font-size: 32px;
+        letter-spacing: -1px;
+        margin-bottom: 15px;
+    }
+
+    .onboarding-header p.lead {
+        color: #64748b;
+        font-size: 16px;
+        line-height: 1.8;
+        max-width: 600px; /* Evitamos que el texto se estire demasiado */
+    }
+
+    /* Sección del Formulario con más respiro */
+    .form-section {
+        padding: 20px 60px 60px 60px;
+    }
+
+    /* Separación entre bloques de campos */
+    .form-group-row {
+        margin-bottom: 25px; /* Espacio extra entre filas */
+    }
+
+    .form-label {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: #94a3b8;
+        margin-bottom: 12px; /* Más espacio entre etiqueta e input */
+        display: block;
+    }
+
+    .form-control-custom {
+        padding: 16px 20px; /* Input más alto y cómodo */
+        border-radius: 16px;
+        border: 2px solid #f1f5f9;
+        background: #f8fafc;
+        font-size: 15px;
+        color: #1e293b;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .form-control-custom:focus {
+        border-color: #2e6cff;
+        background: #fff;
+        box-shadow: 0 10px 20px rgba(31, 98, 255, 0.08);
+        outline: none;
+    }
+
+    /* Botones más grandes y separados */
+    .btn-main {
+        padding: 18px 35px; /* Botones más robustos */
+        border-radius: 18px;
+        font-weight: 700;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-primary-custom {
+        background: #2563eb; /* Color más sobrio y elegante */
+        border: none;
+        color: #fff;
+    }
+
+    .btn-primary-custom:hover {
+        background: #1352ff;
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0, 68, 255, 0.1);
+    }
+
+    .btn-skip {
+        background: transparent;
+        border: 2px solid #f1f5f9;
+        color: #94a3b8;
+    }
+
+    .btn-skip:hover {
+        background: #f8fafc;
+        color: #1e293b;
+        border-color: #e2e8f0;
+    }
+
+    /* Card de IVA con más aire interno */
+    .iva-card {
+        background: #f8fafc;
+        padding: 25px 30px;
+        border-radius: 20px;
+        border: 2px solid #f1f5f9;
+        margin-top: 10px;
+    }
+
+    .field-error { color: #f43f5e; font-size: 12px; margin-top: 8px; font-weight: 600; }
+    
+    /* Utility para espaciado */
+    .spacer-y { margin-top: 40px; }
+</style>
+
+<div class="container">
+    <div class="onboarding-card">
+        <div class="onboarding-header text-center text-sm-start">
+            <div class="d-flex align-items-center gap-3 mb-3 justify-content-center justify-content-sm-start">
+                <div style="width: 45px; height: 45px; background: #e0e7ff; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="lni lni-sprout text-primary" style="font-size: 24px;"></i>
+                </div>
+                <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill" style="font-size: 11px; font-weight: 700;">CONFIGURACIÓN INICIAL</span>
             </div>
-
-            <!-- Formulario inline (oculto por defecto). Envía al controlador existente EmpresaController::update -->
-            <div id="form-wrap" style="display:none">
-                <form id="onboard-form" data-endpoint="{{ route('empresa.update') }}" novalidate>
-                    @csrf
-                    
-                    @if($errors->any())
-                    <div class="error-banner">
-                        <strong>Por favor, revisa los errores abajo:</strong>
-                        <ul style="margin:6px 0 0;padding-left:20px">
-                            @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
-
-                    <div class="full field-group">
-                        <label for="nombre">Nombre <span style="color:#dc2626">*</span></label>
-                        <input id="nombre" name="nombre" type="text" class="{{ $errors->has('nombre') ? 'error-field' : '' }}" autocomplete="organization" placeholder="Ej: Mi Empresa S.A.S.">
-                        @if($errors->has('nombre'))
-                        <div class="field-error show">{{ $errors->first('nombre') }}</div>
-                        @endif
-                    </div>
-
-                    <div class="field-group">
-                        <label for="nit">NIT</label>
-                        <input id="nit" name="nit" type="text" class="{{ $errors->has('nit') ? 'error-field' : '' }}" placeholder="Ej: 123456789">
-                        @if($errors->has('nit'))
-                        <div class="field-error show">{{ $errors->first('nit') }}</div>
-                        @endif
-                    </div>
-
-                    <div class="field-group">
-                        <label for="moneda">Moneda</label>
-                        <input id="moneda" name="moneda" type="text" class="{{ $errors->has('moneda') ? 'error-field' : '' }}" value="COP" placeholder="COP">
-                        @if($errors->has('moneda'))
-                        <div class="field-error show">{{ $errors->first('moneda') }}</div>
-                        @endif
-                    </div>
-
-                    <div class="full field-group">
-                        <label for="direccion">Dirección</label>
-                        <input id="direccion" name="direccion" type="text" class="{{ $errors->has('direccion') ? 'error-field' : '' }}" placeholder="Ej: Calle 123 #45-67, Apartado 1">
-                        @if($errors->has('direccion'))
-                        <div class="field-error show">{{ $errors->first('direccion') }}</div>
-                        @endif
-                    </div>
-
-                    <div class="field-group">
-                        <label for="telefono">Teléfono</label>
-                        <input id="telefono" name="telefono" type="text" class="{{ $errors->has('telefono') ? 'error-field' : '' }}" placeholder="Ej: 3001234567">
-                        @if($errors->has('telefono'))
-                        <div class="field-error show">{{ $errors->first('telefono') }}</div>
-                        @endif
-                    </div>
-
-                    <div class="field-group">
-                        <label for="email">Email</label>
-                        <input id="email" name="email" type="text" inputmode="email" autocomplete="email" class="{{ $errors->has('email') ? 'error-field' : '' }}" placeholder="contacto@miempresa.com">
-                        @if($errors->has('email'))
-                        <div class="field-error show">{{ $errors->first('email') }}</div>
-                        @endif
-                    </div>
-
-                    <div class="full field-group">
-                        <label style="font-weight:600">¿La empresa cobra IVA?</label>
-                        <label for="cobra_iva" class="checkbox-label">
-                            <input id="cobra_iva" type="checkbox" name="cobra_iva" value="1">
-                            <span>Sí, esta empresa cobra IVA</span>
-                        </label>
-                    </div>
-
-                    <div style="display:flex;justify-content:flex-end;grid-column:1/-1;margin-top:8px">
-                        <button id="btn-submit" type="button" class="primary">Guardar y comenzar</button>
-                    </div>
-                </form>
+            <h1>¡Bienvenido! Vamos a preparar tu negocio</h1>
+            <p class="lead">Completa los datos básicos de tu empresa. Esto aparecerá en tus facturas y reportes.</p>
+            
+            <div class="mt-4 d-flex gap-2 justify-content-center justify-content-sm-start">
+                <button id="btn-show" class="btn btn-main btn-primary-custom">
+                    <i class="lni lni-cog m-1"></i> Configurar ahora
+                </button>
+                <a href="{{ route('ventas.index') }}" class="btn btn-main btn-skip">
+                    Saltar por ahora
+                </a>
             </div>
+        </div>
 
-            <p class="note" style="margin-top:12px">Puedes cambiar estos datos más adelante desde el panel de configuración de la empresa.</p>
+        <div id="form-wrap" class="form-section" style="display:none; margin-top: 20px;">
+            <hr style="border-top: 2px solid #f1f5f9; margin-bottom: 35px;">
+            
+            <form id="onboard-form" class="row g-4" data-endpoint="{{ route('empresa.update') }}" novalidate>
+                @csrf
+                
+                <div class="col-12">
+                    <label class="form-label">Nombre de la Empresa <span class="text-danger">*</span></label>
+                    <input id="nombre" name="nombre" type="text" class="form-control-custom w-100" placeholder="Ej: Mi Tienda Digital S.A.S.">
+                    <div class="field-error" id="error-nombre"></div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">NIT / RUT</label>
+                    <input id="nit" name="nit" type="text" class="form-control-custom w-100" placeholder="900.123.456-1">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Moneda Base</label>
+                    <input id="moneda" name="moneda" type="text" class="form-control-custom w-100" placeholder="Moneda (ej: COP, USD)">
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Dirección Fiscal</label>
+                    <input id="direccion" name="direccion" type="text" class="form-control-custom w-100" placeholder="Calle 100 #15-20, Edificio Pro, Oficina 101">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Teléfono de Contacto</label>
+                    <input id="telefono" name="telefono" type="text" class="form-control-custom w-100" placeholder="+57 300 000 0000">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Correo Electrónico</label>
+                    <input id="email" name="email" type="email" class="form-control-custom w-100" placeholder="admin@empresa.com">
+                </div>
+
+                <div class="col-12">
+                    <div class="iva-card">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="cobra_iva" name="cobra_iva" value="1" style="width: 40px; height: 20px; cursor: pointer;">
+                            <label class="form-check-label ms-2" for="cobra_iva" style="font-weight: 700; color: #334155; cursor: pointer;">
+                                ¿Esta empresa es responsable de IVA?
+                            </label>
+                        </div>
+                        <p class="text-muted mb-0 mt-2" style="font-size: 12px; margin-left: 50px;">
+                            Si activas esta opción, podrás configurar las tarifas por producto.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-5 d-flex justify-content-end gap-3">
+    <a href="{{ route('ventas.index') }}" class="btn btn-main btn-skip">
+        Saltar por ahora
+    </a>
+
+    <button id="btn-submit" type="submit" class="btn btn-main btn-primary-custom px-5">
+        Guardar y Comenzar <i class="lni lni-arrow-right ms-2"></i>
+    </button>
+</div>
+
+            </form>
+        </div>
+
+        <div class="p-4 text-center" style="background: #f8fafc; border-top: 1px solid #f1f5f9;">
+            <p class="mb-0" style="font-size: 13px; color: #94a3b8;">
+                <i class="lni lni-lock-alt me-1"></i> Tus datos están seguros y puedes editarlos en cualquier momento.
+            </p>
         </div>
     </div>
+</div>
 
-    <script>
-        // JS vanilla: onboarding con AJAX (fetch) + sin recarga de página
-        (function(){
-            var btn = document.getElementById('btn-show');
-            var wrap = document.getElementById('form-wrap');
-            var form = document.getElementById('onboard-form');
-            var submitBtn = document.getElementById('btn-submit');
-            
-            if (!btn || !wrap || !form || !submitBtn) return;
+<script src="/assets/js/bootstrap.bundle.min.js"></script>
 
-            // Toggle formulario: mostrar/ocultar
-            btn.addEventListener('click', function(e){
-                e.preventDefault();
-                if (wrap.style.display === 'none' || wrap.style.display === '') {
-                    wrap.style.display = 'block';
-                    btn.textContent = 'Ocultar formulario';
-                } else {
-                    wrap.style.display = 'none';
-                    btn.textContent = 'Configurar ahora';
-                }
-            });
+<script>
+(function(){
+    var btn = document.getElementById('btn-show');
+    var wrap = document.getElementById('form-wrap');
+    var form = document.getElementById('onboard-form');
+    var submitBtn = document.getElementById('btn-submit');
+    var headerCard = document.querySelector('.onboarding-header'); // CUADRO SUPERIOR
 
-            // Estado de envío
-            var isSubmitting = false;
+    if (!btn || !wrap || !form || !submitBtn || !headerCard) return;
 
-            // Forzar que el navegador NO haga validación nativa y bloquear envíos nativos
-            form.noValidate = true;
-            form.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); e.stopImmediatePropagation(); } });
-            form.addEventListener('submit', function(e){
-                e.preventDefault();
-                e.stopImmediatePropagation();
+    // Toggle formulario: mostrar/ocultar y ocultar el cuadro superior
+    btn.addEventListener('click', function(e){
+        e.preventDefault();
+        if (wrap.style.display === 'none' || wrap.style.display === '') {
+            wrap.style.display = 'block';
+            headerCard.style.display = 'none';
+        } else {
+            wrap.style.display = 'none';
+            headerCard.style.display = 'flex';
+        }
+    });
 
-                var nombre = document.getElementById('nombre').value.trim();
-                
-                // Validación cliente mínima
-                if (!nombre) {
-                    var nombreField = document.getElementById('nombre');
-                    nombreField.classList.add('error-field');
-                    var existingError = nombreField.nextElementSibling;
-                    if (existingError && existingError.classList.contains('field-error')) {
-                        existingError.classList.add('show');
-                        existingError.textContent = 'El nombre de la empresa es obligatorio.';
-                    } else {
-                        var errorDiv = document.createElement('div');
-                        errorDiv.className = 'field-error show';
-                        errorDiv.textContent = 'El nombre de la empresa es obligatorio.';
-                        nombreField.parentNode.insertBefore(errorDiv, nombreField.nextSibling);
-                    }
-                    return false;
-                }
+    // Estado de envío
+    var isSubmitting = false;
 
-                // Prevenir doble submit
-                if (isSubmitting) {
-                    return false;
-                }
+    // Bloquear submit nativo y Enter
+    form.noValidate = true;
+    form.addEventListener('keydown', function(e){ if(e.key === 'Enter') e.preventDefault(); });
 
-                isSubmitting = true;
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Guardando…';
+    form.addEventListener('submit', function(e){
+        e.preventDefault();
 
-                // Limpiar errores previos
-                clearFieldErrors();
+        var nombre = document.getElementById('nombre').value.trim();
 
-                // Preparar FormData con los datos del formulario
-                var formData = new FormData(form);
+        // Validación mínima
+        if (!nombre) {
+            showFieldError('nombre', 'El nombre de la empresa es obligatorio.');
+            return false;
+        }
 
-                // Enviar con fetch al endpoint controlado (sin action/method nativos)
-                var endpoint = form.dataset.endpoint;
-                fetch(endpoint, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(function(response){
-                    // Manejar respuesta 200 (éxito, posible redirección)
-                    if (response.ok) {
-                        // El servidor puede redirigir internamente o devolver una respuesta
-                        // Si hay Location header, el navegador sigue automáticamente
-                        if (response.redirected) {
-                            window.location.href = response.url;
-                        } else {
-                            // Si es 200 sin redirección, ir a ventas.index
-                            window.location.href = '{{ route("ventas.index") }}';
-                        }
-                        return null;
-                    }
+        if (isSubmitting) return false;
+        isSubmitting = true;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Guardando…';
 
-                    // Manejar respuesta 422 (validación fallida)
-                    if (response.status === 422) {
-                        return response.json().then(function(data){
-                            showValidationErrors(data.errors);
-                            submitBtn.disabled = false;
-                            submitBtn.textContent = 'Guardar y comenzar';
-                            isSubmitting = false;
-                        });
-                    }
+        clearFieldErrors();
 
-                    // Manejar respuesta 419 (CSRF token expirado)
-                    if (response.status === 419) {
-                        showError('La sesión expiró. Recarga la página e inténtalo de nuevo.');
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Guardar y comenzar';
-                        isSubmitting = false;
-                        return null;
-                    }
+        var formData = new FormData(form);
+        var endpoint = form.dataset.endpoint;
 
-                    // Manejar otros errores (500, etc.)
-                    showError('Ocurrió un error inesperado. Intenta nuevamente.');
+        fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(function(response){
+            if (response.ok) {
+                window.location.href = response.redirected ? response.url : '{{ route("ventas.index") }}';
+                return null;
+            }
+            if (response.status === 422) {
+                return response.json().then(function(data){
+                    showValidationErrors(data.errors);
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'Guardar y comenzar';
-                    isSubmitting = false;
-                    return null;
-                })
-                .catch(function(error){
-                    // Error de red o CORS
-                    console.error('Error:', error);
-                    showError('Ocurrió un error inesperado. Intenta nuevamente.');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Guardar y comenzar';
+                    submitBtn.textContent = 'Guardar Configuración y Empezar';
                     isSubmitting = false;
                 });
-            });
-
-            // Limpiar errores previos de la vista
-            function clearFieldErrors() {
-                // Remover banner de errores
-                var errorBanner = document.querySelector('.error-banner');
-                if (errorBanner) {
-                    errorBanner.remove();
-                }
-
-                // Remover estilos de error de todos los campos
-                var inputs = form.querySelectorAll('input');
-                inputs.forEach(function(input){
-                    input.classList.remove('error-field');
-                });
-
-                // Remover mensajes de error de los campos
-                var fieldErrors = form.querySelectorAll('.field-error');
-                fieldErrors.forEach(function(error){
-                    error.classList.remove('show');
-                    error.textContent = '';
-                });
             }
+            if (response.status === 419) {
+                showError('La sesión expiró. Recarga la página e inténtalo de nuevo.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Guardar Configuración y Empezar';
+                isSubmitting = false;
+                return null;
+            }
+            showError('Ocurrió un error inesperado. Intenta nuevamente.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Guardar Configuración y Empezar';
+            isSubmitting = false;
+            return null;
+        })
+        .catch(function(error){
+            console.error('Error:', error);
+            showError('Ocurrió un error inesperado. Intenta nuevamente.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Guardar Configuración y Empezar';
+            isSubmitting = false;
+        });
+    });
 
-            // Mostrar errores de validación (respuesta 422)
-            function showValidationErrors(errors) {
-                // Crear banner de errores general
-                var errorBanner = document.createElement('div');
-                errorBanner.className = 'error-banner';
-                errorBanner.innerHTML = '<strong>Por favor, revisa los errores abajo:</strong><ul style="margin:6px 0 0;padding-left:20px"></ul>';
-                var ul = errorBanner.querySelector('ul');
+    // Funciones auxiliares
+    function clearFieldErrors() {
+        var errorBanner = document.querySelector('.error-banner');
+        if (errorBanner) errorBanner.remove();
 
-                // Iterar sobre cada campo con error
-                for (var field in errors) {
-                    if (errors.hasOwnProperty(field)) {
-                        var messages = errors[field];
-                        var fieldInput = document.getElementById(field);
+        var inputs = form.querySelectorAll('input, select');
+        inputs.forEach(input => input.classList.remove('error-field'));
 
-                        // Resaltar el campo
-                        if (fieldInput) {
-                            fieldInput.classList.add('error-field');
+        var fieldErrors = form.querySelectorAll('.field-error');
+        fieldErrors.forEach(error => { error.classList.remove('show'); error.textContent = ''; });
+    }
 
-                            // Mostrar error específico debajo del campo
-                            var errorDiv = fieldInput.nextElementSibling;
-                            if (errorDiv && errorDiv.classList.contains('field-error')) {
-                                errorDiv.classList.add('show');
-                                errorDiv.textContent = messages[0] || 'Este campo es inválido.';
-                            }
-                        }
+    function showFieldError(fieldId, message) {
+        var fieldInput = document.getElementById(fieldId);
+        if (fieldInput) {
+            fieldInput.classList.add('error-field');
+            var errorDiv = fieldInput.nextElementSibling;
+            if (errorDiv && errorDiv.classList.contains('field-error')) {
+                errorDiv.classList.add('show');
+                errorDiv.textContent = message;
+            }
+        }
+    }
 
-                        // Agregar al banner general
-                        if (Array.isArray(messages)) {
-                            messages.forEach(function(msg){
-                                var li = document.createElement('li');
-                                li.textContent = msg;
-                                ul.appendChild(li);
-                            });
+    function showValidationErrors(errors) {
+        var errorBanner = document.createElement('div');
+        errorBanner.className = 'error-banner';
+        errorBanner.innerHTML = '<strong>Por favor, revisa los errores abajo:</strong><ul style="margin:6px 0 0;padding-left:20px"></ul>';
+        var ul = errorBanner.querySelector('ul');
+
+        for (var field in errors) {
+            if (errors.hasOwnProperty(field)) {
+                var messages = errors[field];
+                var fieldInput = document.getElementById(field);
+                if (fieldInput) fieldInput.classList.add('error-field');
+
+                messages.forEach(msg => {
+                    // Mostrar error específico debajo del campo
+                    if (fieldInput) {
+                        var errorDiv = fieldInput.nextElementSibling;
+                        if (errorDiv && errorDiv.classList.contains('field-error')) {
+                            errorDiv.classList.add('show');
+                            errorDiv.textContent = msg;
                         }
                     }
-                }
-
-                // Insertar banner al inicio del formulario
-                form.insertBefore(errorBanner, form.firstChild);
+                    // Agregar al banner general
+                    var li = document.createElement('li');
+                    li.textContent = msg;
+                    ul.appendChild(li);
+                });
             }
+        }
 
-            // Mostrar error genérico
-            function showError(message) {
-                var errorBanner = document.createElement('div');
-                errorBanner.className = 'error-banner';
-                errorBanner.textContent = message;
-                form.insertBefore(errorBanner, form.firstChild);
-            }
-        })();
-    </script>
+        form.insertBefore(errorBanner, form.firstChild);
+    }
+
+    function showError(message) {
+        var errorBanner = document.createElement('div');
+        errorBanner.className = 'error-banner';
+        errorBanner.textContent = message;
+        form.insertBefore(errorBanner, form.firstChild);
+    }
+
+})();
+</script>
+
+
 </body>
 </html>
