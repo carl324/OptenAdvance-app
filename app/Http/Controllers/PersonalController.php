@@ -176,9 +176,69 @@ class PersonalController extends Controller
             $empleado->activo = 0;
             $empleado->save();
 
-            return response()->json(['success' => true, 'message' => 'Empleado marcado como inactivo.']);
+            return response()->json(['success' => true, 'message' => 'Empleado eliminado correctamente.']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Error al desactivar el empleado.'], 500);
+            return response()->json(['success' => false, 'message' => 'Error al eliminar el empleado.'], 500);
         }
+    }
+
+    public function updateAdminProfile(Request $request)
+    {
+        $admin = Auth::user();
+        
+        if (!$admin || $admin->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
+        }
+
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($admin->id)->where(function ($query) {
+                    return $query->where('activo', 1);
+                }),
+            ],
+            'password' => 'nullable|string|min:4',
+        ];
+
+        $messages = [
+            'required' => 'Este campo es obligatorio.',
+            'email' => 'El email no es válido.',
+            'password.min' => 'La contraseña es muy corta. Mínimo :min caracteres.',
+            'max' => 'Máximo :max caracteres permitidos.',
+            'unique' => 'Este correo ya está en uso por otro usuario.'
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        $admin->name = $data['name'];
+        $admin->email = $data['email'];
+        
+        if (!empty($data['password'])) {
+            $admin->password = Hash::make($data['password']);
+        }
+        
+        $admin->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Perfil actualizado correctamente.',
+            'user' => [
+                'id' => $admin->id,
+                'name' => $admin->name,
+                'email' => $admin->email,
+            ],
+        ]);
     }
 }

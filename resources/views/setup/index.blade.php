@@ -98,6 +98,7 @@
                     Crea una cuenta de administrador para comenzar a usar el sistema.
                   </p>
                   <form id="setup-form" data-endpoint="{{ route('setup.store') }}" novalidate>
+                    <div id="setup-alerts"></div>
                     @csrf
                     <div class="row">
 
@@ -111,15 +112,7 @@
                         </div>
                       </div>
 
-                      <div class="col-12">
-                        <div class="input-style-1">
-                          <label>Usuario</label>
-                          <input type="text" name="username" value="{{ old('username') }}" placeholder="Crea un nombre de usuario" />
-                          @error('username')
-                            <div class="text-danger" style="font-size:13px; margin-top:6px;">{{ $message }}</div>
-                          @enderror
-                        </div>
-                      </div>
+                      
                       
                       <div class="col-12">
                         <div class="input-style-1">
@@ -232,6 +225,10 @@
   btn.addEventListener('click', function(){
     btn.disabled = true;
     var fd = new FormData(form);
+    // limpiar alertas previas
+    var alerts = document.getElementById('setup-alerts');
+    if (alerts) alerts.innerHTML = '';
+
     fetch(form.dataset.endpoint, {
       method: 'POST',
       body: fd,
@@ -245,10 +242,29 @@
         return;
       }
       if (res.status === 422) return res.json().then(function(data){
-        alert('Errores: ' + Object.values(data.errors).map(function(v){ return v[0]; }).join('\n'));
+        var errors = data.errors || {};
+        var html = '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
+        html += '<strong>Error:</strong><ul style="margin-top:6px; margin-bottom:6px;">';
+        Object.keys(errors).forEach(function(k){
+          var msg = errors[k][0];
+          html += '<li>' + (msg || k) + '</li>';
+        });
+        html += '</ul>';
+        html += '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>';
+        html += '</div>';
+        if (alerts) alerts.innerHTML = html;
+        // poner foco en el primer campo con error si existe
+        var firstKey = Object.keys(errors)[0];
+        if (firstKey) {
+          var el = form.querySelector('[name="' + firstKey + '"]');
+          if (el && typeof el.focus === 'function') el.focus();
+        }
       });
-      alert('Ocurrió un error. Intente nuevamente.');
-    }).catch(function(){ alert('Ocurrió un error de red.'); })
+      // otros errores HTTP
+      if (alerts) alerts.innerHTML = '<div class="alert alert-danger" role="alert">Ocurrió un error. Intente nuevamente.</div>';
+    }).catch(function(){
+      if (alerts) alerts.innerHTML = '<div class="alert alert-danger" role="alert">Ocurrió un error de red.</div>';
+    })
     .finally(function(){ btn.disabled = false; });
   });
 })();

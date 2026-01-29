@@ -65,6 +65,25 @@
 .btn-password-toggle i {
   font-size: 20px;
 }
+/* Chrome / Edge (WebKit / Blink) */
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  position: absolute;
+  right: 0;
+}
+
+/* Edge / IE */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* Opcional: refuerzo general */
+input[type="password"] {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 </style>
 </head>
 <body>
@@ -97,7 +116,7 @@
                   <p class="text-sm mb-25">
                     Ingresa tus credenciales para acceder al sistema.
                   </p>
-                  <form method="POST" action="{{ route('login.submit') }}">
+                  <form method="POST" autocomplete="off" action="{{ route('login.submit') }}">
                     @csrf
                     <div class="row">
 
@@ -109,9 +128,12 @@
 
                         <div class="col-12">
                         <div class="input-style-1">
-                          <label>Nombre de usuario</label>
-                          <input type="text" name="username" value="{{ old('username') }}" placeholder="Nombre de usuario" />
-                          @error('username')
+                          <label>Correo electrónico</label>
+                          <input type="text" autocomplete="off"
+  autocorrect="off"
+  autocapitalize="off"
+  spellcheck="false" name="email" value="{{ old('email') }}" placeholder="Nombre de usuario" />
+                          @error('email')
                             <div class="text-danger" style="font-size:13px; margin-top:6px;">{{ $message }}</div>
                           @enderror
                         </div>
@@ -119,23 +141,23 @@
                       
                       
                       <!-- end col -->
-                      <div class="col-12">
-                        <div class="mb-3">
-  <label class="form-label fw-semibold" style="color: #0f172a; font-size: 14px;">Contraseña</label>
-  <div class="input-group input-group-password">
-    <input type="password" name="password" id="password-input" class="form-control" placeholder="Ingresa tu contraseña" style="border-right: none; padding-right: 12px;" />
-   
+                      <!-- Reemplaza toda la sección del password en login.blade.php -->
+
+<div class="col-12">
+  <div class="mb-3">
+    <label class="form-label fw-semibold" style="color: #0f172a; font-size: 14px;">Contraseña</label>
+    <div class="input-group input-group-password">
+      <input type="password"  autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" name="password" id="password-input" class="form-control" placeholder="Ingresa tu contraseña" style="border-right: none; padding-right: 12px;" />
+      <button class="btn btn-password-toggle" type="button" id="togglePassword" aria-label="Mostrar contraseña">
+        <i class="mdi mdi-eye" id="eye-icon"></i>
+      </button>
+    </div>
+    
+    @error('password') 
+    <div class="text-danger small mt-2">{{ $message }}</div> 
+    @enderror 
   </div>
-  
-  @error('password') 
-  <div class="text-danger small mt-2">{{ $message }}</div> 
-  @enderror 
 </div>
-
-
-
-
-                      </div>
                       
                       <!-- end col -->
                       

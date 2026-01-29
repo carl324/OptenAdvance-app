@@ -231,7 +231,7 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
             if (response.ok) {
                 // Obtener nombre del archivo del header Content-Disposition
                 const contentDisposition = response.headers.get('content-disposition');
-                let fileName = 'opten_backup.sqlite';
+                let fileName = 'opten_backup.sql';
                 if (contentDisposition) {
                     const matches = contentDisposition.match(/filename="(.+?)"/);
                     if (matches) fileName = matches[1];

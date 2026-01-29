@@ -68,7 +68,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/personal', [PersonalController::class, 'store'])->name('personal.store');
         Route::post('/empleados/{id}/update', [PersonalController::class, 'update']);
         Route::delete('/empleados/{id}/delete', [PersonalController::class, 'destroy']);
-        Route::post('/perfil/admin/update', [AdminProfileController::class, 'update'])->name('perfil.admin.update');
+        Route::post('/perfil/admin/update', [PersonalController::class, 'updateAdminProfile'])->name('perfil.admin.update');
 
         Route::get('/onboarding', function () {
             return view('onboarding');

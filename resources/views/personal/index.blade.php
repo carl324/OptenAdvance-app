@@ -4,6 +4,138 @@
 
 @section('content')
 <br><br>
+<style>
+/* ========== Perfil Colapsable ========== */
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.profile-header:hover {
+  background: #f8fafc;
+}
+
+.profile-preview {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.profile-image-small {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid #e2e8f0;
+}
+
+.profile-image-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.status-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+
+.status-online {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.status-offline {
+  background: #94a3b8;
+}
+
+.profile-info-compact h6 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.profile-info-compact p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.toggle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.toggle-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.toggle-btn i {
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.toggle-btn.active i {
+  transform: rotate(180deg);
+}
+
+.profile-content {
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-content.show {
+  animation: slideDown 0.3s ease;
+}
+
+/* ========== Badge empleados ========== */
+.badge-empleados {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b82f6;
+}
+</style>
 <section class="section">
   <div class="container-fluid">
     <!-- ========== title-wrapper start ========== -->
@@ -222,138 +354,7 @@
   <!-- end container -->
 </section>
 
-<style>
-/* ========== Perfil Colapsable ========== */
-.profile-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 8px;
-}
 
-.profile-header:hover {
-  background: #f8fafc;
-}
-
-.profile-preview {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex: 1;
-}
-
-.profile-image-small {
-  position: relative;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
-  border: 2px solid #e2e8f0;
-}
-
-.profile-image-small img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.status-badge {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid #ffffff;
-}
-
-.status-online {
-  background: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-}
-
-.status-offline {
-  background: #94a3b8;
-}
-
-.profile-info-compact h6 {
-  font-size: 15px;
-  font-weight: 600;
-  color: #0f172a;
-  margin: 0;
-}
-
-.profile-info-compact p {
-  font-size: 13px;
-  color: #64748b;
-  margin: 0;
-}
-
-.toggle-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: none;
-  background: #f1f5f9;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-}
-
-.toggle-btn:hover {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-.toggle-btn i {
-  font-size: 18px;
-  transition: transform 0.3s ease;
-}
-
-.toggle-btn.active i {
-  transform: rotate(180deg);
-}
-
-.profile-content {
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.profile-content.show {
-  animation: slideDown 0.3s ease;
-}
-
-/* ========== Badge empleados ========== */
-.badge-empleados {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: 100px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #3b82f6;
-}
-</style>
 
 <script>
 function toggleProfile() {

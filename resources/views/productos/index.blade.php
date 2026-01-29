@@ -207,7 +207,7 @@
     }
 
     .btn-submit {
-      background: #3b82f6;
+      background: #2478ff;
       color: white;
     }
 
@@ -405,13 +405,13 @@
     }
 
     /* Centrar contenido de stock */
-    .table td.min-width.text-center {
+    .table td.min-width.text-centerr {
       text-align: center !important;
       text-overflow: clip;
     }
 
-    .table td.min-width.text-center .view,
-    .table td.min-width.text-center .truncate {
+    .table td.min-width.text-centerr .view,
+    .table td.min-width.text-centerr .truncate {
       text-align: center !important;
     }
 
@@ -733,26 +733,26 @@
       white-space: normal;
     }
     /* Centrar contenido en columnas específicas */
-    td.text-center,
-    .text-center {
+    td.text-centerr,
+    .text-centerr {
       text-align: center !important;
     }
 
     /* Para la tabla de productos - centrar stock */
-    .table td.text-center .view,
-    .table td.text-center .truncate {
+    .table td.text-centerr .view,
+    .table td.text-centerr .truncate {
       display: block;
       width: 100%;
       text-align: center !important;
     }
 
-    .table td.text-center input.edit {
+    .table td.text-centerr input.edit {
       text-align: center !important;
     }
 
     /* Para la tabla de movimientos - centrar cantidad */
-    .striped-table td.text-center,
-    .striped-table td.text-center span {
+    .striped-table td.text-centerr,
+    .striped-table td.text-centerr span {
       text-align: center !important;
     }
 </style>
@@ -884,7 +884,7 @@
                                                                 {{ $m->producto_nombre ?? 'Producto #' . $m->producto_id }}
                                                             </span>
                                                         </td>
-                                                            <td class="text-center">
+                                                            <td class="text-centerr">
                                                               <span class="truncate truncate-xs" data-bs-toggle="tooltip" data-bs-title="{{ $m->cantidad }}">
                                                                 {{ $m->cantidad }}
                                                               </span>
@@ -943,7 +943,7 @@
       Lista de productos registrados con información de precios y stock.
     </p>
   </div>
-
+    
   <!-- DERECHA -->
   <div class="ms-auto">
     <div class="input-group input-group-sm search-pos" style="width:240px;">
@@ -961,7 +961,7 @@
   </div>
 
 </div>
-
+<br>
                         <div class="table-wrapper table-responsive">
                             <table class="table {{ auth()->user()->role !== 'admin' ? 'table-rows-tall' : '' }}">
                                 <thead>
@@ -1062,12 +1062,17 @@ function resetForm(e, clearAlert = true) {
   }
 }
 
+@if(auth()->user()->role === 'admin')
 // Formatear precio en tiempo real
-document.getElementById('basePrice').addEventListener('input', function() {
-  const onlyDigits = this.value.replace(/\D/g, '');
-  const intVal = parseInt(onlyDigits || '0', 10);
-  this.value = formatCOP(intVal);
-});
+const basePriceInput = document.getElementById('basePrice');
+if (basePriceInput) {
+  basePriceInput.addEventListener('input', function() {
+    const onlyDigits = this.value.replace(/\D/g, '');
+    const intVal = parseInt(onlyDigits || '0', 10);
+    this.value = formatCOP(intVal);
+  });
+}
+@endif
 
 function insertProductoFila(p) {
   const tbody = document.querySelector('.card-style .table tbody');
@@ -1183,7 +1188,7 @@ function insertProductoFila(p) {
       <tr>
         <td><span class="truncate truncate-xs" data-bs-toggle="tooltip" data-bs-title="${escapeHtml(m.fecha || '-')}">${escapeHtml(m.fecha || '-')}</span></td>
         <td><span class="truncate truncate-sm" data-bs-toggle="tooltip" data-bs-title="${escapeHtml(m.producto_nombre || '-')}">${escapeHtml(m.producto_nombre || '-')}</span></td>
-        <td class="text-center"><span class="truncate truncate-xs" data-bs-toggle="tooltip" data-bs-title="${escapeHtml(m.cantidad)}">${escapeHtml(m.cantidad)}</span></td>
+        <td class="text-centerr"><span class="truncate truncate-xs" data-bs-toggle="tooltip" data-bs-title="${escapeHtml(m.cantidad)}">${escapeHtml(m.cantidad)}</span></td>
         <td>${tipoBadge}</td>
         <td><span class="truncate truncate-sm" data-bs-toggle="tooltip" data-bs-title="${escapeHtml(formatOrigenLabel(m.origen))}">${escapeHtml(formatOrigenLabel(m.origen))}</span></td>
       </tr>
@@ -1647,57 +1652,74 @@ async function eliminarProducto(id) {
     modal.dataset.productId = id;
 }
 
+// ========== EVENT LISTENERS DEL MODAL (SOLO PARA ADMIN) ==========
+@if(auth()->user()->role === 'admin')
 // Cerrar modal de eliminar
-document.getElementById('cancelDelete').addEventListener('click', function() {
-    document.getElementById('deleteModal').classList.remove('active');
-});
+const cancelBtn = document.getElementById('cancelDelete');
+if (cancelBtn) {
+  cancelBtn.addEventListener('click', function() {
+    const modalEl = document.getElementById('deleteModal');
+    if (modalEl) modalEl.classList.remove('active');
+  });
+}
 
-document.getElementById('deleteModal').addEventListener('click', function(e) {
+const deleteModalEl = document.getElementById('deleteModal');
+if (deleteModalEl) {
+  deleteModalEl.addEventListener('click', function(e) {
     if (e.target === this) {
-        this.classList.remove('active');
+      this.classList.remove('active');
     }
-});
+  });
+}
 
 // Confirmar eliminación
-document.getElementById('confirmDelete').addEventListener('click', async function() {
+const confirmBtn = document.getElementById('confirmDelete');
+if (confirmBtn) {
+  confirmBtn.addEventListener('click', async function() {
     const modal = document.getElementById('deleteModal');
-    const id = modal.dataset.productId;
-    const tr = document.getElementById(`producto-${id}`);
-    const msg = tr.querySelector('.msg');
-    
-    this.disabled = true;
+    const id = modal ? modal.dataset.productId : null;
+    const tr = id ? document.getElementById(`producto-${id}`) : null;
+    const msg = tr ? tr.querySelector('.msg') : null;
+
+    if (!id || !tr || !msg) {
+      return;
+    }
+
+    confirmBtn.disabled = true;
     msg.innerText = 'Eliminando...';
-    
+
     try {
-        const res = await fetch(`/productos/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': csrf,
-                'Accept': 'application/json'
-            }
-        });
-
-        if (res.status === 419) {
-          msg.innerText = 'Sesión expirada.';
-          showAlert('Tu sesión ha expirado. Redirigiendo al inicio de sesión...', 'error');
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 1500);
-          return;
+      const res = await fetch(`/productos/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-TOKEN': csrf,
+          'Accept': 'application/json'
         }
+      });
 
-        const result = await res.json();
-        if (!res.ok) throw result;
+      if (res.status === 419) {
+        msg.innerText = 'Sesión expirada.';
+        showAlert('Tu sesión ha expirado. Redirigiendo al inicio de sesión...', 'error');
+        setTimeout(() => {
+        window.location.href = '/login';
+        }, 1500);
+        return;
+      }
 
-        tr.remove();
-        modal.classList.remove('active');
+      const result = await res.json();
+      if (!res.ok) throw result;
+
+      tr.remove();
+      if (modal) modal.classList.remove('active');
 
     } catch (error) {
-        msg.innerText = 'Error al eliminar. Intenta de nuevo.';
+      msg.innerText = 'Error al eliminar. Intenta de nuevo.';
     } finally {
-        this.disabled = false;
+      confirmBtn.disabled = false;
     }
-});
+  });
+}
+@endif
 
 function disableRow(tr, state) {
     tr.querySelectorAll('button, input, select').forEach(e => e.disabled = state);
@@ -1895,7 +1917,15 @@ function initSearchFunctionality() {
     // Crear función con debounce de 300ms
     const busquedaDebounced = debounce(function(e) {
         const termino = e.target.value;
-        buscarProductos(termino);
+    // Si el campo está vacío, recargar todos los productos automáticamente
+    if (termino.trim() === '' && lastSearchTerm !== '') {
+      clearSearchRequested = true;
+      lastSearchTerm = '';
+      buscarProductos('');
+      return;
+    }
+
+    buscarProductos(termino);
     }, 300);
 
     // Event listener con debounce

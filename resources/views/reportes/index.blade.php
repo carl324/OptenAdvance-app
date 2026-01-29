@@ -612,8 +612,8 @@ function actualizarTabla(data) {
           <td><p class="text-sm">${formatNumber(row.total)}</p></td>
           <td style="text-align: center;">
             <div class="action-buttons">
-              <button class="btn-action btn-print" onclick="verDetallesVenta(${row.id})" title="Ver factura">
-                <i class="lni lni-eye"></i> Ver factura
+              <button class="btn-action btn-print" onclick="verDetallesVenta(${row.id})">
+                <i class="lni lni-eye"></i> Ver detalles
               </button>
             </div>
           </td>
@@ -829,7 +829,7 @@ function exportarDatos() {
 }
 
 function verDetallesVenta(ventaId) {
-  window.location.href = `/ventas/${ventaId}/factura`;
+  window.location.href = `/ventas/${ventaId}/detalle`;
 }
 
 function mostrarError(mensaje) {

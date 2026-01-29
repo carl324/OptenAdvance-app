@@ -6,17 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
     {
         Schema::table('ventas', function (Blueprint $table) {
-            $table->timestamps(); // Agrega created_at y updated_at
+            $table->string('forma_pago')->nullable()->after('cliente');
         });
     }
 
-    public function down()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
         Schema::table('ventas', function (Blueprint $table) {
-            $table->dropTimestamps();
+            $table->dropColumn('forma_pago');
         });
     }
 };

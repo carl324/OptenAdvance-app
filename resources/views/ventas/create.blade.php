@@ -1272,21 +1272,33 @@ function modalEstado(estado) {
 // Ver factura
 function irAFactura() {
     if (window.ultimaVentaId) {
-        window.open(`/ventas/${window.ultimaVentaId}/factura`, '_blank');
+        window.location.href = `/ventas/${window.ultimaVentaId}/factura`;
     }
 }
 
+
 // Nueva venta
 function nuevaVenta() {
-    // Cerrar modal
-    bootstrap.Modal.getInstance(document.getElementById('modalPago')).hide();
+    // 1. Ocultar visualmente el modal de inmediato
+    const modalElement = document.getElementById('modalPago');
+    if (modalElement) {
+        modalElement.style.opacity = '0';
+        modalElement.style.transition = 'none'; // Sin transición para que sea instantáneo
+    }
     
-    // Volver al estado de formulario y limpiar
+    // 2. Cambiar al estado formulario
     modalEstado('formulario');
-    limpiarVenta();
     
-    // Recargar productos para actualizar stock
-    cargarProductos();
+    // 3. Cerrar el modal
+    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+    if (modalInstance) {
+        modalInstance.hide();
+    }
+    
+    // 4. Recargar la página después de que el modal se cierre
+    setTimeout(() => {
+        location.reload();
+    }, 100); // Reducido porque el modal ya está visualmente oculto
 }
 
 // Limpiar venta

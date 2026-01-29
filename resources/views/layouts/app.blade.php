@@ -411,7 +411,7 @@
       </a>
     </div>
     <nav class="sidebar-nav">
-      <ul class="d-flex flex-column gap-1">
+      <ul class="d-flex flex-column gap-0">
         @php $role = Auth::user()->role ?? 'empleado'; @endphp
         @if($role === 'admin')
           <li class="nav-item {{ activeRoute('ventas.create') }}">

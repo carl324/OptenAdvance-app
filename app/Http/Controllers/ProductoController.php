@@ -45,10 +45,19 @@ class ProductoController extends Controller
 
         // Si es solicitud AJAX, devolver JSON con HTML renderizado
         if ($request->ajax() || $request->wantsJson()) {
+            $showActions = Auth::check() && Auth::user()->role === 'admin';
+
             return response()->json([
                 'success' => true,
-                'html' => view('productos._table', compact('productos', 'empresa'))->render(),
-                'pagination' => view('productos._pagination', compact('productos', 'search'))->render(),
+                'html' => view('productos._table', [
+                    'productos' => $productos,
+                    'empresa' => $empresa,
+                    'showActions' => $showActions
+                ])->render(),
+                'pagination' => view('productos._pagination', [
+                    'productos' => $productos,
+                    'search' => $search
+                ])->render(),
                 'currentPage' => $productos->currentPage(),
                 'lastPage' => $productos->lastPage(),
                 'total' => $productos->total()

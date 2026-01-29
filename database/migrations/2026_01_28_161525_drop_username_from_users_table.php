@@ -6,27 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            if (! Schema::hasColumn('users', 'activo')) {
-                $table->tinyInteger('activo')->default(1)->after('role');
-            }
+            // 1. Eliminar índice UNIQUE
+            $table->dropUnique('users_username_unique');
+
+            // 2. Eliminar columna
+            $table->dropColumn('username');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            if (Schema::hasColumn('users', 'activo')) {
-                $table->dropColumn('activo');
-            }
+            // Restaurar columna
+            $table->string('username')->nullable();
+
+            // Restaurar índice UNIQUE
+            $table->unique('username', 'users_username_unique');
         });
     }
 };
