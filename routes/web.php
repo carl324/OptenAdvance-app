@@ -10,6 +10,9 @@ use App\Http\Controllers\SetupController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\PersonalController;
 use App\Http\Controllers\AdminProfileController;
+//use App\Http\Controllers\BackupConfigController;
+
+//Route::prefix('backup-config')->middleware('auth')->group(function() { Route::get('/carpetas', [App\Http\Controllers\BackupConfigController::class, 'listarCarpetas'])->name('backup.carpetas'); Route::get('/obtener', [App\Http\Controllers\BackupConfigController::class, 'obtener'])->name('backup.obtener'); Route::post('/guardar', [App\Http\Controllers\BackupConfigController::class, 'guardar'])->name('backup.guardar'); });
 
 Route::get('/setup', [SetupController::class, 'show'])->name('setup.show');
 Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
@@ -50,7 +53,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/api/reportes', [ReporteController::class, 'apiData'])->name('reportes.api');
         Route::get('/api/reportes/stats', [ReporteController::class, 'apiStats'])->name('reportes.api.stats');
         Route::get('/api/reportes/export', [ReporteController::class, 'apiExport'])->name('reportes.api.export');
-
+        
         // Rutas de productos solo para admin (excepto index)
         Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
         Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
@@ -79,7 +82,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:admin,empleado'])->group(function () {
         Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
     });
-
+    
     // Soporte: vista estática
     Route::get('/soporte', function () {
         return view('soporte.index');

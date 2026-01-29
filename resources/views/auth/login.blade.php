@@ -175,9 +175,17 @@ input[type="password"] {
                     <!-- end row -->
                   </form>
                 </div>
+                
               </div>
+              
+<div class="col-md-6 d-flex justify-content-center align-items-center">
+  <p class="text-sm mb-0">
+    © {{ date('Y') }} OptenAdvance · v{{ config('app.version') }}
+  </p>
+</div>
             </div>
             <!-- end col -->
+             
           </div>
           
           <!-- end row -->

@@ -25,7 +25,7 @@ class BackupController extends Controller
             }
 
             // 1) Prevenir doble ejecución: crear lock temporal
-            $lockFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'opten_backup.lock';
+            $lockFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'opten_db.lock';
             $lockTimeout = 5 * 60; // 5 minutos
             
             if (file_exists($lockFile)) {
@@ -75,7 +75,7 @@ class BackupController extends Controller
 
             // 5) Nombre de archivo
             $timestamp = date('Y-m-d_H-i-s');
-            $fileName = "opten_backup_{$timestamp}.sql";
+            $fileName = "opten_db_{$timestamp}.sql";
             $target = $tempDir . DIRECTORY_SEPARATOR . $fileName;
 
             // 6) Ejecutar mysqldump

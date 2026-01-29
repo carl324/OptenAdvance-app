@@ -800,7 +800,8 @@
       <div class="col-md-6 order-last order-md-first">
         <div class="copyright text-center text-md-start">
           <p class="text-sm mb-0">
-            © {{ date('Y') }} OptenAdvance · v1.0.0
+            © {{ date('Y') }} OptenAdvance · v{{ config('app.version') }}
+
           </p>
         </div>
       </div>
