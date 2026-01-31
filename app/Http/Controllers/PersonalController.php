@@ -8,14 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 
 class PersonalController extends Controller
 {
     public function index()
     {
-        // Usar el modelo Empleado que filtra automáticamente por activo = 1
         $query = Empleado::where('role', 'empleado');
 
         if (Auth::check() && Auth::user()->role === 'admin') {
@@ -36,9 +34,7 @@ class PersonalController extends Controller
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('users', 'email')->where(function ($query) {
-                    return $query->where('activo', 1);
-                }),
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
             ],
             'phone' => 'nullable|string|max:50',
             'password' => 'required|string|min:4',
@@ -98,15 +94,14 @@ class PersonalController extends Controller
         if (! $empleado) {
             return response()->json(['success' => false, 'message' => 'Empleado no encontrado.'], 404);
         }
+
         $rules = [
             'name' => 'required|string|max:255',
             'email' => [
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('users', 'email')->ignore($empleado->id)->where(function ($query) {
-                    return $query->where('activo', 1);
-                }),
+                Rule::unique('users', 'email')->ignore($empleado->id)->whereNull('deleted_at'),
             ],
             'phone' => 'nullable|string|max:50',
             'password' => 'nullable|string|min:4',
@@ -135,7 +130,6 @@ class PersonalController extends Controller
 
         $data = $validator->validated();
 
-        // Evitar cambios peligrosos (no permitir cambiar role aquí)
         $empleado->name = $data['name'];
         $empleado->email = $data['email'];
         $empleado->phone = $data['phone'] ?? null;
@@ -171,15 +165,9 @@ class PersonalController extends Controller
             return response()->json(['success' => false, 'message' => 'No puede eliminar un administrador.'], 403);
         }
 
-        try {
-            // Soft-delete lógico: marcar activo = 0
-            $empleado->activo = 0;
-            $empleado->save();
+        $empleado->delete();  // Soft delete real
 
-            return response()->json(['success' => true, 'message' => 'Empleado eliminado correctamente.']);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Error al eliminar el empleado.'], 500);
-        }
+        return response()->json(['success' => true, 'message' => 'Empleado eliminado correctamente.']);
     }
 
     public function updateAdminProfile(Request $request)
@@ -196,9 +184,7 @@ class PersonalController extends Controller
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('users', 'email')->ignore($admin->id)->where(function ($query) {
-                    return $query->where('activo', 1);
-                }),
+                Rule::unique('users', 'email')->ignore($admin->id)->whereNull('deleted_at'),
             ],
             'password' => 'nullable|string|min:4',
         ];
