@@ -261,7 +261,7 @@
                 </div>
                 @if($ivaValor > 0)
                 <div style="font-size: 8px; text-align: right; color: #666;">
-                    IVA: ${{ number_format($ivaValor, 0, ',', '.') }} ({{ $tarifaIva ? $tarifaIva.'%' : '—' }})
+                    IVA: ${{ number_format($ivaValor, 0, ',', '.') }} <!--({{ $tarifaIva ? $tarifaIva.'%' : '—' }})-->
                 </div>
                 @endif
             </div>

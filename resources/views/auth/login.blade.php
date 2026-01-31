@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>@yield('title', 'POS')</title>
+  <title>@yield('title', 'Inicia sesión')</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -132,7 +132,7 @@ input[type="password"] {
                           <input type="text" autocomplete="off"
   autocorrect="off"
   autocapitalize="off"
-  spellcheck="false" name="email" value="{{ old('email') }}" placeholder="Nombre de usuario" />
+  spellcheck="false" name="email" value="{{ old('email') }}" placeholder="Ingresa tu correo electrónico" />
                           @error('email')
                             <div class="text-danger" style="font-size:13px; margin-top:6px;">{{ $message }}</div>
                           @enderror

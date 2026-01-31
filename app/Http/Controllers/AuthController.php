@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -21,12 +19,22 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        $remember = true;
+        // POS local → NO recordar sesión
+        $remember = false;
 
-        if (!Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']], $remember)) {
+        if (!Auth::attempt($credentials, $remember)) {
             return back()
                 ->withErrors(['auth' => 'Credenciales inválidas.'])
                 ->withInput($request->only('email'));
+        }
+
+        
+        if (!Auth::user()->activo) {
+            Auth::logout();
+
+            return back()->withErrors([
+                'auth' => 'Usuario eliminado.'
+            ]);
         }
 
         $request->session()->regenerate();

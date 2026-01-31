@@ -9,7 +9,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-
+use Illuminate\Support\Facades\Log;
 class ReporteController extends Controller
 {
     // Límite máximo de filas permitidas en exportación (protección de rendimiento)
@@ -232,22 +232,36 @@ class ReporteController extends Controller
         }
 
         $row = 2;
-        $totalCantidad = 0;
-        $totalSubtotal = 0;
-        $totalIva = 0;
-        $totalTotal = 0;
+$totalCantidad = 0;
+$totalSubtotal = 0;
+$totalIva = 0;
+$totalTotal = 0;
 
-        // Cargar usuarios relacionados en una sola consulta para evitar N+1
-        $userIds = $detalles->map(function($d) {
-            return optional($d->venta)->user_id;
-        })->filter()->unique()->values()->all();
-        $users = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
+// Cargar usuarios relacionados en una sola consulta para evitar N+1
+$userIds = $detalles->map(function($d) {
+    return optional($d->venta)->user_id;
+})->filter()->unique()->values()->all();
+$users = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
 
-        foreach ($detalles as $d) {
-            // Origen del registro (solo para UI / export)
-            $d->origen_reporte = 'venta_detalle';
-            $fecha = optional($d->venta->fecha)->format('Y-m-d H:i');
-            $facturaNumero = optional($d->venta->factura)->numero ?? '-';
+// Variables para coloreo alternado por factura
+$facturaAnterior = null;
+$colorActual = 0; // 0 = blanco, 1 = verde claro
+$colores = [
+    'FFFFFF', // Blanco
+    'E8F5E9'  // Verde claro suave
+];
+
+foreach ($detalles as $d) {
+    // Origen del registro (solo para UI / export)
+    $d->origen_reporte = 'venta_detalle';
+    $fecha = optional($d->venta->created_at)->format('Y-m-d H:i');
+    $facturaNumero = optional($d->venta->factura)->numero ?? '-';
+    
+    // Detectar cambio de factura para alternar color
+    if ($facturaAnterior !== null && $facturaAnterior !== $facturaNumero) {
+        $colorActual = ($colorActual + 1) % 2; // Alterna entre 0 y 1
+    }
+    $facturaAnterior = $facturaNumero;
             $cliente = (optional($d->venta->factura)->cliente_nombre ?? $d->venta->cliente) ?? '-';
             $producto = optional($d->producto)->nombre ?? '#' . $d->producto_id;
             // Usar subtotal directamente (ya incluye IVA desde BD)
@@ -280,11 +294,20 @@ class ReporteController extends Controller
             $values[] = $d->venta->estado ?? '-';
 
             // Escribir valores en hoja
-            $col = 'A';
-            foreach ($values as $val) {
-                $sheet->setCellValue($col . $row, $val);
-                $col++;
-            }
+            // Escribir valores en hoja
+$col = 'A';
+foreach ($values as $val) {
+    $sheet->setCellValue($col . $row, $val);
+    $col++;
+}
+
+// Aplicar color de fondo a toda la fila
+$lastCol = Coordinate::stringFromColumnIndex(count($headers));
+$sheet->getStyle('A' . $row . ':' . $lastCol . $row)
+      ->getFill()
+      ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+      ->getStartColor()
+      ->setRGB($colores[$colorActual]);
 
             $totalCantidad += (float)$d->cantidad;
             $totalSubtotal += (float)$d->subtotal;
@@ -600,7 +623,7 @@ class ReporteController extends Controller
             // Cajas: usar tabla cajas y hacer LEFT JOIN con users para obtener el nombre
             $query = \DB::table('cajas as c')
                 ->leftJoin('users as u', 'u.id', '=', 'c.user_id')
-                ->whereBetween('c.fecha_apertura', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+                ->whereBetween('c.created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
                 ->when($search, function ($q) use ($search) {
                     $term = '%' . strtolower($search) . '%';
                     return $q->whereRaw('LOWER(u.name) LIKE ?', [$term])
@@ -939,17 +962,32 @@ class ReporteController extends Controller
             // Aplicar estilos al header
             $this->aplicarEstilosHeader($sheet, $headerCells);
 
-            $row = 2;
-            $totalVentas = 0;
-            $totalIva = 0;
-            $ventasCompletadas = 0;
-            // Precargar usuarios para evitar N+1
-            $userIds = $data->map(function($v) { return $v->user_id; })->filter()->unique()->values()->all();
-            $users = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
+           $row = 2;
+$totalVentas = 0;
+$totalIva = 0;
+$ventasCompletadas = 0;
+// Precargar usuarios para evitar N+1
+$userIds = $data->map(function($v) { return $v->user_id; })->filter()->unique()->values()->all();
+$users = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
 
-            foreach ($data as $venta) {
-                $detalles = $venta->detalles ?? collect();
-                $medioPago = optional($venta->factura)->forma_pago ?? '-';
+// Variables para coloreo alternado por factura
+$facturaAnterior = null;
+$colorActual = 0; // 0 = blanco, 1 = verde claro
+$colores = [
+    'FFFFFF', // Blanco
+    'E8F5E9'  // Verde claro suave
+];
+
+foreach ($data as $venta) {
+    $detalles = $venta->detalles ?? collect();
+    $medioPago = optional($venta->factura)->forma_pago ?? '-';
+    $facturaNumero = optional($venta->factura)->numero ?? '-';
+    
+    // Detectar cambio de factura para alternar color
+    if ($facturaAnterior !== null && $facturaAnterior !== $facturaNumero) {
+        $colorActual = ($colorActual + 1) % 2; // Alterna entre 0 y 1
+    }
+    $facturaAnterior = $facturaNumero;
                 $motivoAnulacion = '-';
                 if ($venta->estado === 'anulada') {
                     $motivoAnulacion = optional($detalles->first())->motivo_anulacion ?? '-';
@@ -978,11 +1016,20 @@ class ReporteController extends Controller
                     $values[] = $motivoAnulacion;
 
                     $col = 'A';
-                    foreach ($values as $val) {
-                        $sheet->setCellValue($col . $row, $val);
-                        $col++;
-                    }
-                    $row++;
+foreach ($values as $val) {
+    $sheet->setCellValue($col . $row, $val);
+    $col++;
+}
+
+// Aplicar color de fondo a toda la fila
+$sheet->getStyle('A' . $row . ':O' . $row)
+      ->getFill()
+      ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+      ->getStartColor()
+      ->setRGB($colores[$colorActual]);
+
+$ivaVenta += ($detalle->iva ?? 0);
+$row++;
 
                     if ($venta->estado === 'completada') {
                         $totalVentas += $venta->total;

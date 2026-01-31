@@ -88,7 +88,8 @@ class ProductoController extends Controller
         $data['nombre'] = trim(mb_strtolower($data['nombre']));
 
         // Calcular precio con IVA
-        $data['precio_con_iva'] = $data['precio'] * (1 + ($data['iva'] / 100));
+        $data['precio_con_iva'] = (int) round($data['precio'] * (1 + ($data['iva'] / 100)));
+
 
         // Evitar duplicados activos
         $existe = Producto::whereRaw('LOWER(nombre) = ?', [$data['nombre']])
@@ -227,7 +228,8 @@ class ProductoController extends Controller
 
             // Recalcular precio con IVA si cambió precio o iva
             if (isset($data['precio']) || isset($data['iva'])) {
-                $producto->precio_con_iva = $producto->precio * (1 + ($producto->iva / 100));
+                $producto->precio_con_iva = (int) round($producto->precio * (1 + ($producto->iva / 100)));
+
             }
 
             // Guardar cambios básicos primero

@@ -982,7 +982,7 @@ function actualizarCarrito() {
         <tr>
             <td class="text-sm">Producto</td>
             <td class="text-sm text-center" style="width: 100px;">Cantidad</td>
-            <td class="text-sm text-end" style="width: 150px;">Subtotal</td>
+            <td class="text-sm text-end" style="width: 150px;"></td>
         </tr>
     `;
 

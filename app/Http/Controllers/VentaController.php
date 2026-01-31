@@ -135,29 +135,36 @@ class VentaController extends Controller
             $productosCalculados = [];
 
             foreach ($data['productos'] as $item) {
-                $producto = Producto::findOrFail($item['id']);
-                $precioBase = $producto->precio;
-                $ivaRate = $cobraIva ? $producto->iva : 0;
-                
-                $neto = $item['cantidad'] * $precioBase;
-                $iva  = round($neto * $ivaRate / 100, 2);
-                $final = $neto + $iva;
-                
-                $totalNeto += $neto;
-                $totalIva  += $iva;
-                
-                // Guardar cálculos para reutilizar sin recalcular
-                $productosCalculados[] = [
-                    'item' => $item,
-                    'producto' => $producto,
-                    'precioBase' => $precioBase,
-                    'ivaRate' => $ivaRate,
-                    'neto' => $neto,
-                    'iva' => $iva,
-                    'final' => $final
-                ];
-            }
-            $totalFinal = $totalNeto + $totalIva;
+    $producto = Producto::findOrFail($item['id']);
+    $precioBase = $producto->precio;
+    $ivaRate = $cobraIva ? $producto->iva : 0;
+
+    // Subtotal entero, sin IVA
+    $neto = (int) ($item['cantidad'] * $precioBase);
+
+    // IVA sobre el subtotal
+    $iva  = (int) round($neto * $ivaRate / 100);
+
+    // Total por línea
+    $final = $neto + $iva;
+
+    // Totales acumulados
+    $totalNeto += $neto;
+    $totalIva  += $iva;
+
+    // Guardar cálculos para reutilizar al crear VentaDetalle
+    $productosCalculados[] = [
+        'item' => $item,
+        'producto' => $producto,
+        'precioBase' => $precioBase,
+        'ivaRate' => $ivaRate,
+        'neto' => $neto,     // Subtotal entero
+        'iva' => $iva,
+        'final' => $final
+    ];
+}
+$totalFinal = $totalNeto + $totalIva;
+
 
             // Nota: Se permite guardar aunque `total_pagado` sea menor que `totalFinal`.
 
@@ -204,7 +211,7 @@ class VentaController extends Controller
                     'cantidad'        => $calc['item']['cantidad'],
                     'precio_unitario' => $calc['precioBase'],
                     'iva'             => $calc['iva'],
-                    'subtotal'        => $calc['final'],
+                    'subtotal'        => $calc['neto'],
                     'total_pagado'    => $data['total_pagado'],
                 ]);
 

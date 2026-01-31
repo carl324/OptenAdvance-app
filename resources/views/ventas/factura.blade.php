@@ -7,28 +7,32 @@
 
 @if(strtolower($venta->estado ?? '') === 'anulada')
 <style>
-.invoice-wrapper { position: relative; }
+.invoice-wrapper {
+    position: relative;
+    overflow: hidden;          /* ¡Esto es clave! Recorta la marca de agua que sobresale */
+}
 
 .invoice-watermark {
     position: absolute;
-    top: 50%;
+    top: 55%;                  /* Movido un poco más abajo para evitar que suba hacia navbar */
     left: 50%;
     transform: translate(-50%, -50%) rotate(-25deg);
 
-    max-width: 98%; /* nunca más ancho que el contenedor */
+    max-width: 95%;            /* Limita ancho para no desbordar horizontalmente */
+    max-height: 90%;           /* Limita altura para no desbordar verticalmente */
     white-space: nowrap;
     
     border: 6px double rgba(220, 38, 38, 0.15);
     padding: 10px 30px;
     border-radius: 12px;
 
-    font-size: 5em; /* tamaño relativo al contenedor */
+    font-size: 4.5em;          /* Reducido un poco para mejor contención (ajusta si quieres más grande) */
     font-family: 'Inter', 'Segoe UI', sans-serif;
     color: rgba(220, 38, 38, 0.15);
 
     pointer-events: none;
     user-select: none;
-    z-index: 9999;
+    z-index: 1;                /* Bajado para que no tape elementos con z-index mayor (navbar suele tener alto) */
 
     text-align: center;
     font-weight: 900;
@@ -39,10 +43,15 @@
 
 @media print {
     .invoice-watermark {
-        color: rgba(220, 38, 38, 0.18) !important;
-        border-color: rgba(220, 38, 38, 0.18) !important;
+        color: rgba(220, 38, 38, 0.25) !important;     /* Más visible en impresión */
+        border-color: rgba(220, 38, 38, 0.25) !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        font-size: 4em;                                /* Ajuste para impresión si se ve muy grande */
+    }
+    
+    .invoice-wrapper {
+        overflow: visible !important;                  /* En print a veces hidden corta, pero con visible + z-index bajo suele quedar bien */
     }
 }
 
@@ -70,10 +79,15 @@
                 <div class="invoice-watermark">VENTA ANULADA</div>
             @endif
             <div class="row">
+                
                 <div class="col-12">
+                    
                     <div class="invoice-card card-style mb-30">
+                        
                         <div class="invoice-header">
+                            
                             <div class="address-item">
+                                
                                 <h2>{{ $empresa->nombre ?? 'Empresa' }}</h2>
                                 <p class="text-sm">
                                     {{ $empresa->direccion ?? '-' }}
@@ -137,8 +151,8 @@
                                         @endphp
                                         @if($hasIva)
                                             <th class="amount">
-                                                <h6 class="text-sm text-medium">Tarifa IVA</h6>
-                                            </th>
+                                                <!--<h6 class="text-sm text-medium">Tarifa IVA</h6>-->
+                                            </th> 
                                             <th class="amount">
                                                 <h6 class="text-sm text-medium">Valor IVA</h6>
                                             </th>
@@ -162,17 +176,17 @@
                                         </td>
                                         @if($hasIva)
                                             <td>
-                                                <p class="text-sm">
+                                               <!-- <p class="text-sm">
                                                     {{ (optional($d->producto)->iva ?? 0) > 0 ? optional($d->producto)->iva . '%' : '—' }}
-                                                </p>
-                                            </td>
+                                                </p>-->
+                                            </td> 
                                             <td>
                                                 <p class="text-sm">${{ number_format($d->iva ?? 0, 0, ',', '.') }}</p>
                                             </td>
                                         @endif
                                         <td>
-                                            <p class="text-sm">${{ number_format($d->subtotal, 0, ',', '.') }}</p>
-                                        </td>
+    <p class="text-sm">${{ number_format(($d->subtotal ?? 0) + ($d->iva ?? 0), 0, ',', '.') }}</p>
+</td>
                                     </tr>
                                     @endforeach
                                     

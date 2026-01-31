@@ -267,7 +267,7 @@
                 <th class="text-right" style="width:8%;">Cantidad</th>
                 <th class="text-right" style="width:14%;">Precio Unitario</th>
                 @if($hasIva)
-                    <th class="text-right" style="width:10%;">Tarifa IVA</th>
+                    <!-- <th class="text-right" style="width:10%;">Tarifa IVA</th> -->
                     <th class="text-right" style="width:10%;">Valor IVA</th>
                 @endif
                 <th class="text-right" style="width:18%;">Total</th>
@@ -289,9 +289,9 @@
                         {{ number_format($detalle->precio_unitario ?? 0, 0, ',', '.') }}
                     </td>
                     @if($hasIva)
-                        <td class="text-right">
+                        <!-- <td class="text-right">
                             {{ $tarifaIva ? $tarifaIva.'%' : '—' }}
-                        </td>
+                        </td> -->
                         <td class="text-right">
                             {{ number_format($ivaValor, 0, ',', '.') }}
                         </td>
