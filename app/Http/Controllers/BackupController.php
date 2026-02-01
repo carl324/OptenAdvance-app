@@ -25,7 +25,7 @@ class BackupController extends Controller
             }
 
             // 1) Prevenir doble ejecución: crear lock temporal
-            $lockFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'opten_db.lock';
+            $lockFile = storage_path('app' . DIRECTORY_SEPARATOR . 'backup.lock');
             $lockTimeout = 5 * 60; // 5 minutos
             
             if (file_exists($lockFile)) {
@@ -78,29 +78,30 @@ class BackupController extends Controller
             $fileName = "opten_db_{$timestamp}.sql";
             $target = $tempDir . DIRECTORY_SEPARATOR . $fileName;
 
-            // 6) Ejecutar mysqldump
-            // Detectar ruta de mysqldump según el sistema operativo
-            $mysqldumpPath = $this->detectMysqldumpPath();
+            // 6) Detectar ruta de mysqldump desde Laragon portable
+            $mysqldumpPath = $this->detectLaragonMysqldump();
             
-            if (!$mysqldumpPath) {
-                Log::error('BackupController::store - mysqldump no encontrado');
+            if (!$mysqldumpPath || !file_exists($mysqldumpPath)) {
+                Log::error('BackupController::store - mysqldump no encontrado en Laragon');
                 @unlink($lockFile);
-                return response()->json(['error' => 'No se encontró mysqldump. Verifica que MySQL esté instalado correctamente.'], 500);
+                return response()->json(['error' => 'No se encontró mysqldump en Laragon portable.'], 500);
             }
 
-            // Construir comando mysqldump
+            // 7) Construir comando mysqldump para Windows (sin ventana visible)
             $command = sprintf(
-                '"%s" --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > "%s" 2>&1',
-                $mysqldumpPath,
-                escapeshellarg($dbHost),
-                escapeshellarg($dbPort),
-                escapeshellarg($dbUser),
-                escapeshellarg($dbPass),
-                escapeshellarg($dbName),
-                $target
-            );
+    '"%s" --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > "%s" 2> "%s"',
+    $mysqldumpPath,
+    $dbHost,
+    $dbPort,
+    $dbUser,
+    $dbPass,
+    $dbName,
+    $target,
+    $tempDir . DIRECTORY_SEPARATOR . 'warnings.log'
+);
 
-            // Ejecutar comando
+
+            // Ejecutar comando sin mostrar ventana en Windows
             $output = [];
             $returnVar = 0;
             exec($command, $output, $returnVar);
@@ -113,7 +114,7 @@ class BackupController extends Controller
                 return response()->json(['error' => 'Error al crear el respaldo de MySQL. Revisa los logs.'], 500);
             }
 
-            // 7) Validar que el archivo se creó y tiene contenido
+            // 8) Validar que el archivo se creó y tiene contenido
             if (!file_exists($target) || filesize($target) < 100) {
                 Log::error('BackupController::store - Archivo de backup vacío o no creado: ' . $target);
                 @unlink($target);
@@ -123,7 +124,7 @@ class BackupController extends Controller
 
             Log::info('BackupController::store - Backup MySQL completado exitosamente: ' . $fileName . ' (' . filesize($target) . ' bytes)');
 
-            // 8) Limpieza y retornar descarga
+            // 9) Limpieza y retornar descarga
             @unlink($lockFile);
             return response()->download($target, $fileName)->deleteFileAfterSend(true);
 
@@ -137,40 +138,39 @@ class BackupController extends Controller
     }
 
     /**
-     * Detecta la ruta de mysqldump según el sistema operativo
+     * Detecta la ruta de mysqldump desde Laragon portable
      */
-    private function detectMysqldumpPath()
+    private function detectLaragonMysqldump()
     {
-        // Para Windows (XAMPP)
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            $possiblePaths = [
-                'C:\\xampp\\mysql\\bin\\mysqldump.exe',
-                'C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe',
-                'C:\\Program Files\\MySQL\\MySQL Server 5.7\\bin\\mysqldump.exe',
-                'mysqldump.exe', // Si está en el PATH
-            ];
-        } else {
-            // Para Linux/Mac
-            $possiblePaths = [
-                '/usr/bin/mysqldump',
-                '/usr/local/bin/mysqldump',
-                '/opt/lampp/bin/mysqldump',
-                'mysqldump', // Si está en el PATH
-            ];
-        }
+        // Obtener la ruta base del proyecto
+        $basePath = base_path();
+        
+        // Laragon portable está en la raíz del proyecto
+        $laragonBase = dirname($basePath); // Sube un nivel desde el proyecto
+        
+        // Rutas posibles de mysqldump en Laragon portable
+        $possiblePaths = [
+            $laragonBase . DIRECTORY_SEPARATOR . 'laragon' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql' . DIRECTORY_SEPARATOR . 'mysql-8.0.30-winx64' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe',
+            $laragonBase . DIRECTORY_SEPARATOR . 'laragon' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql' . DIRECTORY_SEPARATOR . 'mysql-5.7.24-winx64' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe',
+        ];
 
-        foreach ($possiblePaths as $path) {
-            if (@is_executable($path) || @file_exists($path)) {
-                return $path;
+        // Buscar en subdirectorios de mysql
+        $mysqlDir = $laragonBase . DIRECTORY_SEPARATOR . 'laragon' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql';
+        if (is_dir($mysqlDir)) {
+            $versions = @scandir($mysqlDir);
+            if ($versions) {
+                foreach ($versions as $version) {
+                    if ($version === '.' || $version === '..') continue;
+                    $mysqldump = $mysqlDir . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe';
+                    if (file_exists($mysqldump)) {
+                        return $mysqldump;
+                    }
+                }
             }
         }
 
-        // Intentar encontrar usando 'which' o 'where'
-        $findCommand = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' ? 'where mysqldump' : 'which mysqldump';
-        $output = shell_exec($findCommand);
-        
-        if ($output) {
-            $path = trim($output);
+        // Verificar rutas estáticas como fallback
+        foreach ($possiblePaths as $path) {
             if (file_exists($path)) {
                 return $path;
             }

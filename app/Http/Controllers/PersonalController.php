@@ -151,24 +151,29 @@ class PersonalController extends Controller
     }
 
     public function destroy($id)
-    {
-        $empleado = Empleado::withoutGlobalScope('activo')->find($id);
-        if (! $empleado) {
-            return response()->json(['success' => false, 'message' => 'Empleado no encontrado.'], 404);
-        }
-
-        if (Auth::check() && Auth::id() == $empleado->id) {
-            return response()->json(['success' => false, 'message' => 'No puede eliminar su propio usuario.'], 403);
-        }
-
-        if ($empleado->role === 'admin') {
-            return response()->json(['success' => false, 'message' => 'No puede eliminar un administrador.'], 403);
-        }
-
-        $empleado->delete();  // Soft delete real
-
-        return response()->json(['success' => true, 'message' => 'Empleado eliminado correctamente.']);
+{
+    $empleado = Empleado::withoutGlobalScope('activo')->find($id);
+    if (! $empleado) {
+        return response()->json(['success' => false, 'message' => 'Empleado no encontrado.'], 404);
     }
+
+    if (Auth::check() && Auth::id() == $empleado->id) {
+        return response()->json(['success' => false, 'message' => 'No puede eliminar su propio usuario.'], 403);
+    }
+
+    if ($empleado->role === 'admin') {
+        return response()->json(['success' => false, 'message' => 'No puede eliminar un administrador.'], 403);
+    }
+
+    // Borrar el email antes del soft delete
+    $empleado->email = null;
+    $empleado->save();
+    
+    // Ejecutar soft delete
+    $empleado->delete();
+
+    return response()->json(['success' => true, 'message' => 'Empleado eliminado correctamente.']);
+}
 
     public function updateAdminProfile(Request $request)
     {

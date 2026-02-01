@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Bienvenido</title>
+    <link rel="icon" type="image/png" href="/assets/images/logo/icon.png" />
     <link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
 <link rel="stylesheet" href="/assets/css/lineicons.css" />
 <link rel="stylesheet" href="/assets/css/main.css" />
@@ -205,7 +206,7 @@
                 </div>
 
                 <div class="col-12 mt-5 d-flex justify-content-end gap-3">
-    <a href="{{ route('ventas.index') }}" class="btn btn-main btn-skip">
+    <a href="{{ route('productos.index') }}" class="btn btn-main btn-skip">
         Saltar por ahora
     </a>
 
@@ -287,7 +288,7 @@
         })
         .then(function(response){
             if (response.ok) {
-                window.location.href = response.redirected ? response.url : '{{ route("ventas.index") }}';
+                window.location.href = response.redirected ? response.url : '{{ route("productos.index") }}';
                 return null;
             }
             if (response.status === 422) {

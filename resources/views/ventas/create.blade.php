@@ -427,6 +427,7 @@ textarea {
   name="monto_apertura"
   inputmode="numeric"
   placeholder="0"
+  value="0"
   autocomplete="off"
   style="width: 100%; padding: 12px 15px 12px 35px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 18px; font-weight: 700; color: #1e293b; outline: none;"
 >

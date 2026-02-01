@@ -3,8 +3,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>@yield('title', 'POS')</title>
-
+  <title>@yield('title', 'Registro')</title>
+  <link rel="icon" type="image/png" href="/assets/images/logo/icon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Meta CSRF centralizado -->
@@ -133,11 +133,28 @@
       <i class="mdi mdi-eye" id="eye-icon"></i>
     </button>
   </div>
-  @error('password') 
-  <div class="text-danger small mt-2">{{ $message }}</div> 
-  @enderror 
+  <br>
+ <div class="col-12">
+  <div class="form-check mb-25" style="display: flex; align-items: flex-start; gap: 10px;">
+    <input 
+      class="form-check-input" 
+      type="checkbox" 
+      name="terms" 
+      id="terms" 
+      style="width: 18px; height: 18px; cursor: pointer; border: 1px solid #d1d5db;"
+      required
+    />
+    <label class="form-check-label" for="terms" style="font-size: 14px; color: #5d657b; cursor: pointer; line-height: 1.4;">
+      Al continuar, aceptas nuestros 
+      <a href="{{ route('legal.terminos') }}" class="text-primary" style="text-decoration: none; font-weight: 600;">Términos y Condiciones</a> 
+      y la 
+      <a href="{{ route('legal.privacidad') }}" class="text-primary" style="text-decoration: none; font-weight: 600;">Política de Privacidad</a>.
+    </label>
+  </div>
+  @error('terms')
+    <div class="text-danger small" style="margin-top: -15px; margin-bottom: 15px;">{{ $message }}</div>
+  @enderror
 </div>
-
 
 
 
@@ -187,45 +204,89 @@
   
   btn.addEventListener('click', function(){ 
     if(pwd.type === 'password'){ 
-      // Mostrar contraseña → cambiar a ojo CERRADO
       pwd.type = 'text'; 
-      
-      // ========== OPCIÓN 1: MDI (Material Design Icons) ==========
-      icon.className = 'mdi mdi-eye-off'; // Ojo tachado/cerrado
-      
-      // ========== OPCIÓN 2: LineIcons ==========
-      // icon.className = 'lni lni-lock'; // Candado (alternativa porque LineIcons no tiene eye-off)
-      
+      icon.className = 'mdi mdi-eye-off';
       this.setAttribute('aria-label','Ocultar contraseña'); 
     } else { 
-      // Ocultar contraseña → cambiar a ojo ABIERTO
       pwd.type = 'password'; 
-      
-      // ========== OPCIÓN 1: MDI (Material Design Icons) ==========
-      icon.className = 'mdi mdi-eye'; // Ojo abierto
-      
-      // ========== OPCIÓN 2: LineIcons ==========
-      // icon.className = 'lni lni-eye'; // Ojo abierto
-      
+      icon.className = 'mdi mdi-eye';
       this.setAttribute('aria-label','Mostrar contraseña'); 
     } 
   }); 
 })(); 
-</script>
-<script>
+
 // Envío AJAX seguro para setup-form (evitar validación nativa)
 (function(){
   var form = document.getElementById('setup-form');
   var btn = document.getElementById('btn-create-account');
-  if (!form || !btn) return;
+  var termsCheckbox = document.getElementById('terms');
+  var termsLabel = document.querySelector('label[for="terms"]');
+  
+  if (!form || !btn || !termsCheckbox) return;
+  
   form.noValidate = true;
   form.addEventListener('submit', function(e){ e.preventDefault(); e.stopImmediatePropagation(); });
   form.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); e.stopImmediatePropagation(); } });
 
+  // Función para validar términos
+  function validateTerms() {
+    if (!termsCheckbox.checked) {
+      // Marcar en rojo
+      termsCheckbox.style.borderColor = '#eb6060';
+      termsCheckbox.style.outline = '#dc2626';
+      if (termsLabel) {
+        termsLabel.style.color = '#dc2626';
+      }
+      
+      // Mostrar mensaje de error
+      var alerts = document.getElementById('setup-alerts');
+      if (alerts) {
+        alerts.innerHTML = '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+          '<strong>¡Atención!</strong> Debes aceptar los Términos y Condiciones para continuar.' +
+          '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>' +
+          '</div>';
+      }
+      
+      // Scroll al checkbox
+      termsCheckbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      return false;
+    }
+    
+    // Limpiar estilos de error si está marcado
+    termsCheckbox.style.borderColor = '';
+    termsCheckbox.style.outline = '';
+    if (termsLabel) {
+      termsLabel.style.color = '';
+    }
+    
+    return true;
+  }
+
+  // Limpiar error cuando se marque el checkbox
+  termsCheckbox.addEventListener('change', function() {
+    if (this.checked) {
+      this.style.borderColor = '';
+      this.style.outline = '';
+      if (termsLabel) {
+        termsLabel.style.color = '';
+      }
+      // Limpiar alerta si existe
+      var alerts = document.getElementById('setup-alerts');
+      if (alerts) {
+        alerts.innerHTML = '';
+      }
+    }
+  });
+
   btn.addEventListener('click', function(){
+    // Primero validar términos
+    if (!validateTerms()) {
+      return;
+    }
+    
     btn.disabled = true;
     var fd = new FormData(form);
-    // limpiar alertas previas
     var alerts = document.getElementById('setup-alerts');
     if (alerts) alerts.innerHTML = '';
 
@@ -253,15 +314,13 @@
         html += '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>';
         html += '</div>';
         if (alerts) alerts.innerHTML = html;
-        // poner foco en el primer campo con error si existe
         var firstKey = Object.keys(errors)[0];
         if (firstKey) {
           var el = form.querySelector('[name="' + firstKey + '"]');
           if (el && typeof el.focus === 'function') el.focus();
         }
       });
-      // otros errores HTTP
-      if (alerts) alerts.innerHTML = '<div class="alert alert-danger" role="alert">Ocurrió un error. Intente nuevamente.</div>';
+      if (alerts) alerts.innerHTML = '<div class="alert alert-danger" role="alert">Ocurrió un error. Intenta nuevamente.</div>';
     }).catch(function(){
       if (alerts) alerts.innerHTML = '<div class="alert alert-danger" role="alert">Ocurrió un error de red.</div>';
     })

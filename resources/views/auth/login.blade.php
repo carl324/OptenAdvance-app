@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>@yield('title', 'Inicia sesión')</title>
-
+   <link rel="icon" type="image/png" href="/assets/images/logo/icon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Meta CSRF centralizado -->

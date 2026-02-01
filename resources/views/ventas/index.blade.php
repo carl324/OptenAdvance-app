@@ -14,7 +14,7 @@
       <div class="filter-row">
         <div class="filter-group">
           <label>Buscar venta</label>
-          <input type="text" placeholder="Cliente, factura, total, estado..." id="buscadorVentas">
+          <input type="text" placeholder="Factura, total, estado..." id="buscadorVentas">
         </div>
         
         <div class="filter-group date-filter">

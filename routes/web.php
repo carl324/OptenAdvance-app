@@ -10,13 +10,19 @@ use App\Http\Controllers\SetupController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\PersonalController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\DatabaseRestoreController;
 //use App\Http\Controllers\BackupConfigController;
 
 //Route::prefix('backup-config')->middleware('auth')->group(function() { Route::get('/carpetas', [App\Http\Controllers\BackupConfigController::class, 'listarCarpetas'])->name('backup.carpetas'); Route::get('/obtener', [App\Http\Controllers\BackupConfigController::class, 'obtener'])->name('backup.obtener'); Route::post('/guardar', [App\Http\Controllers\BackupConfigController::class, 'guardar'])->name('backup.guardar'); });
 
+
+Route::middleware(['auth', 'throttle:3,10'])->group(function () {
+    Route::post('/database/restore', [DatabaseRestoreController::class, 'restore'])->name('database.restore');
+});
 Route::get('/setup', [SetupController::class, 'show'])->name('setup.show');
 Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
-
+Route::view('/terminos-y-condiciones', 'legal.terminos')->name('legal.terminos');
+Route::view('/politica-de-privacidad', 'legal.privacidad')->name('legal.privacidad');
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -88,9 +94,5 @@ Route::middleware(['auth'])->group(function () {
         return view('soporte.index');
     })->name('soporte.index');
 
-    // Legal: términos y condiciones (vista estática)
-    Route::view('/terminos-y-condiciones', 'legal.terminos')->name('legal.terminos');
-
-    // Legal: política de privacidad (vista estática)
-    Route::view('/politica-de-privacidad', 'legal.privacidad')->name('legal.privacidad');
+    
 });

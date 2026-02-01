@@ -368,104 +368,294 @@
 
 
                     <!-- TAB 3: RESTAURAR DATOS -->
-                    <div class="tab-pane fade" id="auto" role="tabpanel">
-                        <div class="row">
-                            <div class="col-lg-8">
-                                <div style="background: white; padding: 28px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
-                                    <h6 style="font-size: 16px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">
-                                        <i class="lni lni-reload" style="color: #10b981; margin-right: 8px;"></i>
-                                        Restaurar base de datos
-                                    </h6>
-                                    <div style="margin-bottom: 24px;">
-                                        <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 12px;">
-                                            Seleccionar archivo de respaldo
-                                        </label>
-                                        <div style="position: relative;">
-                                            <input type="file" id="file-restore" accept=".sql,.db,.sqlite" style="display: none;">
-                                            <button type="button" onclick="document.getElementById('file-restore').click()" style="width: 100%; padding: 20px; border: 2px dashed #cbd5e1; border-radius: 12px; background: #f8fafc; cursor: pointer; transition: all 0.3s;">
-                                                <div style="text-align: center;">
-                                                    <i class="lni lni-cloud-upload" style="font-size: 48px; color: #94a3b8; display: block; margin-bottom: 12px;"></i>
-                                                    <div style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">Haz clic para seleccionar archivo</div>
-                                                    <div style="font-size: 13px; color: #64748b;">Formatos soportados: .sql, .db, .sqlite</div>
-                                                </div>
-                                            </button>
+<div class="tab-pane fade" id="auto" role="tabpanel">
+    <div class="row">
+        <div class="col-lg-8">
+            <div style="background: white; padding: 28px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+                <h6 style="font-size: 16px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">
+                    <i class="lni lni-reload" style="color: #10b981; margin-right: 8px;"></i>
+                    Restaurar base de datos
+                </h6>
+
+                <form id="form-restore" enctype="multipart/form-data" method="POST">
+                    @csrf
+                    
+                    <div style="margin-bottom: 24px;">
+                        <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 12px;">
+                            Seleccionar archivo de respaldo
+                        </label>
+                        <div style="position: relative;">
+                            <input type="file" id="file-restore" name="backup_file" accept=".sql" style="display: none;" required>
+                            
+                            <!-- Botón de selección de archivo -->
+                            <button type="button" id="upload-btn" onclick="document.getElementById('file-restore').click()" style="width: 100%; padding: 20px; border: 2px dashed #cbd5e1; border-radius: 12px; background: #f8fafc; cursor: pointer; transition: all 0.3s;">
+                                <!-- Placeholder inicial (se oculta cuando se selecciona archivo) -->
+                                <div id="upload-placeholder" style="text-align: center;">
+                                    <i class="lni lni-cloud-upload" style="font-size: 48px; color: #94a3b8; display: block; margin-bottom: 12px;"></i>
+                                    <div style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">Haz clic para seleccionar archivo</div>
+                                    <div style="font-size: 13px; color: #64748b;">Formato soportado: .sql (MySQL)</div>
+                                </div>
+                                
+                                <!-- Información del archivo seleccionado (oculto inicialmente) -->
+                                <div id="file-selected" style="display: none;">
+                                    <div style="display: flex; align-items: center; gap: 16px; justify-content: center;">
+                                        <i class="lni lni-database" style="font-size: 48px; color: #10b981;"></i>
+                                        <div style="text-align: left;">
+                                            <div style="font-size: 14px; font-weight: 600; color: #047857;" id="file-name-display"></div>
+                                            <div style="font-size: 12px; color: #059669;" id="file-size-display"></div>
                                         </div>
-                                        <div id="selected-file-info" style="margin-top: 12px; display: none;">
-                                            <div style="background: #ecfdf5; border: 1px solid #10b981; padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 12px;">
-                                                <i class="lni lni-checkmark-circle" style="font-size: 24px; color: #10b981;"></i>
-                                                <div style="flex: 1;">
-                                                    <div style="font-size: 13px; font-weight: 600; color: #047857;" id="file-name">archivo.sql</div>
-                                                    <div style="font-size: 12px; color: #059669;" id="file-size">2.5 MB</div>
-                                                </div>
-                                                <button type="button" onclick="clearFileSelection()" style="background: none; border: none; color: #dc2626; cursor: pointer;">
-                                                    <i class="lni lni-close" style="font-size: 20px;"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div style="background: #f0fdfa; border-left: 3px solid #10b981; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-                                        <h6 style="font-size: 14px; font-weight: 600; color: #047857; margin-bottom: 12px;">
-                                            <i class="lni lni-list" style="margin-right: 6px;"></i>
-                                            Proceso de restauración
-                                        </h6>
-                                        <ol style="margin: 0; padding-left: 20px; color: #059669; font-size: 13px; line-height: 1.8;">
-                                            <li>Se verificará la integridad del archivo</li>
-                                            <li>Se creará un respaldo automático de tus datos actuales</li>
-                                            <li>Se restaurarán los datos del archivo seleccionado</li>
-                                            <li>Se reiniciarán las conexiones de la base de datos</li>
-                                        </ol>
-                                    </div>
-
-                                    <div style="margin-bottom: 24px;">
-                                        <label style="font-size: 13px; color: #475569; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none;">
-                                            <input type="checkbox" id="confirm-restore" style="margin-top: 3px; width: 18px; height: 18px; cursor: pointer;">
-                                            <span style="flex: 1;">
-                                                <strong>Confirmo que entiendo que esta acción sobrescribirá todos mis datos actuales</strong> y que se creará un respaldo automático antes de restaurar.
-                                            </span>
-                                        </label>
-                                    </div>
-
-                                    <div style="display: flex; gap: 12px;">
-                                        <button class="main-btn light-btn btn-hover" style="flex: 1; padding: 12px; font-weight: 600;">
-                                            <i class="lni lni-close" style="margin-right: 6px;"></i>
-                                            Cancelar
-                                        </button>
-                                        <button class="main-btn btn-hover" style="flex: 1; padding: 12px; font-weight: 600; background: #10b981; color: white; border: none;" disabled id="btn-restore">
-                                            <i class="lni lni-reload" style="margin-right: 6px;"></i>
-                                            Iniciar restauración
-                                        </button>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="col-lg-4">
-                                <div style="background: #fef3c7; border-left: 3px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-                                        <div style="display: flex; align-items: start; gap: 12px;">
-                                            <i class="lni lni-warning" style="font-size: 20px; color: #d97706; margin-top: 2px;"></i>
-                                            <div>
-                                                <div style="font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 4px;">¡Importante! Esta acción sobrescribirá tus datos actuales</div>
-                                                <div style="font-size: 12px; color: #78350f;">Asegúrate de tener un respaldo reciente antes de restaurar. Todos los datos actuales serán reemplazados por los del archivo de respaldo.</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                                    <h6 style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 16px;">
-                                        <i class="lni lni-question-circle" style="color: #3b82f6; margin-right: 6px;"></i>
-                                        ¿Necesitas ayuda?
-                                    </h6>
-                                    <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.6;">
-                                        Si tienes dudas sobre el proceso de restauración, consulta nuestra documentación o contacta a soporte.
-                                    </p>
-                                    <a href="{{ route('soporte.index') }}" class="main-btn light-btn btn-hover w-100" style="padding: 10px; font-size: 13px;">
-                                        
-                                        Contactar a soporte
-                                    </a>
+                            </button>
+                            
+                            <!-- Spinner de carga (oculto inicialmente) -->
+                            <div id="upload-spinner" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 250, 252, 0.95); border-radius: 12px; align-items: center; justify-content: center;">
+                                <div style="text-align: center;">
+                                    <div class="spinner" style="width: 50px; height: 50px; border: 4px solid #e2e8f0; border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
+                                    <div style="font-size: 14px; font-weight: 600; color: #1e293b;">Restaurando...</div>
+                                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Espera un momento</div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <div style="background: #f0fdfa; border-left: 3px solid #10b981; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                        <h6 style="font-size: 14px; font-weight: 600; color: #047857; margin-bottom: 12px;">
+                            <i class="lni lni-list" style="margin-right: 6px;"></i>
+                            Proceso de restauración
+                        </h6>
+                        <ol style="margin: 0; padding-left: 20px; color: #059669; font-size: 13px; line-height: 1.8;">
+                            <li>Se verificará la integridad del archivo</li>
+                            <li>Se creará un respaldo automático de tus datos actuales</li>
+                            <li>Se restaurarán los datos del archivo seleccionado</li>
+                            <li>Se reiniciarán las conexiones de la base de datos</li>
+                        </ol>
+                    </div>
+
+                    <div style="margin-bottom: 24px;">
+                        <label style="font-size: 13px; color: #475569; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" id="confirm-restore" name="confirm_restore" value="1" style="margin-top: 3px; width: 18px; height: 18px; cursor: pointer;">
+                            <span style="flex: 1;">
+                                <strong>Confirmo que entiendo que esta acción sobrescribirá todos mis datos actuales</strong> y que se creará un respaldo automático antes de restaurar.
+                            </span>
+                        </label>
+                    </div>
+
+                    <div style="display: flex; gap: 12px;">
+                        <button type="button" class="main-btn light-btn btn-hover" onclick="resetForm()" style="flex: 1; padding: 12px; font-weight: 600;">
+                            <i class="lni lni-close" style="margin-right: 6px;"></i>
+                            Cancelar
+                        </button>
+                        <button type="submit" class="main-btn btn-hover" style="flex: 1; padding: 12px; font-weight: 600; background: #10b981; color: white; border: none;" disabled id="btn-restore">
+                            <i class="lni lni-reload" style="margin-right: 6px;"></i>
+                            Iniciar restauración
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div style="background: #fef3c7; border-left: 3px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                <div style="display: flex; align-items: start; gap: 12px;">
+                    <i class="lni lni-warning" style="font-size: 20px; color: #d97706; margin-top: 2px;"></i>
+                    <div>
+                        <div style="font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 4px;">¡Importante! Esta acción sobrescribirá tus datos actuales</div>
+                        <div style="font-size: 12px; color: #78350f;">Asegúrate de tener un respaldo reciente antes de restaurar. Todos los datos actuales serán reemplazados por los del archivo de respaldo.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <h6 style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 16px;">
+                    <i class="lni lni-question-circle" style="color: #3b82f6; margin-right: 6px;"></i>
+                    ¿Necesitas ayuda?
+                </h6>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.6;">
+                    Si tienes dudas sobre el proceso de restauración, consulta nuestra documentación o contacta a soporte.
+                </p>
+                <a href="{{ route('soporte.index') }}" class="main-btn light-btn btn-hover w-100" style="padding: 10px; font-size: 13px;">
+                    Contactar a soporte
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de resultado -->
+<div id="modal-result" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; text-align: center;">
+        <div id="modal-icon"></div>
+        <h3 id="modal-title" style="font-size: 20px; font-weight: 600; margin: 16px 0 8px;"></h3>
+        <p id="modal-message" style="font-size: 14px; color: #64748b; margin-bottom: 24px;"></p>
+        <button id="modal-close-btn" class="main-btn btn-hover" style="width: 100%; padding: 12px; font-weight: 600;">Aceptar</button>
+    </div>
+</div>
+
+<style>
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('file-restore');
+    const confirmCheckbox = document.getElementById('confirm-restore');
+    const btnRestore = document.getElementById('btn-restore');
+    const formRestore = document.getElementById('form-restore');
+    const uploadSpinner = document.getElementById('upload-spinner');
+    const uploadBtn = document.getElementById('upload-btn');
+    const modalResult = document.getElementById('modal-result');
+    const modalIcon = document.getElementById('modal-icon');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    // Manejar selección de archivo
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (file) {
+            // Validar extensión
+            if (!file.name.toLowerCase().endsWith('.sql')) {
+                showModal('error', 'Archivo no válido', 'Solo se permiten archivos .sql');
+                clearFileSelection();
+                return;
+            }
+
+            // Validar tamaño (500MB)
+            const maxSize = 500 * 1024 * 1024;
+            if (file.size > maxSize) {
+                showModal('error', 'Archivo muy grande', 'El archivo excede 500MB');
+                clearFileSelection();
+                return;
+            }
+
+            // Mostrar archivo en el botón
+            document.getElementById('file-name-display').textContent = file.name;
+            document.getElementById('file-size-display').textContent = formatFileSize(file.size);
+            document.getElementById('upload-placeholder').style.display = 'none';
+            document.getElementById('file-selected').style.display = 'block';
+            
+            validateForm();
+        }
+    });
+
+    // Validar checkbox de confirmación
+    confirmCheckbox.addEventListener('change', validateForm);
+
+    // Validar formulario completo
+    function validateForm() {
+        const hasFile = fileInput.files.length > 0;
+        const isConfirmed = confirmCheckbox.checked;
+        btnRestore.disabled = !(hasFile && isConfirmed);
+    }
+
+    // Enviar formulario
+    formRestore.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(formRestore);
+        
+        // Mostrar spinner DENTRO del contenedor
+        uploadBtn.style.pointerEvents = 'none';
+        uploadSpinner.style.display = 'flex';
+        btnRestore.disabled = true;
+
+        fetch('{{ route("database.restore") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            uploadSpinner.style.display = 'none';
+            uploadBtn.style.pointerEvents = 'auto';
+            
+            if (data.success) {
+                showModal(
+                    'success', 
+                    'Restauración exitosa', 
+                    'La base de datos se restauró correctamente.<br><small>Backup: ' + data.backup_created + '</small>'
+                );
+            } else {
+                showModal('error', 'Error en la restauración', data.error);
+                btnRestore.disabled = false;
+            }
+        })
+        .catch(error => {
+            uploadSpinner.style.display = 'none';
+            uploadBtn.style.pointerEvents = 'auto';
+            showModal('error', 'Error de conexión', 'No se pudo conectar con el servidor.');
+            btnRestore.disabled = false;
+        });
+    });
+
+    // Mostrar modal
+    function showModal(type, title, message) {
+        const icons = {
+            success: '<div style="width: 80px; height: 80px; background: #ecfdf5; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;"><i class="lni lni-checkmark" style="font-size: 48px; color: #10b981;"></i></div>',
+            error: '<div style="width: 80px; height: 80px; background: #fee2e2; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;"><i class="lni lni-close" style="font-size: 48px; color: #dc2626;"></i></div>'
+        };
+        
+        const colors = {
+            success: { bg: '#10b981', text: '#047857' },
+            error: { bg: '#dc2626', text: '#991b1b' }
+        };
+
+        modalIcon.innerHTML = icons[type];
+        modalTitle.textContent = title;
+        modalTitle.style.color = colors[type].text;
+        modalMessage.innerHTML = message;
+        modalCloseBtn.style.background = colors[type].bg;
+        modalCloseBtn.style.color = 'white';
+        modalCloseBtn.style.border = 'none';
+        modalResult.style.display = 'flex';
+        
+        modalCloseBtn.onclick = function() {
+            if (type === 'success') {
+                window.location.reload();
+            } else {
+                modalResult.style.display = 'none';
+            }
+        };
+        
+        // Si es éxito, recargar automáticamente después de 3 segundos
+        if (type === 'success') {
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        }
+    }
+
+    // Limpiar selección de archivo
+    window.clearFileSelection = function() {
+        fileInput.value = '';
+        document.getElementById('upload-placeholder').style.display = 'block';
+        document.getElementById('file-selected').style.display = 'none';
+        validateForm();
+    };
+
+    // Resetear formulario
+    window.resetForm = function() {
+        clearFileSelection();
+        confirmCheckbox.checked = false;
+        validateForm();
+    };
+
+    // Formatear tamaño de archivo
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+});
+</script>
                 </div>
             </div>
         </div>

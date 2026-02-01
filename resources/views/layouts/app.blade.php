@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>@yield('title', 'OptenAdvance')</title>
-
+  <link rel="icon" type="image/png" href="/assets/images/logo/icon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Meta CSRF centralizado -->
@@ -407,7 +407,7 @@
   <aside class="sidebar-nav-wrapper">
     <div class="navbar-logo">
       <a href="/">
-        <img src="/assets/images/logo/horizontal.svg" alt="logo" />
+        <img src="/assets/images/logo/horizontal.png" alt="logo" />
       </a>
     </div>
     <nav class="sidebar-nav">
@@ -478,7 +478,7 @@
           <li class="nav-item {{ activeRoute('ventas.create') }}">
             <a href="{{ route('ventas.create') }}" class="d-flex align-items-center px-3 py-3 rounded">
               <span class="icon fs-4 me-3">
-                <i class="lni lni-wallet"></i>
+                <i class="mdi mdi-cash-register"></i>
               </span>
               <span class="text fw-semibold">Caja</span>
             </a>
@@ -727,7 +727,7 @@
                 <div class="cierre-main-action">
                     <div class="group-input">
                         <label class="text-label">Efectivo Físico en Caja</label>
-                        <input type="text" inputmode="numeric" class="input-clean input-focus-blue" placeholder="0" autofocus data-raw="0">
+                        <input type="text" inputmode="numeric" class="input-clean input-focus-blue" value="0" placeholder="0" autofocus data-raw="0">
                         
                         <div class="badge-diff">
                             Diferencia detectada: <span style="color: #f43f5e;">$0</span>
@@ -808,8 +808,8 @@
 
       <div class="col-md-6">
         <div class="terms d-flex justify-content-center justify-content-md-end">
-          <a href="/terminos-y-condiciones" class="text-sm">Términos y Condiciones</a>
-          <a href="/politica-de-privacidad" class="text-sm ml-15">Política de Privacidad</a>
+          <a href="{{ route('legal.terminos') }}" class="text-sm">Términos y Condiciones</a>
+          <a href="{{ route('legal.privacidad') }}" class="text-sm ml-15">Política de Privacidad</a>
         </div>
       </div>
     </div>

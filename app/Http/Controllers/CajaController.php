@@ -84,7 +84,7 @@ class CajaController extends Controller
         ]);
 
         $caja = Caja::create([
-            'user_id' => Auth::id(),
+            'user_id' => Auth::id(), // Usuario que abrió
             'fecha_apertura' => now(),
             'monto_apertura' => $data['monto_apertura'],
             'nota_apertura' => $data['nota_apertura'] ?? null,
@@ -148,7 +148,7 @@ class CajaController extends Controller
             'diferencia' => $diferencia,
             'nota_cierre' => $data['nota_cierre'] ?? null,
             'estado' => 'cerrada',
-            'user_id' => Auth::id(),
+            'user_cierre_id' => Auth::id(), // Usuario que cerró
         ]);
 
         $printUrl = null;
@@ -168,6 +168,9 @@ class CajaController extends Controller
         if ($caja->estado !== 'cerrada') {
             return redirect()->route('ventas.create');
         }
+
+        // Cargar relaciones de usuarios
+        $caja->load(['usuarioApertura', 'usuarioCierre']);
 
         return view('caja.cierre-print', compact('caja'));
     }

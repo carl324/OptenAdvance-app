@@ -79,7 +79,7 @@ class SetupController extends Controller
             // Login the newly created admin and redirect to dashboard
             if ($user) {
                 Auth::login($user);
-                return redirect('/productos');
+                return redirect('/onboarding');
             }
 
             return redirect('/login');

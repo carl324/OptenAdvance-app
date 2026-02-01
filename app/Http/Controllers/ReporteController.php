@@ -459,93 +459,97 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
     /**
      * Exporta el reporte de cajas a Excel
      */
-    private function exportCajas($sheet, $filtros)
-    {
-        $sheet->setTitle('Cajas');
+  private function exportCajas($sheet, $filtros)
+{
+    $sheet->setTitle('Cajas');
 
-        // Headers solicitados
-        $headers = [
-            'Fecha apertura',
-            'Fecha cierre',
-            'Usuario',
-            'Estado',
-            'Monto apertura',
-            'Total ventas',
-            'Total efectivo',
-            'Monto cierre calculado',
-            'Monto cierre real',
-            'Diferencia',
-            'Nota apertura',
-            'Nota cierre',
-        ];
+    // Headers actualizados con usuario apertura y usuario cierre
+    $headers = [
+        'Fecha apertura',
+        'Fecha cierre',
+        'Usuario apertura',
+        'Usuario cierre',
+        'Estado',
+        'Monto apertura',
+        'Total ventas',
+        'Total efectivo',
+        'Monto cierre calculado',
+        'Monto cierre real',
+        'Diferencia',
+        'Nota apertura',
+        'Nota cierre',
+    ];
 
-        // Escribir headers
-        $col = 'A';
-        $headerCells = [];
-        foreach ($headers as $h) {
-            $sheet->setCellValue($col . '1', $h);
-            $headerCells[] = $col . '1';
-            $col++;
-        }
-
-        // Aplicar estilos al header
-        $this->aplicarEstilosHeader($sheet, $headerCells);
-
-        // Obtener datos con JOIN a users para traer el nombre
-        $rows = \DB::table('cajas as c')
-            ->leftJoin('users as u', 'u.id', '=', 'c.user_id')
-            ->whereBetween('c.fecha_apertura', [$filtros['fecha_inicio'] . ' 00:00:00', $filtros['fecha_fin'] . ' 23:59:59'])
-            ->orderBy('c.fecha_apertura', 'desc')
-            ->select(
-                'c.fecha_apertura',
-                'c.fecha_cierre',
-                \DB::raw('u.name as usuario'),
-                'c.estado',
-                'c.monto_apertura',
-                'c.total_ventas',
-                'c.total_efectivo',
-                'c.monto_cierre_calculado',
-                'c.monto_cierre_real',
-                'c.diferencia',
-                'c.nota_apertura',
-                'c.nota_cierre'
-            )
-            ->get();
-
-        $row = 2;
-        foreach ($rows as $r) {
-            // Formatear fechas
-            $fechaA = $r->fecha_apertura ? (\Carbon\Carbon::parse($r->fecha_apertura)->format('Y-m-d H:i')) : '';
-            $fechaC = $r->fecha_cierre ? (\Carbon\Carbon::parse($r->fecha_cierre)->format('Y-m-d H:i')) : 'Abierta';
-
-            $sheet->setCellValue('A' . $row, $fechaA);
-            $sheet->setCellValue('B' . $row, $fechaC);
-            $sheet->setCellValue('C' . $row, $r->usuario ?? '-');
-            $sheet->setCellValue('D' . $row, $r->estado ?? '-');
-
-            // Montos como números
-            $sheet->setCellValue('E' . $row, $r->monto_apertura !== null ? (float)$r->monto_apertura : null);
-            $sheet->setCellValue('F' . $row, $r->total_ventas !== null ? (float)$r->total_ventas : null);
-            $sheet->setCellValue('G' . $row, $r->total_efectivo !== null ? (float)$r->total_efectivo : null);
-            $sheet->setCellValue('H' . $row, $r->monto_cierre_calculado !== null ? (float)$r->monto_cierre_calculado : null);
-            $sheet->setCellValue('I' . $row, $r->monto_cierre_real !== null ? (float)$r->monto_cierre_real : null);
-            $sheet->setCellValue('J' . $row, $r->diferencia !== null ? (float)$r->diferencia : null);
-
-            $sheet->setCellValue('K' . $row, $r->nota_apertura ?? '-');
-            $sheet->setCellValue('L' . $row, $r->nota_cierre ?? '-');
-
-            $row++;
-        }
-
-        // Aplicar formato numérico a columnas E-J (montos)
-        $currencyRange = 'E2:J' . max(2, $row - 1);
-        $sheet->getStyle($currencyRange)->getNumberFormat()->setFormatCode('#,##0');
-
-        // Auto size
-        foreach (range('A', 'L') as $columnID) {
-            $sheet->getColumnDimension($columnID)->setAutoSize(true);
-        }
+    // Escribir headers
+    $col = 'A';
+    $headerCells = [];
+    foreach ($headers as $h) {
+        $sheet->setCellValue($col . '1', $h);
+        $headerCells[] = $col . '1';
+        $col++;
     }
+
+    // Aplicar estilos al header
+    $this->aplicarEstilosHeader($sheet, $headerCells);
+
+    // Obtener datos con JOIN a users dos veces (para apertura y cierre)
+    $rows = \DB::table('cajas as c')
+        ->leftJoin('users as ua', 'ua.id', '=', 'c.user_id')
+        ->leftJoin('users as uc', 'uc.id', '=', 'c.user_cierre_id')
+        ->whereBetween('c.fecha_apertura', [$filtros['fecha_inicio'] . ' 00:00:00', $filtros['fecha_fin'] . ' 23:59:59'])
+        ->orderBy('c.fecha_apertura', 'desc')
+        ->select(
+            'c.fecha_apertura',
+            'c.fecha_cierre',
+            \DB::raw('ua.name as usuario_apertura'),
+            \DB::raw('uc.name as usuario_cierre'),
+            'c.estado',
+            'c.monto_apertura',
+            'c.total_ventas',
+            'c.total_efectivo',
+            'c.monto_cierre_calculado',
+            'c.monto_cierre_real',
+            'c.diferencia',
+            'c.nota_apertura',
+            'c.nota_cierre'
+        )
+        ->get();
+
+    $row = 2;
+    foreach ($rows as $r) {
+        // Formatear fechas
+        $fechaA = $r->fecha_apertura ? (\Carbon\Carbon::parse($r->fecha_apertura)->format('Y-m-d H:i')) : '';
+        $fechaC = $r->fecha_cierre ? (\Carbon\Carbon::parse($r->fecha_cierre)->format('Y-m-d H:i')) : 'Abierta';
+
+        $sheet->setCellValue('A' . $row, $fechaA);
+        $sheet->setCellValue('B' . $row, $fechaC);
+        $sheet->setCellValue('C' . $row, $r->usuario_apertura ?? '-');
+        $sheet->setCellValue('D' . $row, $r->usuario_cierre ?? '-');
+        $sheet->setCellValue('E' . $row, $r->estado ?? '-');
+
+        // Montos como números
+        $sheet->setCellValue('F' . $row, $r->monto_apertura !== null ? (float)$r->monto_apertura : null);
+        $sheet->setCellValue('G' . $row, $r->total_ventas !== null ? (float)$r->total_ventas : null);
+        $sheet->setCellValue('H' . $row, $r->total_efectivo !== null ? (float)$r->total_efectivo : null);
+        $sheet->setCellValue('I' . $row, $r->monto_cierre_calculado !== null ? (float)$r->monto_cierre_calculado : null);
+        $sheet->setCellValue('J' . $row, $r->monto_cierre_real !== null ? (float)$r->monto_cierre_real : null);
+        $sheet->setCellValue('K' . $row, $r->diferencia !== null ? (float)$r->diferencia : null);
+
+        $sheet->setCellValue('L' . $row, $r->nota_apertura ?? '-');
+        $sheet->setCellValue('M' . $row, $r->nota_cierre ?? '-');
+
+        $row++;
+    }
+
+    // Aplicar formato numérico a columnas F-K (montos)
+    $currencyRange = 'F2:K' . max(2, $row - 1);
+    $sheet->getStyle($currencyRange)->getNumberFormat()->setFormatCode('#,##0');
+
+    // Auto size
+    foreach (range('A', 'M') as $columnID) {
+        $sheet->getColumnDimension($columnID)->setAutoSize(true);
+    }
+}
 
     /**
      * Sanitiza una fecha recibida por input.
@@ -620,30 +624,35 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
 
         // Obtener datos según tipo
         if ($tipo === 'cajas') {
-            // Cajas: usar tabla cajas y hacer LEFT JOIN con users para obtener el nombre
-            $query = \DB::table('cajas as c')
-                ->leftJoin('users as u', 'u.id', '=', 'c.user_id')
-                ->whereBetween('c.created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
-                ->when($search, function ($q) use ($search) {
-                    $term = '%' . strtolower($search) . '%';
-                    return $q->whereRaw('LOWER(u.name) LIKE ?', [$term])
-                             ->orWhereRaw('LOWER(c.estado) LIKE ?', [$term]);
-                })
-                ->select(
-                    'c.fecha_apertura',
-                    'c.fecha_cierre',
-                    \DB::raw('u.name as user_name'),
-                    'c.total_ventas',
-                    'c.total_efectivo',
-                    'c.monto_cierre_calculado',
-                    'c.monto_cierre_real',
-                    'c.diferencia',
-                    'c.estado'
-                )
-                ->orderBy('c.fecha_apertura', 'desc');
+    // Cajas: LEFT JOIN con users dos veces para apertura y cierre
+    $query = \DB::table('cajas as c')
+        ->leftJoin('users as ua', 'ua.id', '=', 'c.user_id')
+        ->leftJoin('users as uc', 'uc.id', '=', 'c.user_cierre_id')
+        ->whereBetween('c.created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+        ->when($search, function ($q) use ($search) {
+            $term = '%' . strtolower($search) . '%';
+            return $q->where(function($subQ) use ($term) {
+                $subQ->whereRaw('LOWER(ua.name) LIKE ?', [$term])
+                     ->orWhereRaw('LOWER(uc.name) LIKE ?', [$term])
+                     ->orWhereRaw('LOWER(c.estado) LIKE ?', [$term]);
+            });
+        })
+        ->select(
+            'c.fecha_apertura',
+            'c.fecha_cierre',
+            \DB::raw('ua.name as user_apertura_name'),
+            \DB::raw('uc.name as user_cierre_name'),
+            'c.total_ventas',
+            'c.total_efectivo',
+            'c.monto_cierre_calculado',
+            'c.monto_cierre_real',
+            'c.diferencia',
+            'c.estado'
+        )
+        ->orderBy('c.fecha_apertura', 'desc');
 
-            $data = $query->paginate(15)->appends($request->query());
-        } elseif ($tipo === 'movimientos') {
+    $data = $query->paginate(15)->appends($request->query());
+} elseif ($tipo === 'movimientos') {
             // Eager loading de producto + búsqueda server-side
             $query = \App\Models\InventarioMovimiento::with('producto')
                 ->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
@@ -686,19 +695,20 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
                     'origen' => $item->origen,
                 ];
             } elseif ($tipo === 'cajas') {
-                // El query de cajas devuelve columnas ya seleccionadas y con alias user_name
-                return [
-                    'fecha_apertura' => $item->fecha_apertura,
-                    'fecha_cierre' => $item->fecha_cierre,
-                    'user_name' => $item->user_name,
-                    'total_ventas' => isset($item->total_ventas) ? (float)$item->total_ventas : null,
-                    'total_efectivo' => isset($item->total_efectivo) ? (float)$item->total_efectivo : null,
-                    'monto_cierre_calculado' => isset($item->monto_cierre_calculado) ? (float)$item->monto_cierre_calculado : null,
-                    'monto_cierre_real' => isset($item->monto_cierre_real) ? (float)$item->monto_cierre_real : null,
-                    'diferencia' => isset($item->diferencia) ? (float)$item->diferencia : null,
-                    'estado' => $item->estado,
-                ];
-            } else {
+    // El query de cajas devuelve columnas con user_apertura_name y user_cierre_name
+    return [
+        'fecha_apertura' => $item->fecha_apertura,
+        'fecha_cierre' => $item->fecha_cierre,
+        'user_apertura_name' => $item->user_apertura_name,
+        'user_cierre_name' => $item->user_cierre_name,
+        'total_ventas' => isset($item->total_ventas) ? (float)$item->total_ventas : null,
+        'total_efectivo' => isset($item->total_efectivo) ? (float)$item->total_efectivo : null,
+        'monto_cierre_calculado' => isset($item->monto_cierre_calculado) ? (float)$item->monto_cierre_calculado : null,
+        'monto_cierre_real' => isset($item->monto_cierre_real) ? (float)$item->monto_cierre_real : null,
+        'diferencia' => isset($item->diferencia) ? (float)$item->diferencia : null,
+        'estado' => $item->estado,
+    ];
+} else {
                 return [
                     'id' => $item->id,
                     'fecha' => $item->created_at,
@@ -831,7 +841,8 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
                 ->get();
         } elseif ($tipo === 'cajas') {
             $cajasQuery = \DB::table('cajas as c')
-                ->leftJoin('users as u', 'u.id', '=', 'c.user_id')
+                ->leftJoin('users as ua', 'ua.id', '=', 'c.user_id')
+                ->leftJoin('users as uc', 'uc.id', '=', 'c.user_cierre_id')
                 ->whereBetween('c.fecha_apertura', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
 
             $count = (clone $cajasQuery)->count();
@@ -847,7 +858,8 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
                 ->select(
                     'c.fecha_apertura',
                     'c.fecha_cierre',
-                    \DB::raw('u.name as usuario'),
+                    \DB::raw('ua.name as usuario_apertura'),
+                    \DB::raw('uc.name as usuario_cierre'),
                     'c.estado',
                     'c.monto_apertura',
                     'c.total_ventas',
@@ -910,8 +922,22 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
                 $row++;
             }
         } elseif ($tipo === 'cajas') {
-            // Headers para cajas
-            $headers = ['Fecha apertura','Fecha cierre','Usuario','Estado','Monto apertura','Total ventas','Total efectivo','Monto cierre calculado','Monto cierre real','Diferencia','Nota apertura','Nota cierre'];
+            // Headers para cajas - ACTUALIZADO
+            $headers = [
+                'Fecha apertura',
+                'Fecha cierre',
+                'Usuario apertura',
+                'Usuario cierre',
+                'Estado',
+                'Monto apertura',
+                'Total ventas',
+                'Total efectivo',
+                'Monto cierre calculado',
+                'Monto cierre real',
+                'Diferencia',
+                'Nota apertura',
+                'Nota cierre'
+            ];
 
             $col = 'A';
             $headerCells = [];
@@ -929,23 +955,25 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
 
                 $sheet->setCellValue('A' . $row, $fechaA);
                 $sheet->setCellValue('B' . $row, $fechaC);
-                $sheet->setCellValue('C' . $row, $r->usuario ?? '-');
-                $sheet->setCellValue('D' . $row, $r->estado ?? '-');
+                $sheet->setCellValue('C' . $row, $r->usuario_apertura ?? '-');
+                $sheet->setCellValue('D' . $row, $r->usuario_cierre ?? '-');
+                $sheet->setCellValue('E' . $row, $r->estado ?? '-');
 
-                $sheet->setCellValue('E' . $row, $r->monto_apertura !== null ? (float)$r->monto_apertura : null);
-                $sheet->setCellValue('F' . $row, $r->total_ventas !== null ? (float)$r->total_ventas : null);
-                $sheet->setCellValue('G' . $row, $r->total_efectivo !== null ? (float)$r->total_efectivo : null);
-                $sheet->setCellValue('H' . $row, $r->monto_cierre_calculado !== null ? (float)$r->monto_cierre_calculado : null);
-                $sheet->setCellValue('I' . $row, $r->monto_cierre_real !== null ? (float)$r->monto_cierre_real : null);
-                $sheet->setCellValue('J' . $row, $r->diferencia !== null ? (float)$r->diferencia : null);
+                $sheet->setCellValue('F' . $row, $r->monto_apertura !== null ? (float)$r->monto_apertura : null);
+                $sheet->setCellValue('G' . $row, $r->total_ventas !== null ? (float)$r->total_ventas : null);
+                $sheet->setCellValue('H' . $row, $r->total_efectivo !== null ? (float)$r->total_efectivo : null);
+                $sheet->setCellValue('I' . $row, $r->monto_cierre_calculado !== null ? (float)$r->monto_cierre_calculado : null);
+                $sheet->setCellValue('J' . $row, $r->monto_cierre_real !== null ? (float)$r->monto_cierre_real : null);
+                $sheet->setCellValue('K' . $row, $r->diferencia !== null ? (float)$r->diferencia : null);
 
-                $sheet->setCellValue('K' . $row, $r->nota_apertura ?? '-');
-                $sheet->setCellValue('L' . $row, $r->nota_cierre ?? '-');
+                $sheet->setCellValue('L' . $row, $r->nota_apertura ?? '-');
+                $sheet->setCellValue('M' . $row, $r->nota_cierre ?? '-');
 
                 $row++;
             }
 
-            $sheet->getStyle('E2:J' . max(2, $row - 1))->getNumberFormat()->setFormatCode('#,##0');
+            // ACTUALIZADO: rango de formato ahora es F-K (porque agregamos columna)
+            $sheet->getStyle('F2:K' . max(2, $row - 1))->getNumberFormat()->setFormatCode('#,##0');
 
         } else {
             // Headers para ventas con detalles (añadimos Vendedor y Rol)
@@ -1028,7 +1056,6 @@ $sheet->getStyle('A' . $row . ':O' . $row)
       ->getStartColor()
       ->setRGB($colores[$colorActual]);
 
-$ivaVenta += ($detalle->iva ?? 0);
 $row++;
 
                     if ($venta->estado === 'completada') {

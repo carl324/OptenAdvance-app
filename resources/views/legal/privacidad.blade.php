@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <link rel="icon" type="image/png" href="/assets/images/logo/icon.png" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Política de Privacidad · OptenAdvance</title>
@@ -232,7 +233,7 @@
   </section>
 
   <footer class="footer">
-    © 2026 OptenAdvance · v1.0.0
+    © {{ date('Y') }} OptenAdvance · v{{ config('app.version') }}
   </footer>
 </main>
 
