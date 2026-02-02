@@ -389,10 +389,10 @@ textarea {
               <i class="lni lni-unlock me-2"></i>
               Abrir caja
             </button>
-            <button class="main-btn light-btn btn-hover">
-              <i class="lni lni-bar-chart me-2"></i>
-              Ver reportes
-            </button>
+            <a href="{{ route('ventas.index') }}" style="color: inherit; text-decoration: none;"><button class="main-btn light-btn btn-hover {{ activeRoute(['ventas.index', 'ventas.show', 'ventas.devolucion', 'ventas.factura*']) }}">
+              <i class="lni lni-revenue"></i>
+               Ver ventas 
+            </button> </a>
           </div>
         </div>
         

@@ -7,6 +7,9 @@ use App\Models\Venta;
 use Carbon\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use App\Services\LicenseService;
+use App\Http\Controllers\LicenseNotificationController;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +26,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::composer('*', function ($view) {
+
+    $licenseService = app(LicenseService::class);
+    $licenseData = $licenseService->uiData();
+    
+    $notification = app(LicenseNotificationController::class)
+        ->check($licenseService);
+
+    $view->with([
+        'data' => $licenseData,
+        'licenseNotification' => $notification,
+    ]);
+});
+
+         View::composer('*', function ($view) {
+        $view->with('data', app(LicenseService::class)->uiData());
+    });
         View::composer('layouts.app', function ($view) {
             $cajaActual = Caja::where('estado', 'abierta')->first();
             $cajaAbierta = (bool) $cajaActual;

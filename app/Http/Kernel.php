@@ -27,11 +27,13 @@ class Kernel extends HttpKernel
     ];
 
     /**
-     * The application's route middleware.
+     * The application's middleware aliases.
      *
      * @var array
      */
-    protected $routeMiddleware = [
+    protected $middlewareAliases = [  // ← CAMBIA ESTO
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'check.license' => \App\Http\Middleware\CheckLicense::class,
+        // otros middlewares
     ];
 }

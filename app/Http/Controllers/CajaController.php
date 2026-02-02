@@ -52,7 +52,7 @@ class CajaController extends Controller
             ->sum('total');
 
         // monto_cierre_calculado = monto_apertura + total_efectivo - devoluciones_en_efectivo
-        $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo - $devolucionesEfectivo;
+        $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
 
         return response()->json([
             'success' => true,
@@ -134,7 +134,7 @@ class CajaController extends Controller
             ->where('estado', 'anulada')
             ->sum('total');
 
-        $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo - $devolucionesEfectivo;
+        $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
 
         $diferencia = (float) $data['monto_cierre_real'] - $montoCierreCalculado;
 

@@ -394,6 +394,300 @@
         font-size: 13px;
         color: #64748b;
     }
+    .lic-modal-container .modal-content {
+    border: none;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 40px 100px -20px rgba(14, 39, 97, 0.2);
+    background: #ffffff;
+}
+
+@media (min-width: 992px) {
+    .lic-modal-size { max-width: 820px !important; }
+}
+
+.lic-modal-grid {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    min-height: 480px;
+}
+
+/* Lado izquierdo - Fondo con Animación de Luces */
+.lic-modal-image-side {
+    background: #004cff;
+    /* Gradiente animado de fondo */
+    background: linear-gradient(135deg, #004cff 0%, #002db3 100%);
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Esfera de luz 1 */
+.lic-modal-image-side::before {
+    content: '';
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    top: -100px;
+    left: -100px;
+    animation: lic-float-light 8s infinite alternate ease-in-out;
+}
+
+/* Esfera de luz 2 */
+.lic-modal-image-side::after {
+    content: '';
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    bottom: -50px;
+    right: -50px;
+    animation: lic-float-light 12s infinite alternate-reverse ease-in-out;
+}
+
+/* Animación de las luces de fondo */
+@keyframes lic-float-light {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(30px, 40px) scale(1.2); }
+}
+
+.lic-modal-cert-icon {
+    width: 95px;
+    height: 95px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 2;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Sutil pulso al icono */
+}
+
+@keyframes lic-icon-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.1); }
+    50% { transform: scale(1.03); box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.05); }
+}
+
+.lic-modal-cert-icon i {
+    font-size: 45px;
+    color: #ffffff;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+}
+
+.lic-modal-cert-title {
+    font-size: 25px;
+    font-weight: 800;
+    color: #ffffff;
+    text-align: center;
+    z-index: 2;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Lado derecho - Info */
+.lic-modal-info-side {
+    padding: 40px 45px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.lic-modal-status-badge {
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 15px;
+}
+
+.lic-modal-status-active {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #dcfce7;
+}
+.lic-modal-status-trial {
+    background: #eff6ff;   /* azul clarito */
+    color: #3b82f6;        /* azul */
+    border: 1px solid #bfdbfe; /* borde azulito */
+}
+
+.lic-modal-status-expired {
+    background: #fef2f2;   /* rojo clarito */
+    color: #ef4444;        /* rojo */
+    border: 1px solid #fecaca; /* borde rojo */
+}
+.lic-modal-title-main {
+    font-size: 26px;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+}
+
+.lic-modal-info-card {
+    padding: 16px 20px;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    transition: all 0.3s ease;
+}
+
+.lic-modal-info-card:hover {
+    background: #fff;
+    border-color: #e2e8f0;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.02);
+}
+
+.lic-modal-info-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.lic-modal-info-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: 3px;
+}
+
+.lic-modal-permission-item {
+    border: none;
+    background: #fff;
+    padding: 6px 0;
+    font-size: 14px;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lic-modal-check-icon {
+    color: #0f6bff;
+    font-size: 16px;
+}
+
+.lic-modal-btn-close {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 14px;
+    background: #0f6bff;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 15px;
+    transition: all 0.3s;
+    margin-top: 10px;
+    box-shadow: 0 4px 15px rgba(46, 108, 255, 0.2);
+}
+
+.lic-modal-btn-close:hover {
+    background: #0f6bff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(46, 108, 255, 0.3);
+}
+/* ============================================
+   MODAL LICENCIA EXPIRADA - CLEAN RED
+   ============================================ */
+
+.lic-expired-size { max-width: 750px !important; }
+
+.lic-expired-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    min-height: 400px;
+    overflow: hidden;
+}
+
+/* Lado Izquierdo: IMAGEN */
+.lic-expired-img-side {
+    background-image: url('/assets/images/cards/image.jpg'); 
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.lic-expired-img-side::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(220, 38, 38, 0.2), transparent);
+}
+
+/* Lado Derecho */
+.lic-expired-info-side {
+    padding: 50px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: left;
+}
+
+/* Header icon + title */
+.lic-expired-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 15px;
+}
+
+.lic-expired-icon-inline {
+    width: 48px;
+    height: 48px;
+    background: #fef2f2;
+    color: #dc2626;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.lic-expired-title {
+    font-size: 28px;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -1px;
+    margin: 0;
+}
+
+.lic-expired-text {
+    font-size: 15px;
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+.lic-expired-btn-renew {
+    background: #1062fa;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    transition: all 0.3s;
+    text-decoration: none;
+    text-align: center;
+    box-shadow: 0 10px 15px -3px rgba(38, 87, 220, 0.2);
+}
   </style>
 </head>
 
@@ -636,16 +930,23 @@
                     </div>
                   </button>
                   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profile">
+                    
+                    @if($userRole === 'admin')
+                      <li>
+                        <a href="{{ route('empresa.index') }}"> <i class="lni lni-apartment"></i> Empresa </a>
+                      </li>
+                      <li>
+  <a href="#" data-bs-toggle="modal" data-bs-target="#modalLicencia"> 
+    <i class="mdi mdi-certificate"></i> Licencia 
+  </a>
+</li>
+                    @endif
+                    
                     <li>
                       <a href="{{ route('soporte.index') }}">
                         <i class="lni lni-cog"></i> Soporte
                       </a>
                     </li>
-                    @if($userRole === 'admin')
-                      <li>
-                        <a href="{{ route('empresa.index') }}"> <i class="lni lni-apartment"></i> Empresa </a>
-                      </li>
-                    @endif
                     <li class="divider"></li>
                     <li>
   <form method="POST" action="{{ route('logout') }}">
@@ -667,19 +968,154 @@
         </div>
       </div>
     </header>
-    <!-- ========== header end =========== -->
-
-    <!-- ========== MAIN CONTENT AREA ========== -->
-    <!-- INSERTAR CONTENIDO PRINCIPAL AQUI -->
-
-    <!-- ========== MAIN CONTENT AREA ========== -->
-
-    <!-- ========== footer start =========== -->
 
     @yield('content')
 
     @if($cajaAbierta)
   
+
+<div class="modal fade lic-modal-container" id="modalLicencia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered lic-modal-size">
+        <div class="modal-content">
+            <div class="lic-modal-grid">
+                
+                <div class="lic-modal-image-side">
+                    <div class="lic-modal-cert-icon">
+                        <i class="mdi mdi-certificate-outline"></i>
+                    </div>
+                    <h3 class="lic-modal-cert-title">OptenAdvance</h3>
+                    <p style="color: #94a3b8; font-size: 14px; margin-top: 5px;">
+                        @if($data['status'] === 'active')
+                            Licencia Corporativa
+                        @elseif($data['status'] === 'expired')
+                            Licencia Vencida
+                        @else
+                            Prueba Gratuita
+                        @endif
+                    </p>
+                </div>
+
+                <div class="lic-modal-info-side">
+                    <div class="lic-modal-header text-center text-md-start">
+                        <span class="lic-modal-status-badge 
+    {{ $data['status'] === 'active' ? 'lic-modal-status-active' : ($data['status'] === 'expired' ? 'lic-modal-status-expired' : 'lic-modal-status-trial') }}">
+    <span style="width: 8px; height: 8px; 
+        background: {{ $data['status'] === 'active' ? '#16a34a' : ($data['status'] === 'expired' ? '#ef4444' : '#3b82f6') }};
+        border-radius: 50%;"></span>
+    @if($data['status'] === 'active')
+        Suscripción Activa
+    @elseif($data['status'] === 'expired')
+        Licencia Vencida
+    @else
+        Modo de Prueba
+    @endif
+</span>
+
+                        <h2 class="lic-modal-title-main">Tu Licencia</h2>
+                        <p style="color: #64748b; font-size: 15px; margin-bottom: 30px;">
+                            Aquí tienes los detalles de tu plan actual.
+                        </p>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="lic-modal-info-card">
+                                <span class="lic-modal-info-label">Fecha de Activación</span>
+                                <div class="lic-modal-info-value">
+                                    {{ $data['start_at'] ?? '-' }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="lic-modal-info-card">
+                                <span class="lic-modal-info-label">Fecha de Vencimiento</span>
+                                <div class="lic-modal-info-value">
+                                    {{ $data['end_at'] ?? '-' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+    <h4 style="font-size: 13px; font-weight: 800; text-transform: uppercase; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 15px;">
+        Descripcion de tu plan actual
+    </h4>
+    <div class="lic-modal-permissions-list">
+        @if($data['status'] === 'active')
+            <div class="lic-modal-permission-item">
+                <i class="mdi mdi-check-circle-outline lic-modal-check-icon"></i>
+                <span>Acceso ilimitado a todas las funciones de OptenAdvance</span>
+            </div>
+            <div class="lic-modal-permission-item">
+                <i class="mdi mdi-check-circle-outline lic-modal-check-icon"></i>
+                <span>Soporte Técnico VIP y acceso a futuras actualizaciones (primeros 3 meses)</span>
+            </div>
+        @elseif($data['status'] === 'trial' || $data['status'] === 'trial_active' || $data['status'] === 'trial_first')
+            <div class="lic-modal-permission-item d-flex align-items-start">
+    <i class="mdi mdi-information-outline lic-modal-check-icon me-2 mt-1"></i>
+    <span>
+        Actualmente estás usando una licencia de prueba. Puedes explorar todas las funciones, pero recuerda que una vez terminado el periodo de prueba, deberás contactar con soporte para renovación.
+    </span>
+</div>
+
+        @elseif($data['status'] === 'expired')
+            <div class="lic-modal-permission-item d-flex align-items-start">
+                <i style="color: #ef4444" class="mdi mdi-alert-circle-outline lic-modal-check-icon me-2 mt-1"></i>
+                <span>Tu licencia ha terminado. Solo puedes ver las ventas, pero no agregar productos ni exportar a Excel. Contacta con soporte para reactivar tu suscripción y desbloquear todas las funciones.</span>
+            </div>
+        @endif
+    </div>
+</div>
+
+
+                    <div class="lic-modal-footer">
+                        <button type="button" class="lic-modal-btn-close" data-bs-dismiss="modal">
+                            Entendido
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="modalExpirado" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered lic-expired-size">
+        <div class="modal-content" style="border: none; border-radius: 24px; overflow: hidden;">
+            <div class="lic-expired-grid">
+                
+                <div class="lic-expired-img-side"></div>
+
+                <div class="lic-expired-info-side">
+
+                    <div class="lic-expired-header">
+                        <div class="lic-expired-icon-inline">
+                            <i class="mdi mdi-alert-circle-outline"></i>
+                        </div>
+                        <h2 class="lic-expired-title">Licencia expirada</h2>
+                    </div>
+
+                    <p class="lic-expired-text">
+                        Tu periodo de licencia ha finalizado.  
+                        Actualmente el sistema se encuentra en <strong>modo lectura</strong> para proteger tu información.
+                        <br><br>
+                        Renueva tu suscripción y recupera acceso completo a ventas, facturación, reportes y exportaciones sin interrupciones.
+                    </p>
+
+                    <a href="/soporte" class="lic-expired-btn-renew">
+                        Renovar Ahora
+                    </a>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div class="modal fade modal-alegra-final" id="modalCerrarCaja" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-alegra-width">
@@ -687,12 +1123,12 @@
             <div class="cierre-wrapper">
                 
                 <div class="cierre-sidebar">
-                    <span class="text-label">Reporte de Ventas</span>
+                    <span class="text-label">Monto de cierre calculado</span>
                     <div class="total-amount">$0</div>
 
                     <div style="margin-bottom: 30px; padding: 12px 16px; background: #f1f5f9; border-radius: 12px; border: 1px dashed #cbd5e1;">
                       <span style="display: block; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Monto de Apertura</span>
-                      <span class="m-apertura" style="font-size: 16px; font-weight: 700; color: #475569;">$ 150.000</span>
+                      <span class="m-apertura" style="font-size: 16px; font-weight: 700; color: #475569;">$0</span>
                     </div>
                     <div class="grid-methods">
                         <div class="method-card-minimal">
@@ -747,6 +1183,7 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="modalConfirmarCierreSesion" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
     <div class="modal-content" style="border: none; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); overflow: hidden; background: #ffffff;">
@@ -794,7 +1231,8 @@
   </div>
 </div>
     @endif
-    <footer class="footer">
+    
+<footer class="footer">
   <div class="container-fluid">
     <div class="row align-items-center justify-content-between">
       <div class="col-md-6 order-last order-md-first">
@@ -868,6 +1306,43 @@
         });
       }
     });
+     document.addEventListener('DOMContentLoaded', function() {
+        // Interceptar respuestas fetch/axios globalmente
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            return originalFetch.apply(this, args).then(response => {
+                if (response.status === 403) {
+                    response.clone().json().then(data => {
+                        if (data.show_modal) {
+                            let modal = new bootstrap.Modal(document.getElementById('modalExpirado'));
+                            modal.show();
+                        }
+                    });
+                }
+                return response;
+            });
+        };
+
+        // Si usas axios
+        if (typeof axios !== 'undefined') {
+            axios.interceptors.response.use(
+                response => response,
+                error => {
+                    if (error.response?.status === 403 && error.response?.data?.show_modal) {
+                        let modal = new bootstrap.Modal(document.getElementById('modalExpirado'));
+                        modal.show();
+                    }
+                    return Promise.reject(error);
+                }
+            );
+        }
+
+        // Para formularios normales (si redirige con session)
+        @if(session('license_expired'))
+            let modal = new bootstrap.Modal(document.getElementById('modalExpirado'));
+            modal.show();
+        @endif
+    });
   </script>
 
   @if($cajaAbierta)
@@ -934,7 +1409,7 @@
 
           // Sidebar totals
           const totalAmountEl = modal.querySelector('.total-amount');
-          if (totalAmountEl) totalAmountEl.textContent = formatMoneyNoDecimals(data.total_ingresos ?? 0);
+          if (totalAmountEl) totalAmountEl.textContent = formatMoneyNoDecimals(data.monto_cierre_calculado ?? 0);
 
           const cards = modal.querySelectorAll('.grid-methods .method-card-minimal');
           if (cards && cards.length >= 4) {
@@ -951,8 +1426,7 @@
           // Use monto_apertura from backend (if provided) to compute monto_cierre_calculado
           const montoApertura = Number(data.monto_apertura ?? data.monto_apertura_caja ?? 0);
           const totalEfectivo = Number(data.total_efectivo ?? 0);
-          const devolucionesEfectivo = Number(data.devoluciones_efectivo ?? 0);
-          const montoCalculado = montoApertura + totalEfectivo - devolucionesEfectivo;
+          const montoCalculado = montoApertura + totalEfectivo;
 
           // Render monto apertura (solo lectura)
           const aperturaEl = modal.querySelector('.m-apertura');
