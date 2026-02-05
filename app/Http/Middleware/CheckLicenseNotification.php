@@ -11,14 +11,14 @@ class CheckLicenseNotification
 {
     public function handle(Request $request, Closure $next)
     {
-        $licenseService = app(LicenseService::class);
-        $controller = new LicenseNotificationController();
+    //    $licenseService = app(LicenseService::class);
+    //    $controller = new LicenseNotificationController();
         
-        $notification = $controller->check($licenseService);
+    //    $notification = $controller->check($licenseService);
         
         // Compartir con todas las vistas
-        view()->share('licenseNotification', $notification);
+   //     view()->share('licenseNotification', $notification);
         
-        return $next($request);
+    //    return $next($request);
     }
 }

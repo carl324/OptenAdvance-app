@@ -140,22 +140,24 @@ class BackupController extends Controller
     /**
      * Detecta la ruta de mysqldump desde Laragon portable
      */
-    private function detectLaragonMysqldump()
-    {
-        // Obtener la ruta base del proyecto
-        $basePath = base_path();
-        
-        // Laragon portable está en la raíz del proyecto
-        $laragonBase = dirname($basePath); // Sube un nivel desde el proyecto
-        
-        // Rutas posibles de mysqldump en Laragon portable
-        $possiblePaths = [
-            $laragonBase . DIRECTORY_SEPARATOR . 'laragon' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql' . DIRECTORY_SEPARATOR . 'mysql-8.0.30-winx64' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe',
-            $laragonBase . DIRECTORY_SEPARATOR . 'laragon' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql' . DIRECTORY_SEPARATOR . 'mysql-5.7.24-winx64' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe',
-        ];
-
-        // Buscar en subdirectorios de mysql
+    /**
+ * Detecta la ruta de mysqldump desde Laragon portable con múltiples estrategias
+ */
+private function detectLaragonMysqldump()
+{
+    $basePath = base_path();
+    
+    // ESTRATEGIA 1: Buscar en múltiples niveles superiores (proyecto puede estar en www/nombre-proyecto)
+    $levelsUp = [
+        dirname($basePath),                    // ../
+        dirname(dirname($basePath)),           // ../../
+        dirname(dirname(dirname($basePath)))   // ../../../
+    ];
+    
+    foreach ($levelsUp as $laragonBase) {
+        // Buscar en bin/mysql/*/bin/mysqldump.exe
         $mysqlDir = $laragonBase . DIRECTORY_SEPARATOR . 'laragon' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql';
+        
         if (is_dir($mysqlDir)) {
             $versions = @scandir($mysqlDir);
             if ($versions) {
@@ -163,19 +165,51 @@ class BackupController extends Controller
                     if ($version === '.' || $version === '..') continue;
                     $mysqldump = $mysqlDir . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe';
                     if (file_exists($mysqldump)) {
+                        Log::info("BackupController - mysqldump encontrado en: {$mysqldump}");
                         return $mysqldump;
                     }
                 }
             }
         }
-
-        // Verificar rutas estáticas como fallback
-        foreach ($possiblePaths as $path) {
-            if (file_exists($path)) {
-                return $path;
+    }
+    
+    // ESTRATEGIA 2: Buscar mysqldump en el PATH del sistema
+    $output = [];
+    exec('where mysqldump.exe 2>nul', $output, $returnVar);
+    if ($returnVar === 0 && !empty($output[0]) && file_exists($output[0])) {
+        Log::info("BackupController - mysqldump encontrado en PATH: {$output[0]}");
+        return $output[0];
+    }
+    
+    // ESTRATEGIA 3: Buscar en ubicaciones comunes de Laragon
+    $commonPaths = [
+        'C:\\laragon\\bin\\mysql',
+        'D:\\laragon\\bin\\mysql',
+        getenv('USERPROFILE') . '\\laragon\\bin\\mysql'
+    ];
+    
+    foreach ($commonPaths as $mysqlDir) {
+        if (is_dir($mysqlDir)) {
+            $versions = @scandir($mysqlDir);
+            if ($versions) {
+                foreach ($versions as $version) {
+                    if ($version === '.' || $version === '..') continue;
+                    $mysqldump = $mysqlDir . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe';
+                    if (file_exists($mysqldump)) {
+                        Log::info("BackupController - mysqldump encontrado en ruta común: {$mysqldump}");
+                        return $mysqldump;
+                    }
+                }
             }
         }
-
-        return null;
     }
+    
+    // Log de rutas intentadas para debugging
+    Log::error('BackupController - mysqldump NO encontrado. Rutas revisadas:', [
+        'base_path' => $basePath,
+        'levels_checked' => $levelsUp
+    ]);
+    
+    return null;
+}
 }

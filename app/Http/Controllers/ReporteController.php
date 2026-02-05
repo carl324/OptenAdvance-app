@@ -137,7 +137,7 @@ class ReporteController extends Controller
         switch ($tipo) {
             case 'ventas':
                 // Protección: no permitir exportaciones masivas que puedan agotar memoria
-                $count = Reporte::ventasDetalle($filtros)->count();
+                $count = Reporte::ventas($filtros)->count();
                 if ($count > self::MAX_EXPORT_ROWS) {
                     return response()->json([
                         'success' => false,
@@ -205,13 +205,11 @@ class ReporteController extends Controller
         $sheet->setTitle('Ventas Completas');
         
         // Headers (añadimos Vendedor y Rol)
-        $headers = ['Fecha', 'Venta ID', 'N° Factura', 'Cliente', 'Vendedor', 'Rol', 'Producto', 'Cantidad', 'Precio Unit.', 'Subtotal'];
+        $headers = ['Fecha', 'Venta ID', 'N° Factura', 'Cliente', 'Vendedor', 'Rol', 'Total', 'Estado', 'Medio de pago'];
 
         // Verificar si hay datos históricos con IVA > 0
-        $detalles = Reporte::ventasDetalle($filtros)->get();
-        $hayIvaHistorico = $detalles->contains(function($d) {
-            return ($d->iva ?? 0) > 0;
-        });
+        $ventas = Reporte::ventas($filtros)->get();
+        $hayIvaHistorico = false;
 
         // Mostrar columna IVA si la empresa cobra IVA O si hay datos históricos con IVA
         $mostrarIva = ($empresa && $empresa->cobra_iva) || $hayIvaHistorico;
@@ -219,9 +217,6 @@ class ReporteController extends Controller
         if ($mostrarIva) {
             $headers[] = 'IVA';
         }
-        
-        $headers[] = 'Total';
-        $headers[] = 'Estado';
         
         $col = 'A';
         foreach ($headers as $h) {
@@ -232,110 +227,60 @@ class ReporteController extends Controller
         }
 
         $row = 2;
-$totalCantidad = 0;
-$totalSubtotal = 0;
 $totalIva = 0;
 $totalTotal = 0;
 
 // Cargar usuarios relacionados en una sola consulta para evitar N+1
-$userIds = $detalles->map(function($d) {
-    return optional($d->venta)->user_id;
-})->filter()->unique()->values()->all();
+$userIds = $ventas->pluck('user_id')->filter()->unique()->values()->all();
 $users = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
 
-// Variables para coloreo alternado por factura
-$facturaAnterior = null;
-$colorActual = 0; // 0 = blanco, 1 = verde claro
-$colores = [
-    'FFFFFF', // Blanco
-    'E8F5E9'  // Verde claro suave
-];
-
-foreach ($detalles as $d) {
-    // Origen del registro (solo para UI / export)
-    $d->origen_reporte = 'venta_detalle';
-    $fecha = optional($d->venta->created_at)->format('Y-m-d H:i');
-    $facturaNumero = optional($d->venta->factura)->numero ?? '-';
+foreach ($ventas as $venta) {
+    $fecha = optional($venta->created_at)->format('Y-m-d H:i');
+    $facturaNumero = optional($venta->factura)->numero ?? '-';
+    $cliente = (optional($venta->factura)->cliente_nombre ?? $venta->cliente) ?? '-';
+    $medioPago = optional($venta->factura)->forma_pago ?? '-';
     
-    // Detectar cambio de factura para alternar color
-    if ($facturaAnterior !== null && $facturaAnterior !== $facturaNumero) {
-        $colorActual = ($colorActual + 1) % 2; // Alterna entre 0 y 1
+    $ventaUserId = $venta->user_id;
+    $vendedor = $users->get($ventaUserId);
+    $vendedorNombre = optional($vendedor)->name ?? '-';
+    $vendedorRol = optional($vendedor)->role ?? '-';
+    
+    $values = [];
+    $values[] = $fecha;
+    $values[] = $venta->id;
+    $values[] = $facturaNumero;
+    $values[] = $cliente;
+    $values[] = $vendedorNombre;
+    $values[] = $vendedorRol;
+    $values[] = (float)$venta->total;
+    $values[] = $venta->estado ?? '-';
+    $values[] = $medioPago;
+    
+    if ($mostrarIva) {
+        $values[] = (float)($venta->iva ?? 0);
     }
-    $facturaAnterior = $facturaNumero;
-            $cliente = (optional($d->venta->factura)->cliente_nombre ?? $d->venta->cliente) ?? '-';
-            $producto = optional($d->producto)->nombre ?? '#' . $d->producto_id;
-            // Usar subtotal directamente (ya incluye IVA desde BD)
-            $total = $d->subtotal;
-
-            // Obtener vendedor y rol desde colección precargada
-            $ventaUserId = optional($d->venta)->user_id;
-            $vendedor = $users->get($ventaUserId);
-            $vendedorNombre = optional($vendedor)->name ?? '-';
-            $vendedorRol = optional($vendedor)->role ?? '-';
-
-            // Preparar fila de valores acorde al orden de $headers
-            $values = [];
-            $values[] = $fecha;
-            $values[] = $d->venta_id;
-            $values[] = $facturaNumero;
-            $values[] = $cliente;
-            $values[] = $vendedorNombre;
-            $values[] = $vendedorRol;
-            $values[] = $producto;
-            $values[] = (float)$d->cantidad;
-            $values[] = (float)$d->precio_unitario;
-            $values[] = (float)$d->subtotal;
-
-            if ($mostrarIva) {
-                $values[] = (float)$d->iva;
-            }
-
-            $values[] = (float)$total;
-            $values[] = $d->venta->estado ?? '-';
-
-            // Escribir valores en hoja
-            // Escribir valores en hoja
-$col = 'A';
-foreach ($values as $val) {
-    $sheet->setCellValue($col . $row, $val);
-    $col++;
+    
+    $col = 'A';
+    foreach ($values as $val) {
+        $sheet->setCellValue($col . $row, $val);
+        $col++;
+    }
+    
+    $totalTotal += (float)$venta->total;
+    $totalIva += (float)($venta->iva ?? 0);
+    
+    $row++;
 }
 
-// Aplicar color de fondo a toda la fila
-$lastCol = Coordinate::stringFromColumnIndex(count($headers));
-$sheet->getStyle('A' . $row . ':' . $lastCol . $row)
-      ->getFill()
-      ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-      ->getStartColor()
-      ->setRGB($colores[$colorActual]);
-
-            $totalCantidad += (float)$d->cantidad;
-            $totalSubtotal += (float)$d->subtotal;
-            $totalIva += (float)($d->iva ?? 0);
-            $totalTotal += (float)$total;
-
-            $row++;
-        }
-
         // Totales: ubicar columnas dinámicamente según headers
-        $idxProducto = array_search('Producto', $headers);
-        $idxCantidad = array_search('Cantidad', $headers);
-        $idxSubtotal = array_search('Subtotal', $headers);
+        $idxCliente = array_search('Cliente', $headers);
         $idxIva = array_search('IVA', $headers);
         $idxTotal = array_search('Total', $headers);
 
-        if ($idxProducto !== false) {
-            $colProducto = Coordinate::stringFromColumnIndex($idxProducto + 1);
-            $sheet->setCellValue($colProducto . $row, 'TOTALES');
-            $sheet->getStyle($colProducto . $row)->getFont()->setBold(true);
-        }
-        if ($idxCantidad !== false) {
-            $colCantidad = Coordinate::stringFromColumnIndex($idxCantidad + 1);
-            $sheet->setCellValue($colCantidad . $row, $totalCantidad);
-        }
-        if ($idxSubtotal !== false) {
-            $colSubtotal = Coordinate::stringFromColumnIndex($idxSubtotal + 1);
-            $sheet->setCellValue($colSubtotal . $row, $totalSubtotal);
+        if ($idxCliente !== false) {
+            $colCliente = Coordinate::stringFromColumnIndex($idxCliente + 1);
+            $sheet->setCellValue($colCliente . $row, 'TOTALES');
+            $sheet->getStyle($colCliente . $row)->getFont()->setBold(true);
         }
 
         if ($idxIva !== false) {
@@ -349,27 +294,23 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
         }
 
         // Poner en negrita la fila de totales en las columnas numéricas si existen
-        $firstNumIdx = $idxCantidad !== false ? $idxCantidad + 1 : null;
+        $firstNumIdx = $idxTotal !== false ? $idxTotal + 1 : null;
         $lastNumIdx = $idxTotal !== false ? $idxTotal + 1 : null;
         if ($firstNumIdx && $lastNumIdx) {
             $sheet->getStyle(Coordinate::stringFromColumnIndex($firstNumIdx) . $row . ':' . Coordinate::stringFromColumnIndex($lastNumIdx) . $row)->getFont()->setBold(true);
         }
 
-        // Formato de moneda: aplicar a Precio Unitario, Subtotal, IVA y Total si existen
+        // Formato de moneda: aplicar a Total e IVA si existe
         $currencyFormat = '"$"#,##0';
-        $priceIdx = array_search('Precio Unit.', $headers);
-        if ($priceIdx !== false && $idxSubtotal !== false) {
-            $colPrice = Coordinate::stringFromColumnIndex($priceIdx + 1);
-            $colSubtotal = Coordinate::stringFromColumnIndex($idxSubtotal + 1);
-            $sheet->getStyle($colPrice . '2:' . $colSubtotal . $row)->getNumberFormat()->setFormatCode($currencyFormat);
-        }
-        if ($idxIva !== false && $idxTotal !== false) {
-            $colIva = Coordinate::stringFromColumnIndex($idxIva + 1);
-            $colTotal = Coordinate::stringFromColumnIndex($idxTotal + 1);
-            $sheet->getStyle($colIva . '2:' . $colTotal . $row)->getNumberFormat()->setFormatCode($currencyFormat);
-        } elseif ($idxTotal !== false) {
+        $idxTotal = array_search('Total', $headers);
+        if ($idxTotal !== false) {
             $colTotal = Coordinate::stringFromColumnIndex($idxTotal + 1);
             $sheet->getStyle($colTotal . '2:' . $colTotal . $row)->getNumberFormat()->setFormatCode($currencyFormat);
+        }
+        if ($mostrarIva) {
+            $lastColIdx = count($headers);
+            $colIva = Coordinate::stringFromColumnIndex($lastColIdx);
+            $sheet->getStyle($colIva . '2:' . $colIva . $row)->getNumberFormat()->setFormatCode($currencyFormat);
         }
 
         // Auto size
@@ -471,7 +412,7 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
         'Usuario cierre',
         'Estado',
         'Monto apertura',
-        'Total ventas',
+        'Total ingresos',
         'Total efectivo',
         'Monto cierre calculado',
         'Monto cierre real',
@@ -739,74 +680,95 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
      * Sin depender del filtro de tipo en la vista
      * Optimizado con query agregada (menos queries a BD)
      */
-    public function apiStats(Request $request)
-    {
-        try {
-            $fecha_inicio = $this->sanitizeDate($request->input('fecha_inicio'));
-            $fecha_fin = $this->sanitizeDate($request->input('fecha_fin'));
+public function apiStats(Request $request)
+{
+    try {
+        $fecha_inicio = $this->sanitizeDate($request->input('fecha_inicio'));
+        $fecha_fin = $this->sanitizeDate($request->input('fecha_fin'));
 
-            // Si no hay fechas, usar últimos 30 días
-            if (!$fecha_inicio || !$fecha_fin) {
-                $fecha_fin = date('Y-m-d');
-                $fecha_inicio = date('Y-m-d', strtotime('-30 days'));
-            }
-
-            // Optimización: query única con agregación (1 query en lugar de 4)
-            $inventarioStats = \DB::table('inventario_movimientos')
-                ->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
-                ->selectRaw('COUNT(*) as total, SUM(CASE WHEN tipo = ? THEN 1 ELSE 0 END) as entradas, SUM(CASE WHEN tipo = ? THEN 1 ELSE 0 END) as salidas', ['entrada', 'salida'])
-                ->first();
-
-            $ingresos = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->sum('total');
-
-            return response()->json([
-                'success' => true,
-                'stats' => [
-                    'movimientos' => (int)($inventarioStats->total ?? 0),
-                    'entradas' => (int)($inventarioStats->entradas ?? 0),
-                    'salidas' => (int)($inventarioStats->salidas ?? 0),
-                    'ingresos' => (float)($ingresos ?? 0),
-                ]
-            ]);
-        } catch (\Exception $e) {
-            // En caso de error, retornar ceros sin exponer el error
-            return response()->json([
-                'success' => false,
-                'stats' => [
-                    'movimientos' => 0,
-                    'entradas' => 0,
-                    'salidas' => 0,
-                    'ingresos' => 0,
-                ]
-            ], 200);
+        if (!$fecha_inicio || !$fecha_fin) {
+            $fecha_fin = date('Y-m-d');
+            $fecha_inicio = date('Y-m-d', strtotime('-30 days'));
         }
+
+        // ✅ Query optimizada que excluye movimientos de ventas anuladas
+        $inventarioStats = \DB::table('inventario_movimientos as im')
+            ->leftJoin('ventas as v', function($join) {
+                $join->on('im.referencia_id', '=', 'v.id')
+                     ->where('im.origen', '=', 'venta');
+            })
+            ->whereBetween('im.created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE 
+                    WHEN im.tipo = ? THEN 1 
+                    WHEN im.tipo = ? AND v.estado = ? THEN 1 
+                    ELSE 0 
+                END) as entradas,
+                SUM(CASE 
+                    WHEN im.tipo = ? AND (v.id IS NULL OR v.estado != ?) THEN 1 
+                    ELSE 0 
+                END) as salidas
+            ', ['entrada', 'salida', 'anulada', 'salida', 'anulada'])
+            ->first();
+
+        $ingresos = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
+            ->where('estado', '!=', 'anulada')
+            ->sum('total');
+        
+        return response()->json([
+            'success' => true,
+            'stats' => [
+                'movimientos' => (int)($inventarioStats->total ?? 0),
+                'entradas' => (int)($inventarioStats->entradas ?? 0),
+                'salidas' => (int)($inventarioStats->salidas ?? 0),
+                'ingresos' => (float)($ingresos ?? 0),
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'stats' => [
+                'movimientos' => 0,
+                'entradas' => 0,
+                'salidas' => 0,
+                'ingresos' => 0,
+            ]
+        ], 200);
     }
+}
 
     /**
      * Calcula estadísticas para las tarjetas
      */
-    private function calcularEstadisticas($tipo, $fecha_inicio, $fecha_fin)
-    {
-        if ($tipo === 'movimientos') {
-            $movimientos = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->count();
-            $entradas = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->where('tipo', 'entrada')->count();
-            $salidas = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->where('tipo', 'salida')->count();
-            $ingresos = 0;
-        } else {
-            $ventas = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
-            $movimientos = $ventas->count();
-            $entradas = 0;
-            $salidas = 0;
-            $ingresos = $ventas->sum('total');
-        }
+private function calcularEstadisticas($tipo, $fecha_inicio, $fecha_fin)
+{
+    // Inicializar TODAS las variables primero
+    $movimientos = 0;
+    $entradas = 0;
+    $salidas = 0;
+    $ingresos = 0;
 
-        return [
-            'movimientos' => $movimientos,
-            'entradas' => $entradas,
-            'salidas' => $salidas,
-            'ingresos' => $ingresos,
-        ];
+    if ($tipo === 'movimientos') {
+        $movimientos = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->count();
+        $entradas = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->where('tipo', 'entrada')->count();
+        $salidas = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->where('tipo', 'salida')->count();
+    } elseif ($tipo === 'cajas') {
+        $movimientos = \DB::table('cajas')->whereBetween('fecha_apertura', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->count();
+    } else {
+        // Para ventas: contar TODAS, pero sumar solo las NO anuladas
+        $ventas = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
+        $movimientos = (clone $ventas)->count();  // ← Todas las ventas (incluidas anuladas)
+        $ingresos = (clone $ventas)->where('estado', '!=', 'anulada')->sum('total');  // ← Solo ventas NO anuladas
     }
+
+    return [
+        'movimientos' => $movimientos,
+        'entradas' => $entradas,
+        'salidas' => $salidas,
+        'ingresos' => $ingresos,
+    ];
+}
 
     /**
      * API: Exporta datos en Excel
@@ -874,11 +836,7 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
                 ->get();
         } else {
             $ventasQuery = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
-            $detalleCount = \App\Models\VentaDetalle::whereHas('venta', function ($q) use ($fecha_inicio, $fecha_fin) {
-                $q->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
-            })->count();
-            $ventasSinDetalles = (clone $ventasQuery)->doesntHave('detalles')->count();
-            $count = $detalleCount + $ventasSinDetalles;
+            $count = (clone $ventasQuery)->count();
             if ($count > self::MAX_EXPORT_ROWS) {
                 return response()->json([
                     'success' => false,
@@ -888,7 +846,7 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
             }
 
             $data = $ventasQuery
-                ->with('detalles.producto', 'factura')
+                ->with('factura', 'detalles')
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
@@ -930,7 +888,7 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
                 'Usuario cierre',
                 'Estado',
                 'Monto apertura',
-                'Total ventas',
+                'Total ingresos',
                 'Total efectivo',
                 'Monto cierre calculado',
                 'Monto cierre real',
@@ -976,8 +934,8 @@ $sheet->getStyle('A' . $row . ':' . $lastCol . $row)
             $sheet->getStyle('F2:K' . max(2, $row - 1))->getNumberFormat()->setFormatCode('#,##0');
 
         } else {
-            // Headers para ventas con detalles (añadimos Vendedor y Rol)
-            $headers = ['Venta ID', 'Fecha', 'N° Factura', 'Cliente', 'Vendedor', 'Rol', 'Producto', 'Cantidad', 'Precio Unitario', 'Subtotal', 'IVA', 'Total', 'Estado', 'Medio de pago', 'Motivo de anulación'];
+            // Headers para ventas sin detalles expandidos
+            $headers = ['Venta ID', 'Fecha', 'N° Factura', 'Cliente', 'Vendedor', 'Rol', 'IVA', 'Total', 'Estado', 'Medio de pago', 'Motivo de anulación'];
 
             $col = 'A';
             $headerCells = [];
@@ -998,111 +956,46 @@ $ventasCompletadas = 0;
 $userIds = $data->map(function($v) { return $v->user_id; })->filter()->unique()->values()->all();
 $users = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
 
-// Variables para coloreo alternado por factura
-$facturaAnterior = null;
-$colorActual = 0; // 0 = blanco, 1 = verde claro
-$colores = [
-    'FFFFFF', // Blanco
-    'E8F5E9'  // Verde claro suave
-];
-
 foreach ($data as $venta) {
-    $detalles = $venta->detalles ?? collect();
     $medioPago = optional($venta->factura)->forma_pago ?? '-';
     $facturaNumero = optional($venta->factura)->numero ?? '-';
     
-    // Detectar cambio de factura para alternar color
-    if ($facturaAnterior !== null && $facturaAnterior !== $facturaNumero) {
-        $colorActual = ($colorActual + 1) % 2; // Alterna entre 0 y 1
+    $motivoAnulacion = '-';
+    if ($venta->estado === 'anulada') {
+        $motivoAnulacion = optional($venta->detalles->first())->motivo_anulacion ?? '-';
     }
-    $facturaAnterior = $facturaNumero;
-                $motivoAnulacion = '-';
-                if ($venta->estado === 'anulada') {
-                    $motivoAnulacion = optional($detalles->first())->motivo_anulacion ?? '-';
-                }
-                if ($detalles->isEmpty()) {
-                    // Si no hay detalles, mostrar solo la venta (llenar columnas de detalle con valores por defecto)
-                    $ventaUser = $users->get($venta->user_id);
-                    $vendedorNombre = optional($ventaUser)->name ?? '-';
-                    $vendedorRol = optional($ventaUser)->role ?? '-';
+    
+    $ventaUser = $users->get($venta->user_id);
+    $vendedorNombre = optional($ventaUser)->name ?? '-';
+    $vendedorRol = optional($ventaUser)->role ?? '-';
 
-                    $values = [];
-                    $values[] = $venta->id;
-                    $values[] = $venta->created_at ? $venta->created_at->format('Y-m-d H:i') : '';
-                    $values[] = optional($venta->factura)->numero;
-                    $values[] = optional($venta->factura)->cliente_nombre;
-                    $values[] = $vendedorNombre;
-                    $values[] = $vendedorRol;
-                    $values[] = '-'; // Producto
-                    $values[] = 0;   // Cantidad
-                    $values[] = '';  // Precio Unitario
-                    $values[] = '';  // Subtotal
-                    $values[] = 0;   // IVA
-                    $values[] = $venta->total;
-                    $values[] = $venta->estado;
-                    $values[] = $medioPago;
-                    $values[] = $motivoAnulacion;
+    $values = [];
+    $values[] = $venta->id;
+    $values[] = $venta->created_at ? $venta->created_at->format('d/m/Y H:i') : '';
+    $values[] = $facturaNumero;
+    $values[] = optional($venta->factura)->cliente_nombre ?? '-';
+    $values[] = $vendedorNombre;
+    $values[] = $vendedorRol;
+    $values[] = $venta->detalles->sum('iva') ?? 0;
+    $values[] = $venta->total;
+    $values[] = $venta->estado;
+    $values[] = $medioPago;
+    $values[] = $motivoAnulacion;
 
-                    $col = 'A';
-foreach ($values as $val) {
-    $sheet->setCellValue($col . $row, $val);
-    $col++;
+    $col = 'A';
+    foreach ($values as $val) {
+        $sheet->setCellValue($col . $row, $val);
+        $col++;
+    }
+
+    $row++;
+
+    if ($venta->estado === 'completada') {
+        $totalVentas += $venta->total;
+        $totalIva += ($venta->detalles->sum('iva') ?? 0);
+        $ventasCompletadas++;
+    }
 }
-
-// Aplicar color de fondo a toda la fila
-$sheet->getStyle('A' . $row . ':O' . $row)
-      ->getFill()
-      ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-      ->getStartColor()
-      ->setRGB($colores[$colorActual]);
-
-$row++;
-
-                    if ($venta->estado === 'completada') {
-                        $totalVentas += $venta->total;
-                        $ventasCompletadas++;
-                    }
-                } else {
-                    // Mostrar cada detalle en una fila
-                    $ivaVenta = 0;
-                    $ventaUser = $users->get($venta->user_id);
-                    $vendedorNombre = optional($ventaUser)->name ?? '-';
-                    $vendedorRol = optional($ventaUser)->role ?? '-';
-                    foreach ($detalles as $detalle) {
-                        $values = [];
-                        $values[] = $venta->id;
-                        $values[] = $venta->created_at ? $venta->created_at->format('Y-m-d H:i') : '';
-                        $values[] = optional($venta->factura)->numero;
-                        $values[] = optional($venta->factura)->cliente_nombre;
-                        $values[] = $vendedorNombre;
-                        $values[] = $vendedorRol;
-                        $values[] = optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id;
-                        $values[] = $detalle->cantidad;
-                        $values[] = $detalle->precio_unitario;
-                        $values[] = $detalle->subtotal;
-                        $values[] = $detalle->iva ?? 0;
-                        $values[] = $venta->total;
-                        $values[] = $venta->estado;
-                        $values[] = $medioPago;
-                        $values[] = $motivoAnulacion;
-
-                        $col = 'A';
-                        foreach ($values as $val) {
-                            $sheet->setCellValue($col . $row, $val);
-                            $col++;
-                        }
-
-                        $ivaVenta += ($detalle->iva ?? 0);
-                        $row++;
-                    }
-
-                    if ($venta->estado === 'completada') {
-                        $totalVentas += $venta->total;
-                        $totalIva += $ivaVenta;
-                        $ventasCompletadas++;
-                    }
-                }
-            }
 
             // Agregar fila de resumen
             $row += 1;

@@ -113,94 +113,190 @@ class DatabaseRestoreService
     }
 
     public function restoreDatabase(string $sqlFilePath): array
-{
-    try {
-        $dbHost = Config::get('database.connections.mysql.host');
-        $dbPort = Config::get('database.connections.mysql.port', 3306);
-        $dbName = Config::get('database.connections.mysql.database');
-        $dbUser = Config::get('database.connections.mysql.username');
-        $dbPass = Config::get('database.connections.mysql.password');
+    {
+        try {
+            $dbHost = Config::get('database.connections.mysql.host');
+            $dbPort = Config::get('database.connections.mysql.port', 3306);
+            $dbName = Config::get('database.connections.mysql.database');
+            $dbUser = Config::get('database.connections.mysql.username');
+            $dbPass = Config::get('database.connections.mysql.password');
 
-        $mysqlPath = $this->detectLaragonMysql();
-        if (!$mysqlPath) {
-            throw new \Exception('No se encontró mysql.exe en Laragon');
+            $mysqlPath = $this->detectLaragonMysql();
+            if (!$mysqlPath) {
+                throw new \Exception('No se encontró mysql.exe en Laragon');
+            }
+
+            // FIX: Aumentar límites para archivos grandes
+            set_time_limit(600);
+            ini_set('memory_limit', '512M');
+
+            $command = sprintf(
+                '"%s" --host=%s --port=%s --user=%s --password=%s --default-character-set=utf8mb4 %s < "%s" 2>NUL',
+                $mysqlPath,
+                $dbHost,
+                $dbPort,
+                $dbUser,
+                $dbPass,
+                $dbName,
+                $sqlFilePath
+            );
+
+            exec($command, $output, $returnVar);
+
+            if ($returnVar !== 0) {
+                $errorMsg = implode("\n", $output);
+                throw new \Exception('Error al restaurar: ' . $errorMsg);
+            }
+
+            Log::info('DatabaseRestoreService: Base de datos restaurada exitosamente', ['file' => basename($sqlFilePath)]);
+
+            return ['success' => true];
+
+        } catch (\Exception $e) {
+            Log::error('DatabaseRestoreService: Error en restauración', ['error' => $e->getMessage()]);
+            return ['success' => false, 'error' => $e->getMessage()];
         }
-
-        // FIX: Aumentar límites para archivos grandes
-        set_time_limit(600);
-        ini_set('memory_limit', '512M');
-
-        $command = sprintf(
-            '"%s" --host=%s --port=%s --user=%s --password=%s --default-character-set=utf8mb4 %s < "%s" 2>NUL',
-            $mysqlPath,
-            $dbHost,
-            $dbPort,
-            $dbUser,
-            $dbPass,
-            $dbName,
-            $sqlFilePath
-        );
-
-        exec($command, $output, $returnVar);
-
-        if ($returnVar !== 0) {
-            $errorMsg = implode("\n", $output);
-            throw new \Exception('Error al restaurar: ' . $errorMsg);
-        }
-
-        Log::info('DatabaseRestoreService: Base de datos restaurada exitosamente', ['file' => basename($sqlFilePath)]);
-
-        return ['success' => true];
-
-    } catch (\Exception $e) {
-        Log::error('DatabaseRestoreService: Error en restauración', ['error' => $e->getMessage()]);
-        return ['success' => false, 'error' => $e->getMessage()];
     }
-}
 
+    /**
+     * Detecta la ruta de mysql.exe con múltiples estrategias
+     */
     private function detectLaragonMysql(): ?string
     {
         $basePath = base_path();
-        $laragonBase = dirname($basePath);
         
-        $mysqlDir = $laragonBase . DIRECTORY_SEPARATOR . 'laragon' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql';
+        // ESTRATEGIA 1: Buscar en múltiples niveles superiores
+        $levelsUp = [
+            dirname($basePath),                    // ../
+            dirname(dirname($basePath)),           // ../../
+            dirname(dirname(dirname($basePath)))   // ../../../
+        ];
         
-        if (is_dir($mysqlDir)) {
-            $versions = @scandir($mysqlDir);
-            if ($versions) {
-                foreach ($versions as $version) {
-                    if ($version === '.' || $version === '..') continue;
-                    $mysqlExe = $mysqlDir . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql.exe';
-                    if (file_exists($mysqlExe)) {
-                        return $mysqlExe;
+        foreach ($levelsUp as $laragonBase) {
+            $mysqlDir = $laragonBase . DIRECTORY_SEPARATOR . 'laragon' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql';
+            
+            if (is_dir($mysqlDir)) {
+                $versions = @scandir($mysqlDir);
+                if ($versions) {
+                    foreach ($versions as $version) {
+                        if ($version === '.' || $version === '..') continue;
+                        $mysqlExe = $mysqlDir . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql.exe';
+                        if (file_exists($mysqlExe)) {
+                            Log::info("DatabaseRestoreService - mysql.exe encontrado en: {$mysqlExe}");
+                            return $mysqlExe;
+                        }
                     }
                 }
             }
         }
-
+        
+        // ESTRATEGIA 2: Buscar en el PATH del sistema
+        $output = [];
+        exec('where mysql.exe 2>nul', $output, $returnVar);
+        if ($returnVar === 0 && !empty($output[0]) && file_exists($output[0])) {
+            Log::info("DatabaseRestoreService - mysql.exe encontrado en PATH: {$output[0]}");
+            return $output[0];
+        }
+        
+        // ESTRATEGIA 3: Buscar en ubicaciones comunes de Laragon
+        $commonPaths = [
+            'C:\\laragon\\bin\\mysql',
+            'D:\\laragon\\bin\\mysql',
+            getenv('USERPROFILE') . '\\laragon\\bin\\mysql'
+        ];
+        
+        foreach ($commonPaths as $mysqlDir) {
+            if (is_dir($mysqlDir)) {
+                $versions = @scandir($mysqlDir);
+                if ($versions) {
+                    foreach ($versions as $version) {
+                        if ($version === '.' || $version === '..') continue;
+                        $mysqlExe = $mysqlDir . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql.exe';
+                        if (file_exists($mysqlExe)) {
+                            Log::info("DatabaseRestoreService - mysql.exe encontrado en ruta común: {$mysqlExe}");
+                            return $mysqlExe;
+                        }
+                    }
+                }
+            }
+        }
+        
+        Log::error('DatabaseRestoreService - mysql.exe NO encontrado. Rutas revisadas:', [
+            'base_path' => $basePath,
+            'levels_checked' => $levelsUp
+        ]);
+        
         return null;
     }
 
+    /**
+     * Detecta la ruta de mysqldump con múltiples estrategias
+     */
     private function detectLaragonMysqldump(): ?string
     {
         $basePath = base_path();
-        $laragonBase = dirname($basePath);
         
-        $mysqlDir = $laragonBase . DIRECTORY_SEPARATOR . 'laragon' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql';
+        // ESTRATEGIA 1: Buscar en múltiples niveles superiores
+        $levelsUp = [
+            dirname($basePath),                    // ../
+            dirname(dirname($basePath)),           // ../../
+            dirname(dirname(dirname($basePath)))   // ../../../
+        ];
         
-        if (is_dir($mysqlDir)) {
-            $versions = @scandir($mysqlDir);
-            if ($versions) {
-                foreach ($versions as $version) {
-                    if ($version === '.' || $version === '..') continue;
-                    $mysqldump = $mysqlDir . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe';
-                    if (file_exists($mysqldump)) {
-                        return $mysqldump;
+        foreach ($levelsUp as $laragonBase) {
+            $mysqlDir = $laragonBase . DIRECTORY_SEPARATOR . 'laragon' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql';
+            
+            if (is_dir($mysqlDir)) {
+                $versions = @scandir($mysqlDir);
+                if ($versions) {
+                    foreach ($versions as $version) {
+                        if ($version === '.' || $version === '..') continue;
+                        $mysqldump = $mysqlDir . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe';
+                        if (file_exists($mysqldump)) {
+                            Log::info("DatabaseRestoreService - mysqldump encontrado en: {$mysqldump}");
+                            return $mysqldump;
+                        }
                     }
                 }
             }
         }
-
+        
+        // ESTRATEGIA 2: Buscar en el PATH del sistema
+        $output = [];
+        exec('where mysqldump.exe 2>nul', $output, $returnVar);
+        if ($returnVar === 0 && !empty($output[0]) && file_exists($output[0])) {
+            Log::info("DatabaseRestoreService - mysqldump encontrado en PATH: {$output[0]}");
+            return $output[0];
+        }
+        
+        // ESTRATEGIA 3: Buscar en ubicaciones comunes de Laragon
+        $commonPaths = [
+            'C:\\laragon\\bin\\mysql',
+            'D:\\laragon\\bin\\mysql',
+            getenv('USERPROFILE') . '\\laragon\\bin\\mysql'
+        ];
+        
+        foreach ($commonPaths as $mysqlDir) {
+            if (is_dir($mysqlDir)) {
+                $versions = @scandir($mysqlDir);
+                if ($versions) {
+                    foreach ($versions as $version) {
+                        if ($version === '.' || $version === '..') continue;
+                        $mysqldump = $mysqlDir . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe';
+                        if (file_exists($mysqldump)) {
+                            Log::info("DatabaseRestoreService - mysqldump encontrado en ruta común: {$mysqldump}");
+                            return $mysqldump;
+                        }
+                    }
+                }
+            }
+        }
+        
+        Log::error('DatabaseRestoreService - mysqldump NO encontrado. Rutas revisadas:', [
+            'base_path' => $basePath,
+            'levels_checked' => $levelsUp
+        ]);
+        
         return null;
     }
 

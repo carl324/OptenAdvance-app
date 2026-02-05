@@ -7,9 +7,9 @@ use App\Models\Venta;
 use Carbon\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Cache;
 use App\Services\LicenseService;
 use App\Http\Controllers\LicenseNotificationController;
-
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,43 +26,56 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ✅ CONSOLIDADO: Un único composer para todas las vistas
         View::composer('*', function ($view) {
+            // Cache para datos de licencia (10 minutos)
+            $licenseData = Cache::remember('app_license_data', 600, function () {
+                return app(LicenseService::class)->uiData();
+            });
+            
+            // Cache para notificación de licencia (5 minutos)
+            $notification = Cache::remember('app_license_notification', 300, function () {
+                $licenseService = app(LicenseService::class);
+                return app(LicenseNotificationController::class)->check($licenseService);
+            });
 
-    $licenseService = app(LicenseService::class);
-    $licenseData = $licenseService->uiData();
-    
-    $notification = app(LicenseNotificationController::class)
-        ->check($licenseService);
+            $view->with([
+                'data' => $licenseData,
+                'licenseNotification' => $notification,
+            ]);
+        });
 
-    $view->with([
-        'data' => $licenseData,
-        'licenseNotification' => $notification,
-    ]);
-});
-
-         View::composer('*', function ($view) {
-        $view->with('data', app(LicenseService::class)->uiData());
-    });
+        // ✅ OPTIMIZADO: Composer específico para layouts.app con cache
         View::composer('layouts.app', function ($view) {
-            $cajaActual = Caja::where('estado', 'abierta')->first();
+            // Cache de datos de caja (1 minuto - se actualiza frecuentemente)
+            $cajaData = Cache::remember('app_caja_actual_data', 60, function () {
+                $cajaActual = Caja::where('estado', 'abierta')->first();
+                
+                $ventasHoy = null;
+                $ingresosHoy = null;
+                
+                if ($cajaActual) {
+                    // ✅ UNA SOLA QUERY con agregación en lugar de 2
+                    $stats = Venta::where('caja_id', $cajaActual->id)
+                        ->whereNotIn('estado', ['anulada', 'cancelada'])
+                        ->selectRaw('COUNT(*) as count, COALESCE(SUM(total), 0) as ingresos')
+                        ->first();
+                    
+                    $ventasHoy = $stats->count ?? 0;
+                    $ingresosHoy = (float)($stats->ingresos ?? 0);
+                }
+                
+                return compact('cajaActual', 'ventasHoy', 'ingresosHoy');
+            });
+
+            // Extraer datos del cache
+            extract($cajaData);
+            
             $cajaAbierta = (bool) $cajaActual;
-            // Pasar la fecha completa al view (Carbon) para que la presentación
-            // sea responsabilidad de la capa de vista / helpers.
-            $cajaHoraApertura = $cajaActual
+            $cajaHoraApertura = $cajaActual 
                 ? Carbon::parse($cajaActual->fecha_apertura)
                 : null;
-
-            $ventasHoy = null;
-            $ingresosHoy = null;
-
-            if ($cajaActual) {
-                $ventasQuery = Venta::where('caja_id', $cajaActual->id)
-                    ->whereNotIn('estado', ['anulada', 'cancelada']);
-
-                $ventasHoy = $ventasQuery->count();
-                $ingresosHoy = (float) $ventasQuery->sum('total');
-            }
-
+            
             $view->with(compact('cajaActual', 'cajaAbierta', 'cajaHoraApertura', 'ventasHoy', 'ingresosHoy'));
         });
     }

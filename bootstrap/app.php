@@ -12,9 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Agregar middleware al grupo 'web'
-        $middleware->web(append: [
-            \App\Http\Middleware\CheckLicenseNotification::class,
-        ]);
+       // $middleware->web(append: [
+          //  \App\Http\Middleware\CheckLicenseNotification::class,
+        //]);
         
         // Aliases de middlewares
         $middleware->alias([

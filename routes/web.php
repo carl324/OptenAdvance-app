@@ -16,7 +16,9 @@ use App\Http\Middleware\CheckLicense;
 
 //Route::prefix('backup-config')->middleware('auth')->group(function() { Route::get('/carpetas', [App\Http\Controllers\BackupConfigController::class, 'listarCarpetas'])->name('backup.carpetas'); Route::get('/obtener', [App\Http\Controllers\BackupConfigController::class, 'obtener'])->name('backup.obtener'); Route::post('/guardar', [App\Http\Controllers\BackupConfigController::class, 'guardar'])->name('backup.guardar'); });
 
-
+Route::get('/', function () {
+    return redirect()->route('ventas.create');
+});
 Route::middleware(['auth', 'throttle:3,10'])->group(function () {
     Route::post('/database/restore', [DatabaseRestoreController::class, 'restore'])->name('database.restore');
 });
