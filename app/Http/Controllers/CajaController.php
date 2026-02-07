@@ -6,6 +6,7 @@ use App\Models\Caja;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class CajaController extends Controller
 {
@@ -91,6 +92,8 @@ class CajaController extends Controller
             'estado' => 'abierta',
         ]);
 
+        Cache::forget('app_caja_actual_data');
+
         if (!$request->wantsJson()) {
             return redirect()->route('ventas.create');
         }
@@ -150,6 +153,8 @@ class CajaController extends Controller
             'estado' => 'cerrada',
             'user_cierre_id' => Auth::id(), // Usuario que cerró
         ]);
+
+        Cache::forget('app_caja_actual_data');
 
         $printUrl = null;
         if (!empty($data['imprimir'])) {

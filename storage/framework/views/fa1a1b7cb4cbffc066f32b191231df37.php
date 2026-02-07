@@ -972,10 +972,6 @@
     </header>
 
     <?php echo $__env->yieldContent('content'); ?>
-
-    <?php if($cajaAbierta): ?>
-  
-
 <div class="modal fade lic-modal-container" id="modalLicencia" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered lic-modal-size">
         <div class="modal-content">
@@ -1015,7 +1011,7 @@
 
                         <h2 class="lic-modal-title-main">Tu Licencia</h2>
                         <p style="color: #64748b; font-size: 15px; margin-bottom: 30px;">
-                            Aquí tienes los detalles de tu plan actual.
+                            Estos son los detalles de tu plan actual.
                         </p>
                     </div>
 
@@ -1042,7 +1038,7 @@
 
                     <div class="mb-5">
     <h4 style="font-size: 13px; font-weight: 800; text-transform: uppercase; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 15px;">
-        Descripcion de tu plan actual
+        Descripción de tu plan actual
     </h4>
     <div class="lic-modal-permissions-list">
         <?php if($data['status'] === 'active'): ?>
@@ -1083,9 +1079,6 @@
         </div>
     </div>
 </div>
-
-
-
 <div class="modal fade" id="modalExpirado" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered lic-expired-size">
         <div class="modal-content" style="border: none; border-radius: 24px; overflow: hidden;">
@@ -1119,6 +1112,56 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="modalConfirmarCierreSesion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+    <div class="modal-content" style="border: none; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); overflow: hidden; background: #ffffff;">
+            
+     
+
+      <div class="modal-body" style="padding: 40px 30px 30px 30px;">
+        <div style="display: flex; gap: 20px; align-items: flex-start;">
+                    
+          <div style="flex-shrink: 0; width: 54px; height: 54px; background: #fff7ed; border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 1px solid #ffedd5;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+
+          <div style="flex-grow: 1;">
+            <h5 style="font-weight: 800; color: #0f172a; margin: 0 0 8px 0; font-size: 19px; letter-spacing: -0.5px;">Caja Abierta</h5>
+            <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 0;">
+              Tu turno sigue activo. Cierra la caja antes de salir para evitar inconsistencias.
+            </p>
+          </div>
+        </div>
+
+        <div style="margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px;">
+          <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
+          <span style="font-size: 13px; font-weight: 600; color: #475569;">Estado actual: Caja abierta con movimientos</span>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0" style="padding: 0 30px 30px 30px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;">
+          <button type="button" data-bs-dismiss="modal" 
+            style="padding: 14px; border-radius: 14px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;">
+            Regresar
+          </button>
+          <button class="main-btn" type="button" 
+            style="padding: 14px; border-radius: 14px; border: none; background: #2563EB; color: #ffffff; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" data-logout-confirm>
+            Cerrar sesion 
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <?php if($cajaAbierta): ?>
+  
+
 
 
 <div class="modal fade modal-alegra-final" id="modalCerrarCaja" tabindex="-1" aria-hidden="true">
@@ -1188,52 +1231,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalConfirmarCierreSesion" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
-    <div class="modal-content" style="border: none; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); overflow: hidden; background: #ffffff;">
-            
-     
 
-      <div class="modal-body" style="padding: 40px 30px 30px 30px;">
-        <div style="display: flex; gap: 20px; align-items: flex-start;">
-                    
-          <div style="flex-shrink: 0; width: 54px; height: 54px; background: #fff7ed; border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 1px solid #ffedd5;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-          </div>
-
-          <div style="flex-grow: 1;">
-            <h5 style="font-weight: 800; color: #0f172a; margin: 0 0 8px 0; font-size: 19px; letter-spacing: -0.5px;">Caja Abierta</h5>
-            <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 0;">
-              Tu turno sigue activo. Cierra la caja antes de salir para evitar inconsistencias.
-            </p>
-          </div>
-        </div>
-
-        <div style="margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px;">
-          <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
-          <span style="font-size: 13px; font-weight: 600; color: #475569;">Estado actual: Caja abierta con movimientos</span>
-        </div>
-      </div>
-
-      <div class="modal-footer border-0" style="padding: 0 30px 30px 30px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;">
-          <button type="button" data-bs-dismiss="modal" 
-            style="padding: 14px; border-radius: 14px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;">
-            Regresar
-          </button>
-          <button class="main-btn" type="button" 
-            style="padding: 14px; border-radius: 14px; border: none; background: #2563EB; color: #ffffff; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" data-logout-confirm>
-            Cerrar sesion 
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
     <?php endif; ?>
     
 <footer class="footer">
@@ -1261,67 +1259,73 @@
 
   </main>
   <script src="/assets/js/bootstrap.bundle.min.js"></script>
-  <script src="/assets/js/Chart.min.js"></script>
+  <script src="/assets/js/opten-helpers.js"></script>
   <script src="/assets/js/dynamic-pie-chart.js"></script>
   <script src="/assets/js/moment.min.js"></script>
-  <script src="/assets/js/fullcalendar.js"></script>
-  <script src="/assets/js/jvectormap.min.js"></script>
-  <script src="/assets/js/world-merc.js"></script>
-  <script src="/assets/js/polyfill.js"></script>
   <script src="/assets/js/main.js"></script>
   
   <script>
     // Flag desde backend: si el usuario tiene caja abierta
     const CAJA_ABIERTA = <?php echo json_encode((bool)($cajaAbierta ?? false), 15, 512) ?>;
 
-    document.addEventListener('DOMContentLoaded', function () {
-      // Buscar forms cuyo action contenga 'logout' (ruta de logout generada por Laravel)
-      const logoutForms = Array.from(document.querySelectorAll('form')).filter(f => {
-        const action = (f.getAttribute('action') || '').toLowerCase();
-        return action.includes('/logout') || action.endsWith('logout');
-      });
-
-      logoutForms.forEach(form => {
-        form.addEventListener('submit', function (ev) {
-          // Si la caja no está abierta, permitir submit normal
-          if (!CAJA_ABIERTA) return;
-
-          ev.preventDefault();
-          // Guardar referencia del form para usarla después
-          window._pendingLogoutForm = form;
-
-          const modalEl = document.getElementById('modalConfirmarCierreSesion');
-          if (!modalEl) {
-            // fallback: si no existe modal, enviar igualmente
-            form.submit();
-            return;
-          }
-
-          const modal = new bootstrap.Modal(modalEl);
-          modal.show();
+    OptenHelpers.waitForBootstrap(function() {
+      document.addEventListener('DOMContentLoaded', function () {
+        // Buscar forms cuyo action contenga 'logout' (ruta de logout generada por Laravel)
+        const logoutForms = Array.from(document.querySelectorAll('form')).filter(f => {
+          const action = (f.getAttribute('action') || '').toLowerCase();
+          return action.includes('/logout') || action.endsWith('logout');
         });
-      });
 
-      // Botón del modal que confirma logout
-      const modalConfirm = document.querySelector('#modalConfirmarCierreSesion [data-logout-confirm]');
-      if (modalConfirm) {
-        modalConfirm.addEventListener('click', function () {
-          const f = window._pendingLogoutForm || document.querySelector('form[action*="logout"]');
-          if (f) f.submit();
+        logoutForms.forEach(function(form) {
+          form.addEventListener('submit', function (ev) {
+            // Si la caja no está abierta, permitir submit normal
+            if (!CAJA_ABIERTA) return;
+
+            ev.preventDefault();
+            // Guardar referencia del form para usarla después
+            window._pendingLogoutForm = form;
+
+            // Usar helper seguro con fallback
+            var success = OptenHelpers.mostrarModalSeguro('modalConfirmarCierreSesion', {
+              onError: function() {
+                // Si el modal no existe, hacer logout directo
+                form.submit();
+              }
+            });
+            
+            if (!success) {
+              form.submit(); // Fallback adicional
+            }
+          });
         });
-      }
+
+        // Botón del modal que confirma logout
+        var modalConfirm = document.querySelector('#modalConfirmarCierreSesion [data-logout-confirm]');
+        if (modalConfirm) {
+          modalConfirm.addEventListener('click', function () {
+            var f = window._pendingLogoutForm || document.querySelector('form[action*="logout"]');
+            if (f) f.submit();
+          });
+        }
+      });
     });
-     document.addEventListener('DOMContentLoaded', function() {
+    OptenHelpers.waitForBootstrap(function() {
+      document.addEventListener('DOMContentLoaded', function() {
         // Interceptar respuestas fetch/axios globalmente
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-            return originalFetch.apply(this, args).then(response => {
+        var originalFetch = window.fetch;
+        window.fetch = function() {
+            var args = Array.prototype.slice.call(arguments);
+            return originalFetch.apply(this, args).then(function(response) {
                 if (response.status === 403) {
-                    response.clone().json().then(data => {
+                    response.clone().json().then(function(data) {
                         if (data.show_modal) {
-                            let modal = new bootstrap.Modal(document.getElementById('modalExpirado'));
-                            modal.show();
+                            OptenHelpers.mostrarModalSeguro('modalExpirado', {
+                              fallbackUrl: '/soporte',
+                              fallbackMessage: 'Tu licencia ha expirado. Por favor contacta con soporte.'
+                            });
                         }
+                    }).catch(function(err) {
+                        console.warn('[OptenAdvance] Error parseando respuesta 403:', err);
                     });
                 }
                 return response;
@@ -1331,11 +1335,13 @@
         // Si usas axios
         if (typeof axios !== 'undefined') {
             axios.interceptors.response.use(
-                response => response,
-                error => {
-                    if (error.response?.status === 403 && error.response?.data?.show_modal) {
-                        let modal = new bootstrap.Modal(document.getElementById('modalExpirado'));
-                        modal.show();
+                function(response) { return response; },
+                function(error) {
+                    if (error.response && error.response.status === 403 && error.response.data && error.response.data.show_modal) {
+                        OptenHelpers.mostrarModalSeguro('modalExpirado', {
+                          fallbackUrl: '/soporte',
+                          fallbackMessage: 'Tu licencia ha expirado. Por favor contacta con soporte.'
+                        });
                     }
                     return Promise.reject(error);
                 }
@@ -1344,192 +1350,194 @@
 
         // Para formularios normales (si redirige con session)
         <?php if(session('license_expired')): ?>
-            let modal = new bootstrap.Modal(document.getElementById('modalExpirado'));
-            modal.show();
+            OptenHelpers.mostrarModalSeguro('modalExpirado', {
+              fallbackUrl: '/soporte'
+            });
         <?php endif; ?>
     });
+  });
   </script>
 
   <?php if($cajaAbierta): ?>
   <script>
-    (function () {
-      const modal = document.getElementById('modalCerrarCaja');
-      if (!modal) return;
-
-      const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-      function fmtInt(v) {
-        const n = Math.round(Number(v || 0));
-        return n.toLocaleString('es-CO');
-      }
-
-      function formatMoneyNoDecimals(v) {
-        return '$ ' + fmtInt(v);
-      }
-
-      function cleanDigits(value) {
-        // remove all non-digits, but allow empty string
-        return String(value).replace(/\D+/g, '');
-      }
-
-      function formatThousandsFromDigits(digits) {
-        if (!digits) return '';
-        const n = String(Number(digits));
-        return n.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      }
-
-      function formatInputField(el) {
-        const rawSource = (el.value !== undefined && el.value !== null) ? el.value : (el.dataset.raw || '');
-        const digits = cleanDigits(rawSource);
-        el.dataset.raw = digits; // may be empty string
-        el.value = digits === '' ? '' : formatThousandsFromDigits(digits);
-      }
-
-      function showError(container, message) {
-        let err = container.querySelector('.ajax-error-msg');
-        if (!err) {
-          err = document.createElement('div');
-          err.className = 'alert alert-danger ajax-error-msg';
-          container.insertBefore(err, container.firstChild);
-        }
-        err.textContent = message;
-        err.classList.remove('d-none');
-      }
-
-      function clearError(container) {
-        const err = container.querySelector('.ajax-error-msg');
-        if (err) {
-          err.classList.add('d-none');
-          err.textContent = '';
-        }
-      }
-
-      async function loadResumen() {
-        const main = modal.querySelector('.cierre-main-action');
-        clearError(main);
-        try {
-          const res = await fetch('<?php echo e(route('caja.cierre.resumen')); ?>', { headers: { Accept: 'application/json' } });
-          const data = await res.json();
-          if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo cargar el resumen de cierre');
-
-          // Sidebar totals
-          const totalAmountEl = modal.querySelector('.total-amount');
-          if (totalAmountEl) totalAmountEl.textContent = formatMoneyNoDecimals(data.monto_cierre_calculado ?? 0);
-
-          const cards = modal.querySelectorAll('.grid-methods .method-card-minimal');
-          if (cards && cards.length >= 4) {
-            const ef = cards[0].querySelector('.m-price');
-            const ta = cards[1].querySelector('.m-price');
-            const tr = cards[2].querySelector('.m-price');
-            const vt = cards[3].querySelector('.m-price');
-            if (ef) ef.textContent = formatMoneyNoDecimals(data.total_efectivo ?? 0);
-            if (ta) ta.textContent = formatMoneyNoDecimals(data.total_tarjeta ?? 0);
-            if (tr) tr.textContent = formatMoneyNoDecimals(data.total_transferencia ?? 0);
-            if (vt) vt.textContent = (data.total_ventas_cantidad ?? 0) + ' Ventas';
-          }
-
-          // Use monto_apertura from backend (if provided) to compute monto_cierre_calculado
-          const montoApertura = Number(data.monto_apertura ?? data.monto_apertura_caja ?? 0);
-          const totalEfectivo = Number(data.total_efectivo ?? 0);
-          const montoCalculado = montoApertura + totalEfectivo;
-
-          // Render monto apertura (solo lectura)
-          const aperturaEl = modal.querySelector('.m-apertura');
-          if (aperturaEl) aperturaEl.textContent = formatMoneyNoDecimals(montoApertura);
-
-          // Store monto calculado and apertura on modal for calculations
-          modal.dataset.montoCalculado = Number(montoCalculado);
-          modal.dataset.montoApertura = Number(montoApertura);
-
-          // Reset input and difference -> mark as pending (no value entered)
-          const inputEfectivo = modal.querySelector('.input-focus-blue');
-          const badgeDiff = modal.querySelector('.badge-diff');
-          if (inputEfectivo) {
-            inputEfectivo.value = '';
-            inputEfectivo.dataset.raw = '';
-          }
-          if (badgeDiff) badgeDiff.innerHTML = 'Diferencia detectada: <span style="color: #64748b;">$ 0</span>';
-
-          updateStatus(null);
-        } catch (err) {
-          const main = modal.querySelector('.cierre-main-action');
-          showError(main, err.message);
-        }
-      }
-
-      function updateStatus(diferencia) {
-        const badge = modal.querySelector('.badge-diff');
-        const statusDot = modal.querySelector('.status-dot');
-        const sidebar = modal.querySelector('.cierre-sidebar');
-
-        // Pending: no value entered
-        if (diferencia === null || diferencia === undefined) {
-          if (badge) badge.innerHTML = 'Diferencia detectada: <span style="color: #64748b;">$ 0</span>';
-          if (statusDot) statusDot.style.background = '#3b82f6'; // azul
-          if (sidebar) {
-            const spans = Array.from(sidebar.querySelectorAll('span'));
-            const statusSpan = spans.find(s => /(Balance|Sistema|Descuadre|Pendiente)/i.test(s.textContent)) || spans[spans.length - 1];
-            if (statusSpan) statusSpan.textContent = 'Pendiente';
-          }
+    OptenHelpers.waitForBootstrap(function() {
+      (function () {
+        var modal = document.getElementById('modalCerrarCaja');
+        if (!modal) {
+          console.warn('[OptenAdvance] Modal cerrar caja no encontrado');
           return;
         }
 
-        // When a numeric value exists: zero -> green, non-zero -> red
-        const color = diferencia === 0 ? '#059669' : '#f43f5e';
-        if (badge) {
-          const formatted = '$ ' + fmtInt(Math.abs(diferencia));
-          badge.innerHTML = 'Diferencia detectada: <span style="color: ' + color + '">' + (diferencia < 0 ? '-' : '') + formatted + '</span>';
+        var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+        function fmtInt(v) {
+          var n = Math.round(Number(v || 0));
+          return n.toLocaleString('es-CO');
         }
 
-        if (statusDot) statusDot.style.background = diferencia === 0 ? '#10b981' : '#f43f5e';
+        function formatMoneyNoDecimals(v) {
+          return '$ ' + fmtInt(v);
+        }
 
-        if (sidebar) {
-          const spans = Array.from(sidebar.querySelectorAll('span'));
-          const statusSpan = spans.find(s => /(Balance|Sistema|Descuadre|Pendiente)/i.test(s.textContent)) || spans[spans.length - 1];
-          if (statusSpan) {
-            statusSpan.textContent = diferencia === 0 ? 'Balance correcto' : 'Descuadre';
+        function cleanDigits(value) {
+          // remove all non-digits, but allow empty string
+          return String(value).replace(/\D+/g, '');
+        }
+
+        function formatThousandsFromDigits(digits) {
+          if (!digits) return '';
+          var n = String(Number(digits));
+          return n.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        function formatInputField(el) {
+          var rawSource = (el.value !== undefined && el.value !== null) ? el.value : (el.dataset.raw || '');
+          var digits = cleanDigits(rawSource);
+          el.dataset.raw = digits;
+          el.value = digits === '' ? '' : formatThousandsFromDigits(digits);
+        }
+
+        function showError(container, message) {
+          var err = container.querySelector('.ajax-error-msg');
+          if (!err) {
+            err = document.createElement('div');
+            err.className = 'alert alert-danger ajax-error-msg';
+            container.insertBefore(err, container.firstChild);
+          }
+          err.textContent = message;
+          err.classList.remove('d-none');
+        }
+
+        function clearError(container) {
+          var err = container.querySelector('.ajax-error-msg');
+          if (err) {
+            err.classList.add('d-none');
+            err.textContent = '';
           }
         }
-      }
 
-      function bindInputListener() {
-        const inputEfectivo = modal.querySelector('.input-focus-blue');
-        if (!inputEfectivo) return;
-        inputEfectivo.addEventListener('input', function () {
-          // format while typing and keep raw digits
-          formatInputField(this);
-          const raw = this.dataset.raw;
-          if (raw === '' || raw === null || raw === undefined) {
-            updateStatus(null);
+        function loadResumen() {
+          var main = modal.querySelector('.cierre-main-action');
+          clearError(main);
+          fetch('<?php echo e(route('caja.cierre.resumen')); ?>', { headers: { Accept: 'application/json' } })
+            .then(function(res) {
+              return res.json().then(function(data) {
+                return { res: res, data: data };
+              });
+            })
+            .then(function(result) {
+              var res = result.res;
+              var data = result.data;
+              if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo cargar el resumen de cierre');
+
+              var totalAmountEl = modal.querySelector('.total-amount');
+              if (totalAmountEl) totalAmountEl.textContent = formatMoneyNoDecimals(data.monto_cierre_calculado || 0);
+
+              var cards = modal.querySelectorAll('.grid-methods .method-card-minimal');
+              if (cards && cards.length >= 4) {
+                var ef = cards[0].querySelector('.m-price');
+                var ta = cards[1].querySelector('.m-price');
+                var tr = cards[2].querySelector('.m-price');
+                var vt = cards[3].querySelector('.m-price');
+                if (ef) ef.textContent = formatMoneyNoDecimals(data.total_efectivo || 0);
+                if (ta) ta.textContent = formatMoneyNoDecimals(data.total_tarjeta || 0);
+                if (tr) tr.textContent = formatMoneyNoDecimals(data.total_transferencia || 0);
+                if (vt) vt.textContent = (data.total_ventas_cantidad || 0) + ' Ventas';
+              }
+
+              var montoApertura = Number(data.monto_apertura || data.monto_apertura_caja || 0);
+              var totalEfectivo = Number(data.total_efectivo || 0);
+              var montoCalculado = montoApertura + totalEfectivo;
+
+              var aperturaEl = modal.querySelector('.m-apertura');
+              if (aperturaEl) aperturaEl.textContent = formatMoneyNoDecimals(montoApertura);
+
+              modal.dataset.montoCalculado = Number(montoCalculado);
+              modal.dataset.montoApertura = Number(montoApertura);
+
+              var inputEfectivo = modal.querySelector('.input-focus-blue');
+              var badgeDiff = modal.querySelector('.badge-diff');
+              if (inputEfectivo) {
+                inputEfectivo.value = '';
+                inputEfectivo.dataset.raw = '';
+              }
+              if (badgeDiff) badgeDiff.innerHTML = 'Diferencia detectada: <span style="color: #64748b;">$ 0</span>';
+
+              updateStatus(null);
+            })
+            .catch(function(err) {
+              showError(main, err.message);
+            });
+        }
+
+        function updateStatus(diferencia) {
+          var badge = modal.querySelector('.badge-diff');
+          var statusDot = modal.querySelector('.status-dot');
+          var sidebar = modal.querySelector('.cierre-sidebar');
+
+          if (diferencia === null || diferencia === undefined) {
+            if (badge) badge.innerHTML = 'Diferencia detectada: <span style="color: #64748b;">$ 0</span>';
+            if (statusDot) statusDot.style.background = '#3b82f6';
+            if (sidebar) {
+              var spans = Array.from(sidebar.querySelectorAll('span'));
+              var statusSpan = spans.find(function(s) { return /(Balance|Sistema|Descuadre|Pendiente)/i.test(s.textContent); }) || spans[spans.length - 1];
+              if (statusSpan) statusSpan.textContent = 'Pendiente';
+            }
             return;
           }
-          const real = Number(raw || 0);
-          const calculado = Number(modal.dataset.montoCalculado || 0);
-          const diferencia = real - calculado;
-          updateStatus(diferencia);
-        });
-      }
 
-      function bindConfirm() {
-        const btn = modal.querySelector('.btn-finalizar');
-        const main = modal.querySelector('.cierre-main-action');
-        if (!btn) return;
-        btn.addEventListener('click', async function () {
-          clearError(main);
-          btn.disabled = true;
-          try {
-            const inputEfectivo = modal.querySelector('.input-focus-blue');
-            const raw = inputEfectivo?.dataset.raw;
+          var color = diferencia === 0 ? '#059669' : '#f43f5e';
+          if (badge) {
+            var formatted = '$ ' + fmtInt(Math.abs(diferencia));
+            badge.innerHTML = 'Diferencia detectada: <span style="color: ' + color + '">' + (diferencia < 0 ? '-' : '') + formatted + '</span>';
+          }
+
+          if (statusDot) statusDot.style.background = diferencia === 0 ? '#10b981' : '#f43f5e';
+
+          if (sidebar) {
+            var spans = Array.from(sidebar.querySelectorAll('span'));
+            var statusSpan = spans.find(function(s) { return /(Balance|Sistema|Descuadre|Pendiente)/i.test(s.textContent); }) || spans[spans.length - 1];
+            if (statusSpan) {
+              statusSpan.textContent = diferencia === 0 ? 'Balance correcto' : 'Descuadre';
+            }
+          }
+        }
+
+        function bindInputListener() {
+          var inputEfectivo = modal.querySelector('.input-focus-blue');
+          if (!inputEfectivo) return;
+          inputEfectivo.addEventListener('input', function () {
+            formatInputField(this);
+            var raw = this.dataset.raw;
+            if (raw === '' || raw === null || raw === undefined) {
+              updateStatus(null);
+              return;
+            }
+            var real = Number(raw || 0);
+            var calculado = Number(modal.dataset.montoCalculado || 0);
+            var diferencia = real - calculado;
+            updateStatus(diferencia);
+          });
+        }
+
+        function bindConfirm() {
+          var btn = modal.querySelector('.btn-finalizar');
+          var main = modal.querySelector('.cierre-main-action');
+          if (!btn) return;
+          btn.addEventListener('click', function () {
+            clearError(main);
+            btn.disabled = true;
+            var inputEfectivo = modal.querySelector('.input-focus-blue');
+            var raw = inputEfectivo && inputEfectivo.dataset.raw;
             if (!inputEfectivo || raw === '' || raw === undefined) {
               showError(main, 'Ingresa el monto de efectivo en caja');
               btn.disabled = false;
               return;
             }
-            const montoReal = Number(raw || 0);
+            var montoReal = Number(raw || 0);
+            var nota = modal.querySelector('textarea') && modal.querySelector('textarea').value || null;
 
-            const nota = modal.querySelector('textarea')?.value || null;
-
-            const res = await fetch('<?php echo e(route('caja.cerrar')); ?>', {
+            fetch('<?php echo e(route('caja.cerrar')); ?>', {
               method: 'POST',
               headers: {
                 'X-CSRF-TOKEN': csrfToken,
@@ -1540,34 +1548,41 @@
                 monto_cierre_real: montoReal,
                 nota_cierre: nota
               })
-            });
+            })
+              .then(function(res) {
+                return res.json().then(function(data) {
+                  return { res: res, data: data };
+                });
+              })
+              .then(function(result) {
+                var res = result.res;
+                var data = result.data;
+                if (!res.ok || !data.success) {
+                  throw new Error(data.message || 'No se pudo cerrar la caja');
+                }
 
-            const data = await res.json();
-            if (!res.ok || !data.success) {
-              throw new Error(data.message || 'No se pudo cerrar la caja');
-            }
+                var modalInstance = bootstrap.Modal.getInstance(modal);
+                if (modalInstance) modalInstance.hide();
 
-            const modalInstance = bootstrap.Modal.getInstance(modal);
-            if (modalInstance) modalInstance.hide();
+                window.location.reload();
+              })
+              .catch(function(err) {
+                showError(main, err.message);
+                btn.disabled = false;
+              });
+          });
+        }
 
-            // Refrescar página para actualizar estado de la UI
-            window.location.reload();
-          } catch (err) {
-            showError(main, err.message);
-            btn.disabled = false;
-          }
+        // Bind events
+        modal.addEventListener('shown.bs.modal', function () {
+          loadResumen();
         });
-      }
 
-      // Bind events
-      modal.addEventListener('shown.bs.modal', function () {
-        loadResumen();
-      });
-
-      // Setup listeners once
-      bindInputListener();
-      bindConfirm();
-    })();
+        // Setup listeners once
+        bindInputListener();
+        bindConfirm();
+      })();
+    });
   </script>
   <?php endif; ?>
 

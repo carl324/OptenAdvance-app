@@ -22,7 +22,9 @@ class GenerateLicense extends Command
 
         $file = $path . '/license.lic';
 
-        $machineHash = $this->machineHash();
+        $uuid = '7507E725-DCDA-11E8-BB88-E86A644BB18D';
+        $machineHash = hash('sha256', $uuid . 'FIXED_SALT');
+
 
         // --- Fechas ---
         $startAt = Carbon::now()->format('Y-m-d H:i:s');
