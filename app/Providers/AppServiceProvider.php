@@ -26,8 +26,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // ✅ CONSOLIDADO: Un único composer para todas las vistas
-        View::composer('*', function ($view) {
+        // ✅ ESPECÍFICO: Solo inyectar datos de licencia en vistas que los usan
+        View::composer(['layouts.app', 'modals.license'], function ($view) {
             // Cache para datos de licencia (10 minutos)
             $licenseData = Cache::remember('app_license_data', 600, function () {
                 return app(LicenseService::class)->uiData();

@@ -112,9 +112,9 @@
                     <div>
                         <h6 class="mb-2" style="font-size: 18px; font-weight: 600;">
                             <i class="lni lni-cloud-upload" style="color: #3b82f6; margin-right: 8px;"></i>
-                            Gestión de respaldos
+                            Gestión de respaldos y licencia
                         </h6>
-                        <p class="text-xs text-gray mb-0">Configura y administra los respaldos de tu base de datos</p>
+                        <p class="text-xs text-gray mb-0">Configura y administra los respaldos de tu base de datos y la licencia de tu software</p>
                     </div>
                     
                 </div>
@@ -137,6 +137,12 @@
                         <button class="nav-link" id="auto-tab" data-bs-toggle="tab" data-bs-target="#auto" type="button" role="tab" style="font-weight: 600; padding: 12px 24px; border: none; background: none; color: #64748b;">
                             <i class="lni lni-cloud-download" style="margin-right: 6px;"></i>
                             Restaurar datos
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="cloud-tab" data-bs-toggle="tab" data-bs-target="#cloud" type="button" role="tab" style="font-weight: 600; padding: 12px 24px; border: none; background: none; color: #64748b;">
+                            <i class="mdi mdi-key" style="margin-right: 6px;"></i>
+                            Licencia
                         </button>
                     </li>
                 </ul>
@@ -481,6 +487,494 @@
         </div>
     </div>
 </div>
+
+
+<div class="tab-pane fade" id="cloud" role="tabpanel">
+    <div class="row">
+        <div class="col-lg-12">
+            
+            <!-- 🆕 NUEVA SECCIÓN: Código de Equipo -->
+            
+
+            <div class="row">
+                <!-- Panel izquierdo: Estado actual -->
+                <div class="col-lg-6">
+                    <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; height: 100%;">
+                        <h6 style="font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">
+                            <i class="lni lni-certificate" style="color: #0b8cf5; margin-right: 8px;"></i>
+                            Estado de la Licencia
+                        </h6>
+
+                        <!-- Estado actual con badge dinámico -->
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                            <div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">Estado actual</div>
+                            <div id="license-status-badge" style="display: inline-block; padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; background: #dbeafe; color: #1e40af;">
+                                <i class="lni lni-checkmark-circle" style="margin-right: 6px;"></i>
+                                <span>Activa</span>
+                            </div>
+                        </div>
+
+                        <!-- Información de fechas -->
+                        <div style="margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px;">
+                                <span style="font-size: 13px; color: #64748b;">Fecha de inicio:</span>
+                                <span id="license-start-date" style="font-size: 13px; font-weight: 600; color: #1e293b;">--</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px;">
+                                <span style="font-size: 13px; color: #64748b;">Fecha de vencimiento:</span>
+                                <span id="license-end-date" style="font-size: 13px; font-weight: 600; color: #1e293b;">--</span>
+                            </div>
+                        </div>
+
+                        <!-- Botón limpiar caché -->
+                        <button type="button" id="btn-refresh-license" class="main-btn primary-btn btn-hover w-100" style="padding: 12px; font-weight: 600; margin-bottom: 12px;">
+                            <i class="lni lni-reload" style="margin-right: 6px;"></i>
+                            <span>Actualizar Estado</span>
+                        </button>
+
+                        <!-- Info box -->
+                        <div style="background: #eff6ff; padding: 16px; border-radius: 8px; border-left: 3px solid #3b82f6;">
+                            <div style="display: flex; align-items: start; gap: 12px;">
+                                <i class="lni lni-information" style="font-size: 20px; color: #3b82f6; margin-top: 2px;"></i>
+                                <div>
+                                    <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">Actualización de estado</div>
+                                    <div style="font-size: 12px; color: #64748b;">Usa "Actualizar Estado" después de cargar un nuevo archivo de licencia para ver los cambios inmediatamente</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel derecho: Cargar licencia -->
+                <div class="col-lg-6">
+                    <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; height: 100%;">
+                        <h6 style="font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">
+                            <i class="lni lni-upload" style="color: #8b5cf6; margin-right: 8px;"></i>
+                            Cargar Nueva Licencia
+                        </h6>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">
+                                Archivo de licencia (.lic)
+                            </label>
+                            
+                            <input type="file" id="license-file-input" accept=".lic" style="display: none;">
+                            
+                            <button type="button" onclick="document.getElementById('license-file-input').click()" style="width: 100%; padding: 20px; border: 2px dashed #cbd5e1; border-radius: 12px; background: #f8fafc; cursor: pointer; transition: all 0.3s;">
+                                <!-- Placeholder inicial -->
+                                <div id="license-upload-placeholder" style="text-align: center;">
+                                    <i class="lni lni-cloud-upload" style="font-size: 48px; color: #94a3b8; display: block; margin-bottom: 12px;"></i>
+                                    <div style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">Haz clic para seleccionar archivo</div>
+                                    <div style="font-size: 13px; color: #64748b;">Formato soportado: .lic</div>
+                                </div>
+                                
+                                <!-- Información del archivo seleccionado -->
+                                <div id="license-file-selected" style="display: none;">
+                                    <div style="display: flex; align-items: center; gap: 16px; justify-content: center;">
+                                        <i class="lni lni-certificate" style="font-size: 48px; color: #f59e0b;"></i>
+                                        <div style="text-align: left;">
+                                            <div style="font-size: 14px; font-weight: 600; color: #92400e;" id="license-file-name-display"></div>
+                                            <div style="font-size: 12px; color: #d97706;" id="license-file-size-display"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
+                            
+                            <small style="font-size: 12px; color: #64748b; display: block; margin-top: 6px;">
+                                <i class="lni lni-files" style="color: #8b5cf6;"></i>
+                                Selecciona el archivo .lic proporcionado por soporte
+                            </small>
+                        </div>
+
+                        <button type="button" id="btn-upload-license" class="main-btn success-btn btn-hover w-100" style="padding: 12px; font-weight: 600; margin-bottom: 16px;">
+                            <i class="lni lni-checkmark-circle" style="margin-right: 6px;"></i>
+                            <span>Cargar Licencia</span>
+                        </button>
+
+                        <!-- Warning box -->
+                        <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                            <div style="display: flex; align-items: start; gap: 12px;">
+                                <i class="lni lni-warning" style="font-size: 20px; color: #d97706; margin-top: 2px;"></i>
+                                <div>
+                                    <div style="font-size: 13px; font-weight: 600; color: #78350f; margin-bottom: 4px;">Importante</div>
+                                    <div style="font-size: 12px; color: #92400e;">Solo carga archivos .lic válidos proporcionados por soporte. Archivos incorrectos pueden causar problemas de acceso.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <br><br>
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div style="
+            background:#ffffff;
+            padding:22px;
+            border-radius:12px;
+            border:1px solid #e5e7eb;
+        ">
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+                gap:20px;
+                flex-wrap:wrap;
+            ">
+                
+                <div style="flex:1; min-width:260px;">
+                    <div style="
+                        display:flex;
+                        align-items:center;
+                        gap:8px;
+                        margin-bottom:6px;
+                    ">
+                        <i class="lni lni-code" style="font-size:15px; color:#6b7280;"></i>
+                        <span style="
+                            font-size:13px;
+                            font-weight:600;
+                            color:#111827;
+                        ">
+                            Identificador del equipo
+                        </span>
+                    </div>
+
+                    <div style="
+                        font-size:12px;
+                        color:#6b7280;
+                        margin-bottom:12px;
+                    ">
+                        Necesario para emitir la licencia de uso
+                    </div>
+
+                    <div style="
+                        background:#f9fafb;
+                        border:1px solid #e5e7eb;
+                        border-radius:8px;
+                        padding:12px;
+                        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                        font-size:13px;
+                        color:#111827;
+                        word-break:break-all;
+                    ">
+                        <span id="machine-hash-display">Cargando…</span>
+                    </div>
+                </div>
+
+                <div style="
+                    display:flex;
+                    flex-direction:column;
+                    gap:10px;
+                ">
+                    <button
+                        type="button"
+                        id="btn-copy-machine-hash"
+                        class="btn btn-sm"
+                        style="
+                            background:rgb(37, 97, 233);
+                            color:#ffffff;
+                            border-radius:8px;
+                            padding:8px 14px;
+                            font-size:13px;
+                            font-weight:500;
+                            display:flex;
+                            align-items:center;
+                            gap:6px;
+                        ">
+                        <i class="lni lni-clipboard"></i>
+                        Copiar
+                    </button>
+
+                    <button
+                        type="button"
+                        id="btn-refresh-machine-hash"
+                        class="btn btn-sm"
+                        style="
+                            background:transparent;
+                            color:#374151;
+                            border:1px solid #d1d5db;
+                            border-radius:8px;
+                            padding:8px 14px;
+                            font-size:13px;
+                            font-weight:500;
+                            display:flex;
+                            align-items:center;
+                            gap:6px;
+                        ">
+                        <i class="lni lni-reload"></i>
+                        Regenerar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+        </div>
+    </div>
+</div>
+<!-- Modal de mensajes -->
+<div class="modal fade" id="modalMensaje" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 12px; border: none;">
+            <div class="modal-body" style="padding: 30px; text-align: center;">
+                <i id="modal-icon" class="lni lni-checkmark-circle" style="font-size: 64px; color: #10b981; display: block; margin-bottom: 16px;"></i>
+                <h5 id="modal-title" style="font-weight: 600; color: #111827; margin-bottom: 8px;">Éxito</h5>
+                <p id="modal-message" style="color: #6b7280; margin-bottom: 20px;">Operación completada</p>
+                <button type="button" class="main-btn primary-btn btn-hover" data-bs-dismiss="modal" style="padding: 10px 24px;">
+                    Aceptar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// Helper para mostrar mensajes bonitos
+function showMessage(title, message, isSuccess = true) {
+    const icon = document.getElementById('modal-icon');
+    const titleEl = document.getElementById('modal-title');
+    const messageEl = document.getElementById('modal-message');
+    
+    if (isSuccess) {
+        icon.className = 'lni lni-checkmark-circle';
+        icon.style.color = '#10b981';
+    } else {
+        icon.className = 'lni lni-close-circle';
+        icon.style.color = '#ef4444';
+    }
+    
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalMensaje'));
+    modal.show();
+}
+
+// Cargar hash y datos de licencia al iniciar
+document.addEventListener('DOMContentLoaded', () => {
+    loadHash();
+    loadLicenseData();
+});
+
+// ========== MACHINE HASH ==========
+
+// Cargar machine hash
+function loadHash() {
+    fetch('/license/machine-hash')
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('machine-hash-display').textContent = 
+                data.success ? data.machine_hash : 'Error';
+        })
+        .catch(() => {
+            document.getElementById('machine-hash-display').textContent = 'Error de conexión';
+        });
+}
+
+// Botón copiar
+document.getElementById('btn-copy-machine-hash').addEventListener('click', function() {
+    const hash = document.getElementById('machine-hash-display').textContent;
+    
+    if (hash === 'Cargando…' || hash === 'Error') return;
+    
+    navigator.clipboard.writeText(hash).then(() => {
+        const originalHTML = this.innerHTML;
+        this.innerHTML = '<i class="lni lni-checkmark"></i> Copiado';
+        
+        setTimeout(() => {
+            this.innerHTML = originalHTML;
+        }, 2000);
+    });
+});
+
+// Botón regenerar hash
+document.getElementById('btn-refresh-machine-hash').addEventListener('click', function() {
+    this.disabled = true;
+    this.innerHTML = '<i class="lni lni-spinner lni-is-spinning"></i> Regenerando...';
+    
+    fetch('/license/machine-hash/refresh', { 
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('machine-hash-display').textContent = 
+                data.success ? data.machine_hash : 'Error';
+        })
+        .finally(() => {
+            this.disabled = false;
+            this.innerHTML = '<i class="lni lni-reload"></i> Regenerar';
+        });
+});
+
+// ========== LICENCIA ==========
+
+// Cargar datos de la licencia
+function loadLicenseData() {
+    fetch('/license/data')
+        .then(res => res.json())
+        .then(response => {
+            if (response.success) {
+                updateLicenseUI(response.data);
+            }
+        })
+        .catch(err => console.error('Error cargando licencia:', err));
+}
+
+// Actualizar UI con datos de licencia
+function updateLicenseUI(data) {
+    const statusBadge = document.getElementById('license-status-badge');
+    const startDate = document.getElementById('license-start-date');
+    const endDate = document.getElementById('license-end-date');
+
+    // Mapeo de estados
+    const statusConfig = {
+        'active': {
+            html: '<i class="lni lni-checkmark-circle"></i> Activa',
+            style: 'background: #dcfce7; color: #166534;'
+        },
+        'trial_active': {
+            html: '<i class="lni lni-checkmark-circle"></i> Trial Activa',
+            style: 'background: #dbeafe; color: #1e40af;'
+        },
+        'trial_first': {
+            html: '<i class="lni lni-warning"></i> Sin Licencia',
+            style: 'background: #fef3c7; color: #92400e;'
+        },
+        'expired': {
+            html: '<i class="lni lni-close-circle"></i> Expirada',
+            style: 'background: #fee2e2; color: #991b1b;'
+        },
+        'trial_hardware': {
+            html: '<i class="lni lni-warning"></i> Hardware Cambiado',
+            style: 'background: #fed7aa; color: #9a3412;'
+        }
+    };
+
+    const config = statusConfig[data.status] || statusConfig['expired'];
+    statusBadge.innerHTML = config.html;
+    statusBadge.style = config.style + ' display: inline-block; padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 14px;';
+
+    startDate.textContent = data.start_at || '--';
+    endDate.textContent = data.end_at || '--';
+}
+
+// Mostrar archivo seleccionado
+document.getElementById('license-file-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    
+    if (file) {
+        const fileName = file.name;
+        const fileSize = (file.size / 1024).toFixed(2) + ' KB';
+        
+        document.getElementById('license-file-name-display').textContent = fileName;
+        document.getElementById('license-file-size-display').textContent = fileSize;
+        
+        document.getElementById('license-upload-placeholder').style.display = 'none';
+        document.getElementById('license-file-selected').style.display = 'block';
+    }
+});
+
+// Botón subir licencia
+document.getElementById('btn-upload-license').addEventListener('click', function() {
+    const fileInput = document.getElementById('license-file-input');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showMessage('Error', 'Por favor selecciona un archivo .lic', false);
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('license_file', file);
+
+    this.disabled = true;
+    this.innerHTML = '<i class="lni lni-spinner lni-is-spinning"></i> Cargando...';
+
+    fetch('/license/upload', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: formData
+    })
+    .then(res => {
+        // Verificar si la respuesta es JSON
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('El servidor devolvió un error inesperado');
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showMessage('Licencia instalada', data.message);
+            
+            // Recargar datos de licencia
+            loadLicenseData();
+            
+            // Resetear input
+            fileInput.value = '';
+            document.getElementById('license-upload-placeholder').style.display = 'block';
+            document.getElementById('license-file-selected').style.display = 'none';
+        } else {
+            showMessage('Error', data.message, false);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('Error', err.message || 'Error al subir la licencia', false);
+    })
+    .finally(() => {
+        this.disabled = false;
+        this.innerHTML = '<i class="lni lni-checkmark-circle"></i> Cargar Licencia';
+    });
+});
+
+// Botón actualizar estado de licencia
+document.getElementById('btn-refresh-license').addEventListener('click', function() {
+    this.disabled = true;
+    this.innerHTML = '<i class="lni lni-spinner lni-is-spinning"></i> Actualizando...';
+    
+    fetch('/license/refresh', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(res => res.json())
+    .then(response => {
+        if (response.success) {
+            updateLicenseUI(response.data);
+            showMessage('Actualizado', 'Estado de licencia actualizado');
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('Error', 'Error al actualizar estado', false);
+    })
+    .finally(() => {
+        this.disabled = false;
+        this.innerHTML = '<i class="lni lni-reload"></i> Actualizar Estado';
+    });
+});
+</script>
+
+
+
+
+
+
+
+
 
 <!-- Modal de resultado -->
 <div id="modal-result" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">

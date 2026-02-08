@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 
 class LicenseService
 {
+    private const MASTER_KEY = '145537332a7bf08db92cb37b3b752588c127fbb85959b5f577ab70b08d154956';
     private string $path;
     private const CACHE_TTL = 86400; // 24 horas en segundos
 
@@ -37,6 +38,100 @@ class LicenseService
     }
 
     /**
+     * Instalar/cargar archivo de licencia
+     */
+    /**
+ * Instalar/cargar archivo de licencia
+ */
+public function install($file): array
+{
+    try {
+        // Leer contenido del archivo subido ANTES de moverlo
+        $raw = file_get_contents($file->getRealPath());
+        
+        if ($raw === false || strlen($raw) < 17) {
+            return [
+                'success' => false,
+                'message' => 'Archivo de licencia corrupto o vacío'
+            ];
+        }
+
+        // Validar que se pueda descifrar
+        $key = hash('sha256', self::MASTER_KEY, true);
+        $iv = substr($raw, 0, 16);
+        $cipher = substr($raw, 16);
+
+        $plain = openssl_decrypt($cipher, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+
+        if ($plain === false) {
+            return [
+                'success' => false,
+                'message' => 'Licencia inválida o corrupta'
+            ];
+        }
+
+        // Validar estructura
+        $parts = explode('|', $plain);
+        if (count($parts) !== 5) {
+            return [
+                'success' => false,
+                'message' => 'Formato de licencia inválido'
+            ];
+        }
+
+        [$type, $machineHash, $startAt, $endAt, $sig] = $parts;
+
+        // Validar firma
+        $expected = hash_hmac(
+            'sha256',
+            $type . '|' . $machineHash . '|' . $startAt . '|' . $endAt,
+            self::MASTER_KEY
+        );
+
+        if (!hash_equals($expected, $sig)) {
+            return [
+                'success' => false,
+                'message' => 'Firma de licencia inválida'
+            ];
+        }
+
+        // Validar hardware
+        if ($machineHash !== $this->machineHash()) {
+            return [
+                'success' => false,
+                'message' => 'Esta licencia no es válida para este equipo'
+            ];
+        }
+
+        // TODO OK - Ahora sí guardar
+        $directory = dirname($this->path);
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        file_put_contents($this->path, $raw);
+
+        // Limpiar caché
+        $this->refresh();
+
+        // Validar estado final
+        $status = $this->checkLicenseStatus();
+
+        return [
+            'success' => true,
+            'message' => 'Licencia instalada correctamente',
+            'status' => $status
+        ];
+        
+    } catch (\Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Error al instalar licencia: ' . $e->getMessage()
+        ];
+    }
+}
+
+    /**
      * Forzar revalidación (llamar cuando se actualice la licencia)
      */
     public function refresh(): void
@@ -63,7 +158,7 @@ class LicenseService
             return $this->persistState('expired', null, $now);
         }
 
-        $key    = hash('sha256', config('app.key'), true);
+        $key    = hash('sha256', self::MASTER_KEY, true);
         $iv     = substr($raw, 0, 16);
         $cipher = substr($raw, 16);
 
@@ -91,7 +186,7 @@ class LicenseService
         $expected = hash_hmac(
             'sha256',
             $type . '|' . $machineHash . '|' . $startAt . '|' . $endAt,
-            config('app.key')
+            self::MASTER_KEY
         );
 
         if (!hash_equals($expected, $sig)) {
@@ -128,7 +223,7 @@ class LicenseService
      */
     private function generateUiData(): array
     {
-        $status = $this->checkLicenseStatus(); // Usa versión sin caché interna
+        $status = $this->checkLicenseStatus();
 
         $data = [
             'status' => $status,
@@ -141,7 +236,7 @@ class LicenseService
         if (file_exists($this->path)) {
             $raw = @file_get_contents($this->path);
             if ($raw && strlen($raw) > 16) {
-                $key    = hash('sha256', config('app.key'), true);
+                $key    = hash('sha256', self::MASTER_KEY, true);
                 $iv     = substr($raw, 0, 16);
                 $cipher = substr($raw, 16);
 
@@ -187,16 +282,42 @@ class LicenseService
     }
 
     /**
-     * Machine hash con caché (el comando exec es LENTO)
+     * Machine hash con caché - SINCRONIZADO CON CONTROLADOR
      */
     private function machineHash(): string
-    {
-        return Cache::remember('license_machine_hash', 604800, function () { // 7 días
-            $hostname = gethostname() ?: 'unknown';
-            $mac = exec('getmac');
-            $mac = preg_replace('/\s+/', '', $mac);
+{
+    return Cache::remember('license_machine_hash', 604800, function () {
+        $hostname = gethostname() ?: 'unknown';
+        
+        $mac = '';
+        
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            // NUEVO: Obtener todas las líneas de getmac
+            exec('getmac', $output);
+            
+            // Buscar la primera MAC válida
+            foreach ($output as $line) {
+                if (preg_match('/([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})/', $line, $matches)) {
+                    $mac = $matches[0];
+                    break;
+                }
+            }
+        } else {
+            // Linux/Unix
+            $mac = @exec("ip link show | grep ether | awk '{print $2}' | head -n 1");
+            
+            if (empty($mac)) {
+                $mac = @exec("ifconfig | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' | head -n 1");
+            }
+        }
+        
+        $mac = preg_replace('/\s+/', '', $mac ?? '');
+        
+        if (empty($mac)) {
+            $mac = $_SERVER['SERVER_ADDR'] ?? '127.0.0.1';
+        }
 
-            return hash('sha256', $mac . $hostname . 'FIXED_SALT');
-        });
-    }
+        return hash('sha256', $mac . $hostname . 'FIXED_SALT');
+    });
+}
 }

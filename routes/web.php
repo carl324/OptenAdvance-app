@@ -12,10 +12,17 @@ use App\Http\Controllers\PersonalController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\DatabaseRestoreController;
 use App\Http\Middleware\CheckLicense;
+use App\Http\Controllers\LicenseController;
 //use App\Http\Controllers\BackupConfigController;
 
 //Route::prefix('backup-config')->middleware('auth')->group(function() { Route::get('/carpetas', [App\Http\Controllers\BackupConfigController::class, 'listarCarpetas'])->name('backup.carpetas'); Route::get('/obtener', [App\Http\Controllers\BackupConfigController::class, 'obtener'])->name('backup.obtener'); Route::post('/guardar', [App\Http\Controllers\BackupConfigController::class, 'guardar'])->name('backup.guardar'); });
-
+Route::prefix('/license')->middleware('auth')->group(function () {
+    Route::get('machine-hash', [LicenseController::class, 'getMachineHash']);
+    Route::post('machine-hash/refresh', [LicenseController::class, 'refreshMachineHash']);
+    Route::get('data', [LicenseController::class, 'getLicenseData']);
+    Route::post('upload', [LicenseController::class, 'uploadLicense']);
+    Route::post('refresh', [LicenseController::class, 'refreshLicense']);
+});
 Route::get('/', function () {
     return redirect()->route('ventas.create');
 });

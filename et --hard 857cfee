@@ -1,0 +1,34 @@
+[33m857cfee[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdevelop[m[33m, [m[1;31morigin/develop[m[33m)[m primera vez en devlop
+[33mb05249b[m[33m ([m[1;33mtag: [m[1;33mv1.0.0[m[33m, [m[1;32mmaster[m[33m)[m chore: cierre versión 1.0 estable
+[33m9b6cc6d[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m todo antes de launcher
+[33m9c67502[m antes de las licensias
+[33mbd7b640[m antes de licencias
+[33mfb9ee6a[m rodo antes de laragon
+[33m1fbf123[m todo antes de agregar soft delete
+[33mace2977[m todo antes de las pruebas
+[33m53323ea[m todo listo antes de hacer pruebas de codigo
+[33mfdbf400[m todo antes de cambiar base de datos
+[33maabde18[m casi todo listo
+[33m28ed58f[m ya casi final todo, solo falta hacer pruebas y deatlle pequeños
+[33ma9d9a66[m todo antes de tocar empleados
+[33mc11efdc[m reportes con ususario para ventas y reporte de caja exitoso
+[33m7beb247[m todo antes de tocar reporter
+[33ma477826[m feat: roles admin/empleado, POS core stable (ventas, caja, permisos)
+[33m17589bf[m proyecto ya casi listo, solo falta teste para produccion
+[33me54c31d[m todo antes de mover el controlador de reportes
+[33mf851f9b[m Actualización: ajuste de facturas PDF y térmico, corrección de contenido y totales
+[33m0ee1561[m solo flta cuadrar los mensajes de mepresa y ya
+[33m712e92b[m flata hacer pruebas a reportes, empresa y factura
+[33m82e0115[m solo falta verificar empresa y factura
+[33mcee5a33[m editando la parte de productos
+[33mb21a37a[m el ultimo comit antes de integrar backend con frotend
+[33m111fe0c[m todo listo para pre producion antes del diseño final
+[33mf158250[m checkpoint: estado estable antes de refactor grande en ventas
+[33mcbe8241[m chore: ajustes finales POS (timezone, factura, productos y ventas)
+[33m8982885[m fix(productos): bloquear edición con precio 0 en frontend
+[33m859ab60[m correciones finales, hoy quedo listo lo de mepresa
+[33m3ea9d9e[m modulo de ventas casi listo para produccion, lo demas falta
+[33m4b4fde8[m editar datos de empresa desde formulario (consulta y actualización del registro existente) estan mal ahi hay error, pero ya quedo todo listo lo del la factura ventas y registro de productos
+[33mbcb29e0[m listar y crear poductos con iva y eso, los productos ya se editan con iva tambien y se guardan en inventario movimientos los stock editados
+[33m4f2e68c[m migrar bases de datos de facturas empresa, y ajustes en los campos de productos y ventas para que s epueda regitrar iva y esa monda, tambien en el codigo cambie todo o ajuste para que los productos se registren con iva y tengan el formato de nequi al escribir
+[33mea494a1[m Initial commit - Opten POS MVP

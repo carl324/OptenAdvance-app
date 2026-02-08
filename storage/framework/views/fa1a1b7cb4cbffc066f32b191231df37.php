@@ -972,11 +972,7 @@
     </header>
 
     <?php echo $__env->yieldContent('content'); ?>
-
-    <?php if($cajaAbierta): ?>
-  
-
-<div class="modal fade lic-modal-container" id="modalLicencia" tabindex="-1" aria-hidden="true">
+    <div class="modal fade lic-modal-container" id="modalLicencia" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered lic-modal-size">
         <div class="modal-content">
             <div class="lic-modal-grid">
@@ -1083,9 +1079,6 @@
         </div>
     </div>
 </div>
-
-
-
 <div class="modal fade" id="modalExpirado" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered lic-expired-size">
         <div class="modal-content" style="border: none; border-radius: 24px; overflow: hidden;">
@@ -1119,8 +1112,54 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="modalConfirmarCierreSesion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+    <div class="modal-content" style="border: none; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); overflow: hidden; background: #ffffff;">
+            
+     
 
+      <div class="modal-body" style="padding: 40px 30px 30px 30px;">
+        <div style="display: flex; gap: 20px; align-items: flex-start;">
+                    
+          <div style="flex-shrink: 0; width: 54px; height: 54px; background: #fff7ed; border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 1px solid #ffedd5;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
 
+          <div style="flex-grow: 1;">
+            <h5 style="font-weight: 800; color: #0f172a; margin: 0 0 8px 0; font-size: 19px; letter-spacing: -0.5px;">Caja Abierta</h5>
+            <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 0;">
+              Tu turno sigue activo. Cierra la caja antes de salir para evitar inconsistencias.
+            </p>
+          </div>
+        </div>
+
+        <div style="margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px;">
+          <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
+          <span style="font-size: 13px; font-weight: 600; color: #475569;">Estado actual: Caja abierta con movimientos</span>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0" style="padding: 0 30px 30px 30px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;">
+          <button type="button" data-bs-dismiss="modal" 
+            style="padding: 14px; border-radius: 14px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;">
+            Regresar
+          </button>
+          <button class="main-btn" type="button" 
+            style="padding: 14px; border-radius: 14px; border: none; background: #2563EB; color: #ffffff; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" data-logout-confirm>
+            Cerrar sesion 
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<?php if($cajaAbierta): ?>
 <div class="modal fade modal-alegra-final" id="modalCerrarCaja" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-alegra-width">
         <div class="modal-content">
@@ -1187,54 +1226,7 @@
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="modalConfirmarCierreSesion" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
-    <div class="modal-content" style="border: none; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); overflow: hidden; background: #ffffff;">
-            
-     
-
-      <div class="modal-body" style="padding: 40px 30px 30px 30px;">
-        <div style="display: flex; gap: 20px; align-items: flex-start;">
-                    
-          <div style="flex-shrink: 0; width: 54px; height: 54px; background: #fff7ed; border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 1px solid #ffedd5;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-          </div>
-
-          <div style="flex-grow: 1;">
-            <h5 style="font-weight: 800; color: #0f172a; margin: 0 0 8px 0; font-size: 19px; letter-spacing: -0.5px;">Caja Abierta</h5>
-            <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 0;">
-              Tu turno sigue activo. Cierra la caja antes de salir para evitar inconsistencias.
-            </p>
-          </div>
-        </div>
-
-        <div style="margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px;">
-          <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
-          <span style="font-size: 13px; font-weight: 600; color: #475569;">Estado actual: Caja abierta con movimientos</span>
-        </div>
-      </div>
-
-      <div class="modal-footer border-0" style="padding: 0 30px 30px 30px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;">
-          <button type="button" data-bs-dismiss="modal" 
-            style="padding: 14px; border-radius: 14px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;">
-            Regresar
-          </button>
-          <button class="main-btn" type="button" 
-            style="padding: 14px; border-radius: 14px; border: none; background: #2563EB; color: #ffffff; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" data-logout-confirm>
-            Cerrar sesion 
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-    <?php endif; ?>
+<?php endif; ?>
     
 <footer class="footer">
   <div class="container-fluid">
