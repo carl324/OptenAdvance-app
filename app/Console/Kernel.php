@@ -6,7 +6,9 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
-{
+{   protected $commands = [
+        \App\Console\Commands\LicenseDays::class,
+    ];
     protected function schedule(Schedule $schedule)
     {
         // Ejecutar el comando de backup cada hora
