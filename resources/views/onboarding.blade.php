@@ -159,6 +159,7 @@
             
             <form id="onboard-form" class="row g-4" data-endpoint="{{ route('empresa.update') }}" novalidate>
                 @csrf
+                <input type="hidden" name="from_onboarding" value="1">
                 
                 <div class="col-12">
                     <label class="form-label">Nombre de la Empresa <span class="text-danger">*</span></label>

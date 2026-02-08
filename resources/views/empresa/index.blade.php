@@ -716,6 +716,15 @@
     </div>
 </div>
 <!-- Modal de mensajes -->
+
+
+
+
+
+
+
+
+<!-- Modal de resultado 
 <div class="modal fade" id="modalMensaje" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 12px; border: none;">
@@ -729,27 +738,57 @@
             </div>
         </div>
     </div>
+</div>-->
+
+<!-- Modal de resultado -->
+<div id="modal-result" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; text-align: center;">
+        <div id="modal-icon"></div>
+        <h3 id="modal-title" style="font-size: 20px; font-weight: 600; margin: 16px 0 8px;"></h3>
+        <p id="modal-message" style="font-size: 14px; color: #64748b; margin-bottom: 24px;"></p>
+        <button id="modal-close-btn" class="main-btn btn-hover" style="width: 100%; padding: 12px; font-weight: 600;">Aceptar</button>
+    </div>
 </div>
+
+<style>
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
 <script>
 // Helper para mostrar mensajes bonitos
+// Helper para mostrar mensajes bonitos
 function showMessage(title, message, isSuccess = true) {
+    const modalResult = document.getElementById('modal-result');
     const icon = document.getElementById('modal-icon');
     const titleEl = document.getElementById('modal-title');
     const messageEl = document.getElementById('modal-message');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
     
+    // Configurar icono y colores según el tipo
     if (isSuccess) {
-        icon.className = 'lni lni-checkmark-circle';
-        icon.style.color = '#10b981';
+        icon.innerHTML = '<div style="width: 80px; height: 80px; background: #ecfdf5; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;"><i class="lni lni-checkmark" style="font-size: 48px; color: #10b981;"></i></div>';
+        titleEl.style.color = '#047857';
+        modalCloseBtn.style.background = '#10b981';
     } else {
-        icon.className = 'lni lni-close-circle';
-        icon.style.color = '#ef4444';
+        icon.innerHTML = '<div style="width: 80px; height: 80px; background: #fee2e2; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;"><i class="lni lni-close" style="font-size: 48px; color: #dc2626;"></i></div>';
+        titleEl.style.color = '#991b1b';
+        modalCloseBtn.style.background = '#dc2626';
     }
     
-    titleEl.textContent = title;
-    messageEl.textContent = message;
+    modalCloseBtn.style.color = 'white';
+    modalCloseBtn.style.border = 'none';
     
-    const modal = new bootstrap.Modal(document.getElementById('modalMensaje'));
-    modal.show();
+    titleEl.textContent = title;
+    messageEl.innerHTML = message;
+    
+    // Mostrar modal
+    modalResult.style.display = 'flex';
+    
+    // Cerrar modal al hacer click en el botón
+    modalCloseBtn.onclick = function() {
+        modalResult.style.display = 'none';
+    };
 }
 
 // Cargar hash y datos de licencia al iniciar
@@ -967,31 +1006,6 @@ document.getElementById('btn-refresh-license').addEventListener('click', functio
     });
 });
 </script>
-
-
-
-
-
-
-
-
-
-<!-- Modal de resultado -->
-<div id="modal-result" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
-    <div style="background: white; border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; text-align: center;">
-        <div id="modal-icon"></div>
-        <h3 id="modal-title" style="font-size: 20px; font-weight: 600; margin: 16px 0 8px;"></h3>
-        <p id="modal-message" style="font-size: 14px; color: #64748b; margin-bottom: 24px;"></p>
-        <button id="modal-close-btn" class="main-btn btn-hover" style="width: 100%; padding: 12px; font-weight: 600;">Aceptar</button>
-    </div>
-</div>
-
-<style>
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('file-restore');

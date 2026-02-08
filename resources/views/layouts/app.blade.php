@@ -1108,6 +1108,9 @@
         </div>
     </div>
 </div>
+
+
+@if($cajaAbierta)
 <div class="modal fade" id="modalConfirmarCierreSesion" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
     <div class="modal-content" style="border: none; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); overflow: hidden; background: #ffffff;">
@@ -1154,8 +1157,6 @@
     </div>
   </div>
 </div>
-
-@if($cajaAbierta)
 <div class="modal fade modal-alegra-final" id="modalCerrarCaja" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-alegra-width">
         <div class="modal-content">
@@ -1253,99 +1254,61 @@
   <script src="/assets/js/moment.min.js"></script>
   <script src="/assets/js/main.js"></script>
   
-  <script>
-    // Flag desde backend: si el usuario tiene caja abierta
-    const CAJA_ABIERTA = @json((bool)($cajaAbierta ?? false));
+<script>
+// Flag desde backend: si el usuario tiene caja abierta
+const CAJA_ABIERTA = @json((bool)($cajaAbierta ?? false));
 
-    OptenHelpers.waitForBootstrap(function() {
-      document.addEventListener('DOMContentLoaded', function () {
-        // Buscar forms cuyo action contenga 'logout' (ruta de logout generada por Laravel)
-        const logoutForms = Array.from(document.querySelectorAll('form')).filter(f => {
-          const action = (f.getAttribute('action') || '').toLowerCase();
-          return action.includes('/logout') || action.endsWith('logout');
-        });
+OptenHelpers.waitForBootstrap(function() {
+  // Buscar forms cuyo action contenga 'logout'
+  const logoutForms = Array.from(document.querySelectorAll('form')).filter(f => {
+    const action = (f.getAttribute('action') || '').toLowerCase();
+    return action.includes('/logout') || action.endsWith('logout');
+  });
 
-        logoutForms.forEach(function(form) {
-          form.addEventListener('submit', function (ev) {
-            // Si la caja no está abierta, permitir submit normal
-            if (!CAJA_ABIERTA) return;
+  logoutForms.forEach(function(form) {
+    form.addEventListener('submit', function (ev) {
+      // Si la caja no está abierta, permitir submit normal
+      if (!CAJA_ABIERTA) return;
 
-            ev.preventDefault();
-            // Guardar referencia del form para usarla después
-            window._pendingLogoutForm = form;
+      ev.preventDefault();
+      ev.stopPropagation(); // Importante: detener propagación
+      
+      // Guardar referencia del form
+      window._pendingLogoutForm = form;
 
-            // Usar helper seguro con fallback
-            var success = OptenHelpers.mostrarModalSeguro('modalConfirmarCierreSesion', {
-              onError: function() {
-                // Si el modal no existe, hacer logout directo
-                form.submit();
-              }
-            });
-            
-            if (!success) {
-              form.submit(); // Fallback adicional
-            }
-          });
-        });
-
-        // Botón del modal que confirma logout
-        var modalConfirm = document.querySelector('#modalConfirmarCierreSesion [data-logout-confirm]');
-        if (modalConfirm) {
-          modalConfirm.addEventListener('click', function () {
-            var f = window._pendingLogoutForm || document.querySelector('form[action*="logout"]');
-            if (f) f.submit();
-          });
-        }
-      });
-    });
-    OptenHelpers.waitForBootstrap(function() {
-      document.addEventListener('DOMContentLoaded', function() {
-        // Interceptar respuestas fetch/axios globalmente
-        var originalFetch = window.fetch;
-        window.fetch = function() {
-            var args = Array.prototype.slice.call(arguments);
-            return originalFetch.apply(this, args).then(function(response) {
-                if (response.status === 403) {
-                    response.clone().json().then(function(data) {
-                        if (data.show_modal) {
-                            OptenHelpers.mostrarModalSeguro('modalExpirado', {
-                              fallbackUrl: '/soporte',
-                              fallbackMessage: 'Tu licencia ha expirado. Por favor contacta con soporte.'
-                            });
-                        }
-                    }).catch(function(err) {
-                        console.warn('[OptenAdvance] Error parseando respuesta 403:', err);
-                    });
-                }
-                return response;
-            });
-        };
-
-        // Si usas axios
-        if (typeof axios !== 'undefined') {
-            axios.interceptors.response.use(
-                function(response) { return response; },
-                function(error) {
-                    if (error.response && error.response.status === 403 && error.response.data && error.response.data.show_modal) {
-                        OptenHelpers.mostrarModalSeguro('modalExpirado', {
-                          fallbackUrl: '/soporte',
-                          fallbackMessage: 'Tu licencia ha expirado. Por favor contacta con soporte.'
-                        });
-                    }
-                    return Promise.reject(error);
-                }
-            );
-        }
-
-        // Para formularios normales (si redirige con session)
-        @if(session('license_expired'))
-            OptenHelpers.mostrarModalSeguro('modalExpirado', {
-              fallbackUrl: '/soporte'
-            });
-        @endif
+      // Mostrar modal
+      var modalEl = document.getElementById('modalConfirmarCierreSesion');
+      if (modalEl) {
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+      } else {
+        console.error('[OptenAdvance] Modal de confirmación no encontrado');
+        form.submit(); // Fallback
+      }
     });
   });
-  </script>
+
+  // Botón del modal que confirma logout
+  var modalConfirm = document.querySelector('#modalConfirmarCierreSesion [data-logout-confirm]');
+  if (modalConfirm) {
+    modalConfirm.addEventListener('click', function () {
+      var f = window._pendingLogoutForm;
+      if (f) {
+        // Ocultar modal primero
+        var modalEl = document.getElementById('modalConfirmarCierreSesion');
+        if (modalEl) {
+          var modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) modal.hide();
+        }
+        // Hacer submit después de un pequeño delay
+        setTimeout(function() {
+          f.submit();
+        }, 300);
+      }
+    });
+  }
+});
+</script>
 
   @if($cajaAbierta)
   <script>
@@ -1575,7 +1538,74 @@
   </script>
   @endif
 
+<script>
+// Fix para warning de aria-hidden en modales
+OptenHelpers.waitForBootstrap(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    // Lista de todos los modales que necesitan fix
+    var modalIds = [
+      'modalLicencia',
+      'modalMensaje', 
+      'modalExpirado',
+      'modalConfirmarCierreSesion',
+      'modalCerrarCaja'
+    ];
 
+    modalIds.forEach(function(modalId) {
+      var modal = document.getElementById(modalId);
+      if (modal) {
+        // Cuando el modal se cierra completamente
+        modal.addEventListener('hidden.bs.modal', function() {
+          // Quita el foco de cualquier elemento activo
+          if (document.activeElement) {
+            document.activeElement.blur();
+          }
+        });
+      }
+    });
+  });
+});
+</script>
+<script>
+OptenHelpers.waitForBootstrap(function() {
+  // 1. Interceptor global para fetch/AJAX
+  const originalFetch = window.fetch;
+  window.fetch = function(...args) {
+    return originalFetch.apply(this, args).then(function(response) {
+      // Si es 403 y hay JSON, verificar si debe mostrar modal
+      if (response.status === 403) {
+        response.clone().json().then(function(data) {
+          if (data.show_modal) {
+            var modalEl = document.getElementById('modalExpirado');
+            if (modalEl) {
+              var modal = new bootstrap.Modal(modalEl);
+              modal.show();
+            }
+          }
+        }).catch(function() {
+          // No es JSON, ignorar
+        });
+      }
+      return response;
+    });
+  };
+
+  // 2. Verificar si hay flash message de licencia expirada
+  @if(session('license_expired'))
+    var modalEl = document.getElementById('modalExpirado');
+    if (modalEl) {
+      var modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    }
+  @endif
+
+  // 3. Interceptor para formularios que retornan con error
+  document.addEventListener('DOMContentLoaded', function() {
+    // Si la página se recargó con el flash message, el código de arriba ya lo manejó
+  });
+});
+</script>
+</body>
 </body>
 
 </html>

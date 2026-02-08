@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // Aliases de middlewares
         $middleware->alias([
+            'ensure.admin.exists' => \App\Http\Middleware\EnsureAdminExists::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'check.license' => \App\Http\Middleware\CheckLicense::class,
         ]);

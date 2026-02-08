@@ -32,6 +32,7 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $middlewareAliases = [  // ← CAMBIA ESTO
+        
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'check.license' => \App\Http\Middleware\CheckLicense::class,
         // otros middlewares

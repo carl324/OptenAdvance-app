@@ -284,40 +284,117 @@ public function install($file): array
     /**
      * Machine hash con caché - SINCRONIZADO CON CONTROLADOR
      */
-    private function machineHash(): string
+/**
+ * Machine hash con caché - MEJORADO CON UUID + DISCO + MAC
+ */
+private function machineHash(): string
 {
     return Cache::remember('license_machine_hash', 604800, function () {
+        $components = [];
         $hostname = gethostname() ?: 'unknown';
         
-        $mac = '';
-        
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            // NUEVO: Obtener todas las líneas de getmac
-            exec('getmac', $output);
+            // === WINDOWS ===
             
-            // Buscar la primera MAC válida
-            foreach ($output as $line) {
-                if (preg_match('/([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})/', $line, $matches)) {
-                    $mac = $matches[0];
-                    break;
+            // 1. UUID de la placa base (MÁS ESTABLE)
+            $uuid = @trim(shell_exec('wmic csproduct get uuid 2>nul'));
+            if (!empty($uuid)) {
+                // Limpiar la salida (viene con "UUID" como header)
+                $lines = array_filter(explode("\n", $uuid));
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if ($line !== 'UUID' && !empty($line) && $line !== 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF') {
+                        $components[] = str_replace([' ', '-'], '', $line);
+                        break;
+                    }
                 }
             }
-        } else {
-            // Linux/Unix
-            $mac = @exec("ip link show | grep ether | awk '{print $2}' | head -n 1");
             
-            if (empty($mac)) {
-                $mac = @exec("ifconfig | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' | head -n 1");
+            // 2. Serial del disco principal
+            $diskSerial = @trim(shell_exec('wmic diskdrive where "DeviceID=\'\\\\.\\PHYSICALDRIVE0\'" get serialnumber 2>nul'));
+            if (!empty($diskSerial)) {
+                $lines = array_filter(explode("\n", $diskSerial));
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if ($line !== 'SerialNumber' && !empty($line)) {
+                        $components[] = preg_replace('/\s+/', '', $line);
+                        break;
+                    }
+                }
+            }
+            
+            // 3. MAC física (con ordenamiento para estabilidad)
+            exec('getmac /fo csv /nh', $output);
+            $physicalMacs = [];
+            
+            if (!empty($output)) {
+                foreach ($output as $line) {
+                    if (preg_match('/([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})/', $line, $matches)) {
+                        $mac = strtoupper(str_replace('-', ':', $matches[0]));
+                        
+                        // Excluir MACs virtuales conocidas
+                        $isVirtual = preg_match('/^(00[:-]05[:-]69|00[:-]0C[:-]29|00[:-]50[:-]56|00[:-]1C[:-]42|00[:-]15[:-]5D)/i', $mac);
+                        
+                        if (!$isVirtual && $mac !== '00:00:00:00:00:00') {
+                            $physicalMacs[] = $mac;
+                        }
+                    }
+                }
+            }
+            
+            if (!empty($physicalMacs)) {
+                sort($physicalMacs); // ORDENAR para consistencia
+                $components[] = $physicalMacs[0];
+            }
+            
+        } else {
+            // === LINUX/UNIX ===
+            
+            // 1. Machine ID (único del sistema)
+            $machineId = @file_get_contents('/etc/machine-id');
+            if ($machineId === false) {
+                $machineId = @file_get_contents('/var/lib/dbus/machine-id');
+            }
+            if ($machineId !== false && !empty(trim($machineId))) {
+                $components[] = trim($machineId);
+            }
+            
+            // 2. MAC física con ordenamiento
+            exec("ip link show | grep 'link/ether' | awk '{print \$2}' | grep -v '00:00:00:00:00:00' | sort", $macs);
+            
+            if (empty($macs)) {
+                exec("ifconfig | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' | grep -v '00:00:00:00:00:00' | sort", $macs);
+            }
+            
+            if (!empty($macs) && is_array($macs)) {
+                $components[] = strtoupper(trim($macs[0]));
+            }
+            
+            // 3. UUID del filesystem raíz
+            $rootUuid = @trim(shell_exec("blkid -s UUID -o value $(df / | tail -1 | awk '{print \$1}') 2>/dev/null"));
+            if (!empty($rootUuid)) {
+                $components[] = $rootUuid;
             }
         }
         
-        $mac = preg_replace('/\s+/', '', $mac ?? '');
-        
-        if (empty($mac)) {
-            $mac = $_SERVER['SERVER_ADDR'] ?? '127.0.0.1';
+        // FALLBACK: Si no se obtuvo NADA (muy raro)
+        if (empty($components)) {
+            // Usar combinación de datos del servidor como último recurso
+            $fallback = md5(
+                php_uname('n') . 
+                ($_SERVER['DOCUMENT_ROOT'] ?? '') . 
+                ($_SERVER['SERVER_NAME'] ?? 'localhost')
+            );
+            $components[] = $fallback;
         }
-
-        return hash('sha256', $mac . $hostname . 'FIXED_SALT');
+        
+        // Siempre agregar hostname al final
+        $components[] = $hostname;
+        
+        // Generar fingerprint final
+        $fingerprint = implode('|', $components);
+        
+        return hash('sha256', $fingerprint . 'FIXED_SALT');
     });
 }
 }

@@ -93,7 +93,7 @@
             <div class="col-lg-6">
               <div class="signin-wrapper">
                 <div class="form-wrapper">
-                  <h6 class="mb-15">Crear Cuenta de Administrador</h6>
+                  <h6 class="mb-15">Crea tu cuenta por primera vez</h6>
                   <p class="text-sm mb-25">
                     Crea una cuenta de administrador para comenzar a usar el sistema.
                   </p>

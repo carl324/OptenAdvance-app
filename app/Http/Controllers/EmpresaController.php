@@ -92,7 +92,8 @@ class EmpresaController extends Controller
         }
 
         // Fallback: petición no por-campo -> validar todo y guardar
-        $input = $request->all();
+        $fromOnboarding = $request->input('from_onboarding') == 1;
+        $input = $request->except('from_onboarding');
 
         $rules = [
             'nombre' => 'nullable|string|max:255',
@@ -120,6 +121,11 @@ class EmpresaController extends Controller
         $input['cobra_iva'] = $request->has('cobra_iva') ? 1 : 0;
         $existingId = Empresa::value('id');
         Empresa::updateOrCreate(['id' => $existingId], $input);
+
+        if ($fromOnboarding) {
+            return redirect()->route('productos.index')->with('success', 'Los datos de la empresa se guardaron correctamente.');
+        }
+
         return redirect()->route('empresa.index')->with('success', 'Los datos de la empresa se guardaron correctamente.');
     }
 }
