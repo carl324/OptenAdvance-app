@@ -13,13 +13,35 @@ use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\DatabaseRestoreController;
 use App\Http\Middleware\CheckLicense;
 use App\Http\Controllers\LicenseController;
+// ========== RUTAS SUPER ADMIN ==========
+use App\Http\Controllers\SuperAdminController;
+
+Route::get('/superadmin/login', [SuperAdminController::class, 'showLogin'])
+    ->name('superadmin.login')
+    ->middleware('guest');
+
+Route::post('/superadmin/login', [SuperAdminController::class, 'login'])
+    ->name('superadmin.login.post')
+    ->middleware(['guest', 'throttle:5,1']);
+
+Route::middleware(['auth', 'super_admin'])->group(function () {
+    Route::get('/superadmin/recovery', [SuperAdminController::class, 'showRecovery'])
+        ->name('superadmin.recovery');
+    
+    Route::post('/superadmin/reset-password', [SuperAdminController::class, 'resetPassword'])
+        ->name('superadmin.reset.password')
+        ->middleware('throttle:10,1');
+    
+    Route::post('/superadmin/logout', [SuperAdminController::class, 'logout'])
+        ->name('superadmin.logout');
+});
 
 // ========== RUTAS PÚBLICAS (sin verificación de admin) ==========
 Route::get('/setup', [SetupController::class, 'show'])->name('setup.show');
 Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
 Route::view('/terminos-y-condiciones', 'legal.terminos')->name('legal.terminos');
 Route::view('/politica-de-privacidad', 'legal.privacidad')->name('legal.privacidad');
-
+Route::view('/soporte/off', 'soporte.off')->name('soporte.off');
 // ========== TODO LO DEMÁS REQUIERE QUE EXISTA UN ADMIN ==========
 Route::middleware(['ensure.admin.exists'])->group(function () {
     
@@ -49,6 +71,10 @@ Route::middleware(['ensure.admin.exists'])->group(function () {
 
     // Rutas autenticadas
     Route::middleware(['auth'])->group(function () {
+
+    Route::post('/superadmin/mark-revealed', [SuperAdminController::class, 'markRevealed'])
+        ->name('superadmin.mark-revealed')
+        ->middleware('role:admin');
 
         // Rutas bloqueables por licencia (escritura)
         Route::middleware(['role:admin,empleado', CheckLicense::class])->group(function () {

@@ -3,12 +3,12 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>@yield('title', 'Registro')</title>
+  <title><?php echo $__env->yieldContent('title', 'Registro'); ?></title>
   <link rel="icon" type="image/png" href="/assets/images/logo/icon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Meta CSRF centralizado -->
-  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
 
   <!-- CSS global y navbar simple (offline, sin librerías) -->
   <link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
@@ -97,18 +97,25 @@
                   <p class="text-sm mb-25">
                     Crea una cuenta de administrador para comenzar a usar el sistema.
                   </p>
-                  <form id="setup-form" data-endpoint="{{ route('setup.store') }}" novalidate>
+                  <form id="setup-form" data-endpoint="<?php echo e(route('setup.store')); ?>" novalidate>
                     <div id="setup-alerts"></div>
-                    @csrf
+                    <?php echo csrf_field(); ?>
                     <div class="row">
 
                         <div class="col-12">
                         <div class="input-style-1">
                           <label>Nombre</label>
-                          <input type="text" name="name" value="{{ old('name') }}" placeholder="Nombre" />
-                          @error('name')
-                            <div class="text-danger" style="font-size:13px; margin-top:6px;">{{ $message }}</div>
-                          @enderror
+                          <input type="text" name="name" value="<?php echo e(old('name')); ?>" placeholder="Nombre" />
+                          <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div class="text-danger" style="font-size:13px; margin-top:6px;"><?php echo e($message); ?></div>
+                          <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
                       </div>
 
@@ -117,10 +124,17 @@
                       <div class="col-12">
                         <div class="input-style-1">
                           <label>Email</label>
-                          <input type="text" name="email" inputmode="email" autocomplete="email" value="{{ old('email') }}" placeholder="Email" />
-                          @error('email')
-                            <div class="text-danger" style="font-size:13px; margin-top:6px;">{{ $message }}</div>
-                          @enderror
+                          <input type="text" name="email" inputmode="email" autocomplete="email" value="<?php echo e(old('email')); ?>" placeholder="Email" />
+                          <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div class="text-danger" style="font-size:13px; margin-top:6px;"><?php echo e($message); ?></div>
+                          <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
                       </div>
                       <!-- end col -->
@@ -146,14 +160,21 @@
     />
     <label class="form-check-label" for="terms" style="font-size: 14px; color: #5d657b; cursor: pointer; line-height: 1.4;">
       Al continuar, aceptas nuestros 
-      <a href="{{ route('legal.terminos') }}" class="text-primary" style="text-decoration: none; font-weight: 600;">Términos y Condiciones</a> 
+      <a href="<?php echo e(route('legal.terminos')); ?>" class="text-primary" style="text-decoration: none; font-weight: 600;">Términos y Condiciones</a> 
       y la 
-      <a href="{{ route('legal.privacidad') }}" class="text-primary" style="text-decoration: none; font-weight: 600;">Política de Privacidad</a>.
+      <a href="<?php echo e(route('legal.privacidad')); ?>" class="text-primary" style="text-decoration: none; font-weight: 600;">Política de Privacidad</a>.
     </label>
   </div>
-  @error('terms')
-    <div class="text-danger small" style="margin-top: -15px; margin-bottom: 15px;">{{ $message }}</div>
-  @enderror
+  <?php $__errorArgs = ['terms'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+    <div class="text-danger small" style="margin-top: -15px; margin-bottom: 15px;"><?php echo e($message); ?></div>
+  <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
 </div>
 
 
@@ -338,4 +359,4 @@
 })();
 </script>
   </body>
-</html>
+</html><?php /**PATH C:\Users\User\Documents\optenadvance\laragon\www\resources\views/setup/index.blade.php ENDPATH**/ ?>

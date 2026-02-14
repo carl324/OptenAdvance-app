@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Productos')
 
-@section('content')
+<?php $__env->startSection('title', 'Productos'); ?>
+
+<?php $__env->startSection('content'); ?>
 
 <style>
     .inventory-section {
@@ -772,7 +772,7 @@
                 <div class="col-lg-12 px-0">
                     <div class="inventory-section">
                         <div class="row">
-                            @if(auth()->user()->role === 'admin')
+                            <?php if(auth()->user()->role === 'admin'): ?>
                             <!-- Formulario Agregar Producto -->
                             <div class="col-lg-6">
                                 <div class="product-form-card">
@@ -807,7 +807,7 @@
                                             </div>
 
                                             <!-- IVA -->
-                                            @if($empresa && $empresa->cobra_iva)
+                                            <?php if($empresa && $empresa->cobra_iva): ?>
                                                 <div class="form-field">
                                                     <label>
                                                         <i class="lni lni-calculator"></i>
@@ -818,9 +818,9 @@
                                                         <span class="input-suffix">%</span>
                                                     </div>
                                                 </div>
-                                            @else
+                                            <?php else: ?>
                                                 <input type="hidden" id="ivaPercent" value="0">
-                                            @endif
+                                            <?php endif; ?>
 
                                             <!-- Stock Inicial -->
                                             <div class="form-field full-width">
@@ -871,36 +871,39 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @forelse($movimientos->take(5) as $m)
+                                                <?php $__empty_1 = true; $__currentLoopData = $movimientos->take(5); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $m): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                                     <tr>
                                                         <td>
                                                             <span class="truncate truncate-xs" 
                                                                   data-bs-toggle="tooltip" 
-                                                                 data-bs-title="{{ formatoHoraInteligente($m->created_at) ?? '-' }}">
-           {{ formatoHoraInteligente($m->created_at) ?? '-' }}
+                                                                 data-bs-title="<?php echo e(formatoHoraInteligente($m->created_at) ?? '-'); ?>">
+           <?php echo e(formatoHoraInteligente($m->created_at) ?? '-'); ?>
+
                                                             </span>
                                                         </td>
                                                         <td>
                                                             <span class="truncate truncate-sm" 
                                                                   data-bs-toggle="tooltip" 
-                                                                  data-bs-title="{{ $m->producto_nombre ?? 'Producto #' . $m->producto_id }}">
-                                                                {{ $m->producto_nombre ?? 'Producto #' . $m->producto_id }}
+                                                                  data-bs-title="<?php echo e($m->producto_nombre ?? 'Producto #' . $m->producto_id); ?>">
+                                                                <?php echo e($m->producto_nombre ?? 'Producto #' . $m->producto_id); ?>
+
                                                             </span>
                                                         </td>
                                                             <td class="text-centerr">
-                                                              <span class="truncate truncate-xs" data-bs-toggle="tooltip" data-bs-title="{{ $m->cantidad }}">
-                                                                {{ $m->cantidad }}
+                                                              <span class="truncate truncate-xs" data-bs-toggle="tooltip" data-bs-title="<?php echo e($m->cantidad); ?>">
+                                                                <?php echo e($m->cantidad); ?>
+
                                                               </span>
                                                             </td>
                                                         <td>
-                                                            @if($m->tipo === 'entrada')
+                                                            <?php if($m->tipo === 'entrada'): ?>
                                                                 <span class="badge-entrada">Entrada</span>
-                                                            @else
+                                                            <?php else: ?>
                                                                 <span class="badge-salida">Salida</span>
-                                                            @endif
+                                                            <?php endif; ?>
                                                         </td>
                                                         <td>
-                                                            @php
+                                                            <?php
                                                                 $origenLower = strtolower($m->origen ?? '');
                                                                 if($origenLower === 'registro_producto') {
                                                                     $origenText = 'Registro';
@@ -909,19 +912,20 @@
                                                                 } else {
                                                                     $origenText = ucfirst($m->origen ?? '-');
                                                                 }
-                                                            @endphp
+                                                            ?>
                                                             <span class="truncate truncate-sm" 
                                                                   data-bs-toggle="tooltip" 
-                                                                  data-bs-title="{{ $origenText }}">
-                                                                {{ $origenText }}
+                                                                  data-bs-title="<?php echo e($origenText); ?>">
+                                                                <?php echo e($origenText); ?>
+
                                                             </span>
                                                         </td>
                                                     </tr>
-                                                @empty
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                                     <tr>
                                                         <td colspan="5" style="text-align: center; color: #999;">Sin movimientos</td>
                                                     </tr>
-                                                @endforelse
+                                                <?php endif; ?>
                                             </tbody>
                                         </table>
                                     </div>
@@ -931,7 +935,7 @@
                           </div>
                         </div>
                       </div>
-                      @endif
+                      <?php endif; ?>
 
             <!-- Tabla de Productos -->
             <div class="row">
@@ -966,30 +970,30 @@
    </div>
     <br>
                         <div class="table-wrapper table-responsive">
-                            <table class="table {{ auth()->user()->role !== 'admin' ? 'table-rows-tall' : '' }}">
+                            <table class="table <?php echo e(auth()->user()->role !== 'admin' ? 'table-rows-tall' : ''); ?>">
                                 <thead>
                                     <tr>
                                         <th><h6 style="margin: 0;">ID</h6></th>
                                         <th><h6 style="margin: 0;">Nombre</h6></th>
                                         <th><h6 style="margin: 0;">Precio</h6></th>
-                                        @if($empresa && $empresa->cobra_iva)
+                                        <?php if($empresa && $empresa->cobra_iva): ?>
                                             <th><h6 style="margin: 0;">IVA %</h6></th>
                                             <th><h6 style="margin: 0;">Precio final</h6></th>
-                                        @endif
+                                        <?php endif; ?>
                                         <th><h6 style="margin: 0;">Stock</h6></th>
-                                        @if(auth()->user()->role === 'admin')
+                                        <?php if(auth()->user()->role === 'admin'): ?>
                                           <th><h6 style="margin: 0;">Acciones</h6></th>
-                                        @endif
+                                        <?php endif; ?>
                                     </tr>
                                 </thead>
                                 <tbody id="productos-tbody">
-                                      @include('productos._table', ['productos' => $productos, 'empresa' => $empresa, 'showActions' => (auth()->user()->role === 'admin')])
+                                      <?php echo $__env->make('productos._table', ['productos' => $productos, 'empresa' => $empresa, 'showActions' => (auth()->user()->role === 'admin')], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                                 </tbody>
                             </table>
                         </div>
                         
                         <!-- Paginación Minimalista AJAX -->
-                        @include('productos._pagination', ['productos' => $productos, 'search' => ''])
+                        <?php echo $__env->make('productos._pagination', ['productos' => $productos, 'search' => ''], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                     </div>
                 </div>
             </div>
@@ -1029,13 +1033,13 @@
 </div>
 
 <script>
-const csrf = '{{ csrf_token() }}';
+const csrf = '<?php echo e(csrf_token()); ?>';
 let currentStock = 0;
 let lastSearchTerm = '';
 let clearSearchRequested = false;
 const SEARCH_TIMEOUT_MS = 8000;
 
-const COBRA_IVA = @json((bool)($empresa && $empresa->cobra_iva));
+const COBRA_IVA = <?php echo json_encode((bool)($empresa && $empresa->cobra_iva), 15, 512) ?>;
 
 // ========== FUNCIONES DEL FORMULARIO AGREGAR PRODUCTO ==========
 
@@ -1075,7 +1079,7 @@ function resetForm(e, clearAlert = true) {
   e.preventDefault();
   document.getElementById('productForm').reset();
   document.getElementById('basePrice').value = '';
-  document.getElementById('ivaPercent').value = @if($empresa && $empresa->cobra_iva)'19'@else'0'@endif;
+  document.getElementById('ivaPercent').value = <?php if($empresa && $empresa->cobra_iva): ?>'19'<?php else: ?>'0'<?php endif; ?>;
   currentStock = 0;
   document.getElementById('stockValue').value = '0';
   if (clearAlert) {
@@ -1083,7 +1087,7 @@ function resetForm(e, clearAlert = true) {
   }
 }
 
-@if(auth()->user()->role === 'admin')
+<?php if(auth()->user()->role === 'admin'): ?>
 // Formatear precio en tiempo real
 const basePriceInput = document.getElementById('basePrice');
 if (basePriceInput) {
@@ -1093,7 +1097,7 @@ if (basePriceInput) {
     this.value = formatCOP(intVal);
   });
 }
-@endif
+<?php endif; ?>
 
 function insertProductoFila(p) {
   const tbody = document.querySelector('.card-style .table tbody');
@@ -1674,7 +1678,7 @@ async function eliminarProducto(id) {
 }
 
 // ========== EVENT LISTENERS DEL MODAL (SOLO PARA ADMIN) ==========
-@if(auth()->user()->role === 'admin')
+<?php if(auth()->user()->role === 'admin'): ?>
 // Cerrar modal de eliminar
 const cancelBtn = document.getElementById('cancelDelete');
 if (cancelBtn) {
@@ -1740,7 +1744,7 @@ if (confirmBtn) {
     }
   });
 }
-@endif
+<?php endif; ?>
 
 function disableRow(tr, state) {
     tr.querySelectorAll('button, input, select').forEach(e => e.disabled = state);
@@ -1969,4 +1973,5 @@ function initSearchFunctionality() {
 // Solo reinicializamos los tooltips de las nuevas filas
 </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\User\Documents\optenadvance\laragon\www\resources\views/productos/index.blade.php ENDPATH**/ ?>
