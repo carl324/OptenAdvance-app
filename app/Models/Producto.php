@@ -13,7 +13,8 @@ class Producto extends Model
 
     protected $fillable = [
         'nombre',
-        'precio',
+        'precio_compra',     
+        'precio_venta',
         'stock',
         'activo',
         'iva',
@@ -21,7 +22,8 @@ class Producto extends Model
     ];
 
     protected $casts = [
-        'precio' => 'float',
+        'precio_compra' => 'float',
+        'precio_venta' => 'float',
         'stock'  => 'integer',
         'activo' => 'boolean',
         'iva' => 'float',
@@ -40,6 +42,25 @@ class Producto extends Model
         $this->attributes['nombre'] = trim(
             mb_convert_case($value, MB_CASE_TITLE, 'UTF-8')
         );
+    }
+
+    // ========== ACCESSORS PARA GANANCIA ==========
+    
+    /**
+     * Ganancia en pesos por unidad
+     */
+    public function getGananciaAttribute()
+    {
+        return $this->precio_venta - $this->precio_compra;
+    }
+
+    /**
+     * Margen de ganancia en porcentaje
+     */
+    public function getMargenPorcentajeAttribute()
+    {
+        if ($this->precio_compra == 0) return 0;
+        return (($this->precio_venta - $this->precio_compra) / $this->precio_compra) * 100;
     }
 
     // Relación con movimientos de inventario

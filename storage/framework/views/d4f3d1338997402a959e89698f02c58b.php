@@ -1,8 +1,23 @@
 <?php
     $showActions = isset($showActions) ? (bool)$showActions : true;
-    $colspan = 4; // id, nombre, precio, stock
-    if(isset($empresa) && $empresa && $empresa->cobra_iva) $colspan += 2; // IVA + precio final
-    if($showActions) $colspan += 1;
+    $isAdmin = auth()->check() && auth()->user()->role === 'admin';
+    
+    // Calcular colspan dinámicamente
+    $colspan = 3; // id, nombre, stock (siempre visibles)
+    
+    if($isAdmin) {
+        $colspan += 2; // precio_compra + ganancia (solo admin)
+    }
+    
+    $colspan += 1; // precio_venta (siempre visible)
+    
+    if(isset($empresa) && $empresa && $empresa->cobra_iva) {
+        $colspan += 2; // IVA + precio final
+    }
+    
+    if($showActions) {
+        $colspan += 1; // acciones
+    }
 ?>
 
 <?php $__empty_1 = true; $__currentLoopData = $productos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $producto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
@@ -20,16 +35,51 @@
             </span>
             <input class="edit" data-field="nombre" type="text" value="<?php echo e($producto->nombre); ?>" hidden>
         </td>
+        
+        <?php if($isAdmin): ?>
+            
+            <td class="min-width">
+                <span class="view truncate" 
+                      data-field="precio_compra" 
+                      data-bs-toggle="tooltip" 
+                      data-bs-title="$<?php echo e(number_format($producto->precio_compra, 0, ',', '.')); ?>">
+                    $<?php echo e(number_format($producto->precio_compra, 0, ',', '.')); ?>
+
+                </span>
+                <input class="edit precio_input" data-field="precio_compra" type="text" inputmode="numeric" value="<?php echo e(number_format($producto->precio_compra, 0, ',', '.')); ?>" hidden>
+            </td>
+        <?php endif; ?>
+
+        
         <td class="min-width">
             <span class="view truncate" 
-                  data-field="precio" 
+                  data-field="precio_venta" 
                   data-bs-toggle="tooltip" 
-                  data-bs-title="$<?php echo e(number_format($producto->precio, 0, ',', '.')); ?>">
-                $<?php echo e(number_format($producto->precio, 0, ',', '.')); ?>
+                  data-bs-title="$<?php echo e(number_format($producto->precio_venta, 0, ',', '.')); ?>">
+                $<?php echo e(number_format($producto->precio_venta, 0, ',', '.')); ?>
 
             </span>
-            <input class="edit precio_input" data-field="precio" type="text" inputmode="numeric" value="<?php echo e(number_format($producto->precio, 0, ',', '.')); ?>" hidden>
+            <input class="edit precio_input" data-field="precio_venta" type="text" inputmode="numeric" value="<?php echo e(number_format($producto->precio_venta, 0, ',', '.')); ?>" hidden>
         </td>
+
+        <?php if($isAdmin): ?>
+            
+            <td class="min-width">
+                <?php
+                    $ganancia = $producto->ganancia ?? 0;
+                    $margen = $producto->margen_porcentaje ?? 0;
+                    $color = $ganancia >= 0 ? '#28a745' : '#dc3545';
+                ?>
+                <span class="view truncate" 
+                      style="color: <?php echo e($color); ?>; font-weight: 600;" 
+                      data-bs-toggle="tooltip" 
+                      data-bs-title="$<?php echo e(number_format($ganancia, 0, ',', '.')); ?> (<?php echo e(number_format($margen, 1)); ?>%)">
+                    $<?php echo e(number_format($ganancia, 0, ',', '.')); ?>
+
+                </span>
+            </td>
+        <?php endif; ?>
+        
         <?php if($empresa && $empresa->cobra_iva): ?>
             <td class="min-width">
               <span class="view truncate" 
@@ -52,7 +102,8 @@
                 <input class="edit" data-field="precio_con_iva" type="text" value="<?php echo e(number_format($producto->precio_con_iva, 0, ',', '.')); ?>" hidden readonly>
             </td>
         <?php endif; ?>
-                <td class="min-width">
+        
+        <td class="min-width">
           <span class="view stock_view" 
               data-field="stock" 
               data-bs-toggle="tooltip" 
@@ -62,6 +113,7 @@
           </span>
           <input class="edit stock_input" data-field="stock" type="text" value="<?php echo e($producto->stock); ?>" data-original-stock="<?php echo e($producto->stock); ?>" hidden>
         </td>
+        
         <?php if($showActions): ?>
         <td>
             <div class="action">
@@ -89,5 +141,4 @@
             <p>No hay productos registrados</p>
         </td>
     </tr>
-<?php endif; ?>
-<?php /**PATH C:\Users\User\Documents\optenadvance\laragon\www\resources\views/productos/_table.blade.php ENDPATH**/ ?>
+<?php endif; ?><?php /**PATH C:\Users\User\Documents\optenadvance\laragon\www\resources\views/productos/_table.blade.php ENDPATH**/ ?>

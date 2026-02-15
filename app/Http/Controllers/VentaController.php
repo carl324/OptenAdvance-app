@@ -56,11 +56,11 @@ class VentaController extends Controller
         }
 
         $productos = Producto::activos()
-            ->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($query) . '%'])
-            ->select('id', 'nombre', 'precio', 'stock', 'iva')
-            ->orderByDesc('stock')
-            ->limit(10)
-            ->get();
+    ->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($query) . '%'])
+    ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva')  // ← Agregar alias
+    ->orderByDesc('stock')
+    ->limit(10)
+    ->get();
 
         return response()->json($this->normalizarIVA($productos));
     }
@@ -136,7 +136,8 @@ class VentaController extends Controller
 
             foreach ($data['productos'] as $item) {
     $producto = Producto::findOrFail($item['id']);
-    $precioBase = $producto->precio;
+    $precioBase = $producto->precio_venta;  // ← Usar precio_venta
+    $precioCompraHistorico = $producto->precio_compra;  // ← NUEVO: Capturar precio_compra
     $ivaRate = $cobraIva ? $producto->iva : 0;
 
     // Subtotal entero, sin IVA
@@ -157,6 +158,7 @@ class VentaController extends Controller
         'item' => $item,
         'producto' => $producto,
         'precioBase' => $precioBase,
+        'precioCompra' => $precioCompraHistorico,
         'ivaRate' => $ivaRate,
         'neto' => $neto,     // Subtotal entero
         'iva' => $iva,
@@ -210,6 +212,7 @@ $totalFinal = $totalNeto + $totalIva;
                     'producto_id'     => $calc['item']['id'],
                     'cantidad'        => $calc['item']['cantidad'],
                     'precio_unitario' => $calc['precioBase'],
+                    'precio_compra'   => $calc['precioCompra'],
                     'iva'             => $calc['iva'],
                     'subtotal'        => $calc['neto'],
                     'total_pagado'    => $data['total_pagado'],
@@ -542,15 +545,15 @@ $totalFinal = $totalNeto + $totalIva;
     }
 
     // Obtener todos los productos
-    public function obtenerTodosProductos()
-    {
-        $productos = Producto::activos()
-            ->select('id', 'nombre', 'precio', 'stock', 'iva')
-            ->orderByDesc('stock')
-            ->get();
+public function obtenerTodosProductos()
+{
+    $productos = Producto::activos()
+        ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva')  // ← Agregar alias
+        ->orderByDesc('stock')
+        ->get();
 
-        return response()->json($this->normalizarIVA($productos));
-    }
+    return response()->json($this->normalizarIVA($productos));
+}
 
     // Descargar factura en PDF
     public function descargarPDF(Venta $venta)

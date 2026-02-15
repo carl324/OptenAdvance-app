@@ -13,15 +13,18 @@ class VentaDetalle extends Model
         'producto_id',
         'cantidad',
         'precio_unitario',
-        'iva',          // ← nuevo
+        'precio_compra',      
+        'iva',
         'subtotal',
         'total_pagado',
+        'motivo_anulacion',   
     ];
 
     protected $casts = [
         'cantidad'        => 'integer',
         'precio_unitario' => 'float',
-        'iva'             => 'float',   // ← nuevo
+        'precio_compra'   => 'float',     
+        'iva'             => 'float',
         'subtotal'        => 'float',
         'total_pagado'    => 'float',
     ];

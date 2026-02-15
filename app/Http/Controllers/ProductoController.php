@@ -79,7 +79,8 @@ class ProductoController extends Controller
     {
         $data = $request->validate([
             'nombre' => 'required|string|max:100',
-            'precio' => 'required|numeric|gt:0',
+            'precio_compra' => 'required|numeric|gte:0',
+            'precio_venta' => 'required|numeric|gt:0',
             'stock'  => 'required|integer|min:0',
             'iva'    => 'required|numeric|min:0|max:100',
         ]);
@@ -88,7 +89,7 @@ class ProductoController extends Controller
         $data['nombre'] = trim(mb_strtolower($data['nombre']));
 
         // Calcular precio con IVA
-        $data['precio_con_iva'] = (int) round($data['precio'] * (1 + ($data['iva'] / 100)));
+        $data['precio_con_iva'] = (int) round($data['precio_venta'] * (1 + ($data['iva'] / 100)));
 
 
         // Evitar duplicados activos
@@ -117,7 +118,8 @@ class ProductoController extends Controller
             // Esto garantiza que ambas operaciones (crear + registrar movimiento) son atómicas
             $producto = Producto::create([
                 'nombre' => $data['nombre'],
-                'precio' => $data['precio'],
+                'precio_compra' => $data['precio_compra'],
+                'precio_venta' => $data['precio_venta'],
                 'iva' => $data['iva'],
                 'precio_con_iva' => $data['precio_con_iva'],
                 'stock'  => $stockInicial,  // Crear directamente con stock correcto
@@ -180,7 +182,8 @@ class ProductoController extends Controller
 
             $data = $request->validate([
                 'nombre' => 'sometimes|string|max:100',
-                'precio' => 'sometimes|numeric|min:0',
+                'precio_compra' => 'sometimes|numeric|gte:0',
+                'precio_venta' => 'sometimes|numeric|gt:0',
                 'iva' => 'sometimes|numeric|min:0|max:100',
                 'stock' => 'sometimes|integer|min:0',
             ]);
@@ -219,24 +222,26 @@ class ProductoController extends Controller
             if (isset($data['nombre'])) {
                 $producto->nombre = $data['nombre'];
             }
-            if (isset($data['precio'])) {
-                $producto->precio = $data['precio'];
+            if (isset($data['precio_compra'])) {
+                $producto->precio_compra = $data['precio_compra'];
+            }
+            if (isset($data['precio_venta'])) {
+                $producto->precio_venta = $data['precio_venta'];
             }
             if (isset($data['iva'])) {
                 $producto->iva = $data['iva'];
             }
 
             // Recalcular precio con IVA si cambió precio o iva
-            if (isset($data['precio']) || isset($data['iva'])) {
-                $producto->precio_con_iva = (int) round($producto->precio * (1 + ($producto->iva / 100)));
-
+            if (isset($data['precio_venta']) || isset($data['iva'])) {
+                $producto->precio_con_iva = (int) round($producto->precio_venta * (1 + ($producto->iva / 100)));
             }
 
             // Guardar cambios básicos primero
             $producto->save();
             Log::info('Producto guardado con campos básicos');
 
-            // ✅ Manejar stock DESPUÉS de guardar lo demás
+            // Manejar stock DESPUÉS de guardar lo demás
             if (isset($data['stock'])) {
                 $stockNuevo = (int)$data['stock'];
                 Log::info('Stock nuevo: ' . $stockNuevo);

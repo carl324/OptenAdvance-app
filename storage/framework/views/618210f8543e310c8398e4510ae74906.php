@@ -775,83 +775,120 @@
                             <?php if(auth()->user()->role === 'admin'): ?>
                             <!-- Formulario Agregar Producto -->
                             <div class="col-lg-6">
-                                <div class="product-form-card">
-                                    <div class="form-header">
-                                        <h6> Agregar Nuevo Producto </h6>
-                                        <p>Complete los datos del producto para registrarlo en el inventario</p>
-                                    </div>
+    <div class="product-form-card">
+        <div class="form-header">
+            <h6> Agregar Nuevo Producto </h6>
+            <p>Complete los datos del producto para registrarlo en el inventario</p>
+        </div>
 
-                                    <div id="alertContainer"></div>
+        <div id="alertContainer"></div>
 
-                                    <form id="productForm">
-                                        <div class="product-form">
-                                            <!-- Nombre del Producto -->
-                                            <div class="form-field full-width">
-                                                <label>
-                                                    <i class="lni lni-text-format"></i>
-                                                    Nombre del Producto
-                                                </label>
-                                                <input type="text" placeholder="Ej: Coca Cola 350ml" id="productName" required>
-                                            </div>
+        <form id="productForm">
+            <div class="product-form">
+                <!-- Nombre del Producto -->
+                <div class="form-field full-width">
+                    <label>
+                        <i class="lni lni-text-format"></i>
+                        Nombre del Producto
+                    </label>
+                    <input type="text" placeholder="Ej: Coca Cola 350ml" id="productName" required>
+                </div>
 
-                                            <!-- Precio Base -->
-                                            <div class="form-field">
-                                                <label>
-                                                    <i class="lni lni-money-protection"></i>
-                                                    Precio del Producto
-                                                </label>
-                                                <div class="input-with-symbol">
-                                                    <span class="input-symbol">$</span>
-                                                    <input type="text" placeholder="0" inputmode="numeric" id="basePrice" required>
-                                                </div>
-                                            </div>
+                <!-- Precio de Compra -->
+                <div class="form-field">
+                    <label>
+                        <i class="lni lni-shopping-bag"></i>
+                        Precio de Compra
+                    </label>
+                    <div class="input-with-symbol">
+                        <span class="input-symbol">$</span>
+                        <input type="text" placeholder="0" inputmode="numeric" id="precioCompra" required>
+                    </div>
+                </div>
 
-                                            <!-- IVA -->
-                                            <?php if($empresa && $empresa->cobra_iva): ?>
-                                                <div class="form-field">
-                                                    <label>
-                                                        <i class="lni lni-calculator"></i>
-                                                        IVA (%)
-                                                    </label>
-                                                    <div class="input-with-symbol input-with-suffix">
-                                                        <input type="number" placeholder="19" step="1" id="ivaPercent" value="19" min="0" max="100">
-                                                        <span class="input-suffix">%</span>
-                                                    </div>
-                                                </div>
-                                            <?php else: ?>
-                                                <input type="hidden" id="ivaPercent" value="0">
-                                            <?php endif; ?>
+                <!-- Precio de Venta -->
+                <div class="form-field">
+                    <label>
+                        <i class="lni lni-money-protection"></i>
+                        Precio de Venta
+                    </label>
+                    <div class="input-with-symbol">
+                        <span class="input-symbol">$</span>
+                        <input type="text" placeholder="0" inputmode="numeric" id="precioVenta" required>
+                    </div>
+                </div>
 
-                                            <!-- Stock Inicial -->
-                                            <div class="form-field full-width">
-                                                <label>
-                                                    <i class="lni lni-layers"></i>
-                                                    Stock Inicial
-                                                </label>
-                                                <div class="quantity-control-wrapper">
-                                                    <button type="button" class="quantity-btn" onclick="decreaseStock(event)">
-                                                        <i class="lni lni-minus"></i>
-                                                    </button>
-                                                    <input type="text" inputmode="numeric" class="quantity-display" id="stockValue" value="0" placeholder="0"/>
-                                                    <button type="button" class="quantity-btn" onclick="increaseStock(event)">
-                                                        <i class="lni lni-plus"></i>
-                                                    </button>
-                                                    <span class="quantity-label">unidades</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                <!-- Ganancia + IVA (lado a lado si cobra IVA) -->
+                <?php if($empresa && $empresa->cobra_iva): ?>
+                    <!-- Ganancia -->
+                    <div class="form-field">
+                        <label>
+                            <i class="lni lni-stats-up"></i>
+                            Ganancia por Unidad
+                        </label>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 8px;">
+                            <span id="gananciaValor" style="font-size: 18px; font-weight: 700; color: #28a745;">$0</span>
+                            <span id="gananciaMargen" style="font-size: 14px; font-weight: 600; background: #e9ecef; padding: 4px 10px; border-radius: 6px; color: #495057;">0%</span>
+                        </div>
+                    </div>
 
-                                        <div class="submit-section">
-                                            <button type="button" class="btn-reset" onclick="resetForm(event)">
-                                                <i class="lni lni-reload"></i> Limpiar
-                                            </button>
-                                            <button type="button" class="btn-submit" id="btnAddProduct" onclick="addProduct(event)">
-                                                <i class="lni lni-checkmark-circle"></i> Agregar Producto
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                    <!-- IVA -->
+                    <div class="form-field">
+                        <label>
+                            <i class="lni lni-calculator"></i>
+                            IVA (%)
+                        </label>
+                        <div class="input-with-symbol input-with-suffix">
+                            <input type="number" placeholder="19" step="1" id="ivaPercent" value="19" min="0" max="100">
+                            <span class="input-suffix">%</span>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <!-- Ganancia (ocupa todo el ancho si NO cobra IVA) -->
+                    <div class="form-field full-width">
+                        <label>
+                            <i class="lni lni-stats-up"></i>
+                            Ganancia por Unidad
+                        </label>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 8px;">
+                            <span id="gananciaValor" style="font-size: 18px; font-weight: 700; color: #28a745;">$0</span>
+                            <span id="gananciaMargen" style="font-size: 14px; font-weight: 600; background: #e9ecef; padding: 4px 10px; border-radius: 6px; color: #495057;">0%</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="ivaPercent" value="0">
+                <?php endif; ?>
+
+                <!-- Stock Inicial -->
+                <div class="form-field full-width">
+                    <label>
+                        <i class="lni lni-layers"></i>
+                        Stock Inicial
+                    </label>
+                    <div class="quantity-control-wrapper">
+                        <button type="button" class="quantity-btn" onclick="decreaseStock(event)">
+                            <i class="lni lni-minus"></i>
+                        </button>
+                        <input type="text" inputmode="numeric" class="quantity-display" id="stockValue" value="0" placeholder="0"/>
+                        <button type="button" class="quantity-btn" onclick="increaseStock(event)">
+                            <i class="lni lni-plus"></i>
+                        </button>
+                        <span class="quantity-label">unidades</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="submit-section">
+                <button type="button" class="btn-reset" onclick="resetForm(event)">
+                    <i class="lni lni-reload"></i> Limpiar
+                </button>
+                <button type="button" class="btn-submit" id="btnAddProduct" onclick="addProduct(event)">
+                    <i class="lni lni-checkmark-circle"></i> Agregar Producto
+                </button>
+            </div>
+        </form>
+    </div>
+    
+</div>
 
                             <!-- Tabla de Movimientos -->
                             <div class="col-lg-6">
@@ -971,21 +1008,27 @@
     <br>
                         <div class="table-wrapper table-responsive">
                             <table class="table <?php echo e(auth()->user()->role !== 'admin' ? 'table-rows-tall' : ''); ?>">
-                                <thead>
-                                    <tr>
-                                        <th><h6 style="margin: 0;">ID</h6></th>
-                                        <th><h6 style="margin: 0;">Nombre</h6></th>
-                                        <th><h6 style="margin: 0;">Precio</h6></th>
-                                        <?php if($empresa && $empresa->cobra_iva): ?>
-                                            <th><h6 style="margin: 0;">IVA %</h6></th>
-                                            <th><h6 style="margin: 0;">Precio final</h6></th>
-                                        <?php endif; ?>
-                                        <th><h6 style="margin: 0;">Stock</h6></th>
-                                        <?php if(auth()->user()->role === 'admin'): ?>
-                                          <th><h6 style="margin: 0;">Acciones</h6></th>
-                                        <?php endif; ?>
-                                    </tr>
-                                </thead>
+<thead>
+    <tr>
+        <th><h6>ID</h6></th>
+        <th><h6>Nombre</h6></th>
+        <?php if(auth()->user()->role === 'admin'): ?>
+            <th><h6>P. Compra</h6></th>
+        <?php endif; ?>
+        <th><h6>P. Venta</h6></th>
+        <?php if(auth()->user()->role === 'admin'): ?>
+            <th><h6>Ganancia</h6></th>
+        <?php endif; ?>
+        <?php if($empresa && $empresa->cobra_iva): ?>
+            <th><h6>IVA %</h6></th>
+            <th><h6>Precio final</h6></th>
+        <?php endif; ?>
+        <th><h6>Stock</h6></th>
+        <?php if(auth()->user()->role === 'admin'): ?>
+          <th><h6>Acciones</h6></th>
+        <?php endif; ?>
+    </tr>
+</thead>
                                 <tbody id="productos-tbody">
                                       <?php echo $__env->make('productos._table', ['productos' => $productos, 'empresa' => $empresa, 'showActions' => (auth()->user()->role === 'admin')], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                                 </tbody>
@@ -1078,24 +1121,65 @@ document.addEventListener('DOMContentLoaded', function() {
 function resetForm(e, clearAlert = true) {
   e.preventDefault();
   document.getElementById('productForm').reset();
-  document.getElementById('basePrice').value = '';
+  document.getElementById('precioCompra').value = '';
+  document.getElementById('precioVenta').value = '';
   document.getElementById('ivaPercent').value = <?php if($empresa && $empresa->cobra_iva): ?>'19'<?php else: ?>'0'<?php endif; ?>;
   currentStock = 0;
   document.getElementById('stockValue').value = '0';
+  
+  // Resetear ganancia
+  document.getElementById('gananciaValor').textContent = '$0';
+  document.getElementById('gananciaMargen').textContent = '0%';
+  document.getElementById('gananciaValor').style.color = '#28a745';
+  
   if (clearAlert) {
     document.getElementById('alertContainer').innerHTML = '';
   }
 }
 
 <?php if(auth()->user()->role === 'admin'): ?>
-// Formatear precio en tiempo real
-const basePriceInput = document.getElementById('basePrice');
-if (basePriceInput) {
-  basePriceInput.addEventListener('input', function() {
+// Formatear precios en tiempo real
+const precioCompraInput = document.getElementById('precioCompra');
+const precioVentaInput = document.getElementById('precioVenta');
+
+if (precioCompraInput) {
+  precioCompraInput.addEventListener('input', function() {
     const onlyDigits = this.value.replace(/\D/g, '');
     const intVal = parseInt(onlyDigits || '0', 10);
     this.value = formatCOP(intVal);
+    calcularGanancia(); // ← Calcular ganancia
   });
+}
+
+if (precioVentaInput) {
+  precioVentaInput.addEventListener('input', function() {
+    const onlyDigits = this.value.replace(/\D/g, '');
+    const intVal = parseInt(onlyDigits || '0', 10);
+    this.value = formatCOP(intVal);
+    calcularGanancia(); // ← Calcular ganancia
+  });
+}
+
+// Función para calcular ganancia en tiempo real
+function calcularGanancia() {
+    const compra = parseCOP(precioCompraInput.value);
+    const venta = parseCOP(precioVentaInput.value);
+    
+    const ganancia = venta - compra;
+    const margen = compra > 0 ? ((ganancia / compra) * 100).toFixed(1) : 0;
+    
+    document.getElementById('gananciaValor').textContent = '$' + formatCOP(ganancia);
+    document.getElementById('gananciaMargen').textContent = margen + '%';
+    
+    // Color verde si positivo, rojo si negativo
+    const gananciaEl = document.getElementById('gananciaValor');
+    if (ganancia < 0) {
+        gananciaEl.style.color = '#dc3545';
+    } else if (ganancia === 0) {
+        gananciaEl.style.color = '#6c757d';
+    } else {
+        gananciaEl.style.color = '#28a745';
+    }
 }
 <?php endif; ?>
 
@@ -1119,9 +1203,13 @@ function insertProductoFila(p) {
     return;
   }
 
-  const precioInt = Math.round(Number(p.precio) || 0);
-  const precioConIvaInt = Math.round(Number(p.precio_con_iva) || 0);
-  const ivaFloat = Number(p.iva) || 0;
+const precioCompraInt = Math.round(Number(p.precio_compra) || 0);
+const precioVentaInt = Math.round(Number(p.precio_venta) || 0);
+const precioConIvaInt = Math.round(Number(p.precio_con_iva) || 0);
+const ivaFloat = Number(p.iva) || 0;
+const ganancia = precioVentaInt - precioCompraInt;
+const margen = precioCompraInt > 0 ? ((ganancia / precioCompraInt) * 100).toFixed(1) : 0;
+const gananciaColor = ganancia >= 0 ? '#28a745' : '#dc3545';
 
   const rowHtml = `
     <tr id="producto-${p.id}">
@@ -1131,9 +1219,16 @@ function insertProductoFila(p) {
         <input class="edit" data-field="nombre" type="text" value="${escapeHtml(p.nombre)}" hidden>
       </td>
       <td class="min-width">
-        <span class="view truncate" data-field="precio" data-bs-toggle="tooltip" data-bs-title="$${formatCOP(precioInt)}">$${formatCOP(precioInt)}</span>
-        <input class="edit precio_input" data-field="precio" type="text" inputmode="numeric" value="${formatCOP(precioInt)}" hidden>
-      </td>
+  <span class="view truncate" data-field="precio_compra" data-bs-toggle="tooltip" data-bs-title="$${formatCOP(precioCompraInt)}">$${formatCOP(precioCompraInt)}</span>
+  <input class="edit precio_input" data-field="precio_compra" type="text" inputmode="numeric" value="${formatCOP(precioCompraInt)}" hidden>
+</td>
+<td class="min-width">
+  <span class="view truncate" data-field="precio_venta" data-bs-toggle="tooltip" data-bs-title="$${formatCOP(precioVentaInt)}">$${formatCOP(precioVentaInt)}</span>
+  <input class="edit precio_input" data-field="precio_venta" type="text" inputmode="numeric" value="${formatCOP(precioVentaInt)}" hidden>
+</td>
+<td class="min-width">
+  <span class="view truncate" style="color: ${gananciaColor}; font-weight: 600;" data-bs-toggle="tooltip" data-bs-title="$${formatCOP(ganancia)} (${margen}%)">$${formatCOP(ganancia)}</span>
+</td>
       ${COBRA_IVA ? `
       <td class="min-width">
         <span class="view truncate" data-field="iva" data-bs-toggle="tooltip" data-bs-title="${ivaFloat > 0 ? ivaFloat + '%' : '-'}">${ivaFloat > 0 ? ivaFloat + '%' : '-'}</span>
@@ -1242,8 +1337,8 @@ async function addProduct(e) {
     e.preventDefault();
     
     const nombre = document.getElementById('productName').value.trim();
-    const precioFormateado = document.getElementById('basePrice').value;
-    const precio = parseCOP(precioFormateado);
+    const precioCompra = parseCOP(document.getElementById('precioCompra').value);
+    const precioVenta = parseCOP(document.getElementById('precioVenta').value);
     const iva = parseFloat(document.getElementById('ivaPercent').value) || 0;
     const stock = currentStock;
 
@@ -1252,11 +1347,17 @@ async function addProduct(e) {
         return;
     }
 
-    if (precio <= 0) {
-        showAlert('El precio debe ser mayor a 0', 'error');
+    if (precioCompra < 0) {
+        showAlert('El precio de compra no puede ser negativo', 'error');
         return;
     }
 
+    if (precioVenta <= 0) {
+        showAlert('El precio de venta debe ser mayor a 0', 'error');
+        return;
+    }
+
+    
     const btn = document.getElementById('btnAddProduct');
     btn.disabled = true;
 
@@ -1268,7 +1369,7 @@ async function addProduct(e) {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ nombre, precio, iva, stock })
+            body: JSON.stringify({ nombre, precio_compra: precioCompra, precio_venta: precioVenta, iva, stock })
         });
 
         if (res.status === 419) {
@@ -1423,6 +1524,16 @@ function editarProducto(id) {
         };
     }
 
+    // ← NUEVO: Sanitizar y formatear precios (compra y venta)
+    const precioInputs = tr.querySelectorAll('.precio_input');
+    precioInputs.forEach(input => {
+        input.oninput = function() {
+            const onlyDigits = this.value.replace(/\D/g, '');
+            const intVal = parseInt(onlyDigits || '0', 10);
+            this.value = formatCOP(intVal);
+        };
+    });
+
     // Sanitizar IVA
     const ivaInput = tr.querySelector('.iva_input');
     if (ivaInput) {
@@ -1525,15 +1636,25 @@ async function guardarProducto(id) {
     const viewEl = tr.querySelector(`span.view[data-field="${field}"]`);
 
     // Precio: comparar en formato numérico usando parseCOP
-    if (field === 'precio') {
-      const newVal = parseCOP(input.value);
-      const oldVal = viewEl ? parseCOP(viewEl.innerText) : 0;
-      if (String(newVal) !== String(oldVal)) {
-        data.precio = newVal;
-      }
-      return;
-    }
+    // Precio Compra: comparar en formato numérico usando parseCOP
+if (field === 'precio_compra') {
+  const newVal = parseCOP(input.value);
+  const oldVal = viewEl ? parseCOP(viewEl.innerText) : 0;
+  if (String(newVal) !== String(oldVal)) {
+    data.precio_compra = newVal;
+  }
+  return;
+}
 
+// Precio Venta: comparar en formato numérico usando parseCOP
+if (field === 'precio_venta') {
+  const newVal = parseCOP(input.value);
+  const oldVal = viewEl ? parseCOP(viewEl.innerText) : 0;
+  if (String(newVal) !== String(oldVal)) {
+    data.precio_venta = newVal;
+  }
+  return;
+}
     // IVA: comparar en float, eliminar '%'
     if (field === 'iva') {
       let newVal = parseFloat(input.value) || 0;
@@ -1617,11 +1738,15 @@ async function guardarProducto(id) {
       if (nombreSpan) nombreSpan.innerText = data.nombre;
     }
 
-    if (typeof data.precio !== 'undefined') {
-      const precioSpan = tr.querySelector('span.view[data-field="precio"]');
-      if (precioSpan) precioSpan.innerText = '$' + formatCOP(data.precio);
-    }
+    if (typeof data.precio_compra !== 'undefined') {
+  const precioCompraSpan = tr.querySelector('span.view[data-field="precio_compra"]');
+  if (precioCompraSpan) precioCompraSpan.innerText = '$' + formatCOP(data.precio_compra);
+}
 
+if (typeof data.precio_venta !== 'undefined') {
+  const precioVentaSpan = tr.querySelector('span.view[data-field="precio_venta"]');
+  if (precioVentaSpan) precioVentaSpan.innerText = '$' + formatCOP(data.precio_venta);
+}
     if (typeof data.iva !== 'undefined') {
       const ivaSpan = tr.querySelector('span.view[data-field="iva"]');
       if (ivaSpan) ivaSpan.innerText = data.iva + '%';

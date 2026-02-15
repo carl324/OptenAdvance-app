@@ -1,8 +1,23 @@
 @php
     $showActions = isset($showActions) ? (bool)$showActions : true;
-    $colspan = 4; // id, nombre, precio, stock
-    if(isset($empresa) && $empresa && $empresa->cobra_iva) $colspan += 2; // IVA + precio final
-    if($showActions) $colspan += 1;
+    $isAdmin = auth()->check() && auth()->user()->role === 'admin';
+    
+    // Calcular colspan dinámicamente
+    $colspan = 3; // id, nombre, stock (siempre visibles)
+    
+    if($isAdmin) {
+        $colspan += 2; // precio_compra + ganancia (solo admin)
+    }
+    
+    $colspan += 1; // precio_venta (siempre visible)
+    
+    if(isset($empresa) && $empresa && $empresa->cobra_iva) {
+        $colspan += 2; // IVA + precio final
+    }
+    
+    if($showActions) {
+        $colspan += 1; // acciones
+    }
 @endphp
 
 @forelse($productos as $producto)
@@ -19,15 +34,48 @@
             </span>
             <input class="edit" data-field="nombre" type="text" value="{{ $producto->nombre }}" hidden>
         </td>
+        
+        @if($isAdmin)
+            {{-- Precio Compra (solo admin) --}}
+            <td class="min-width">
+                <span class="view truncate" 
+                      data-field="precio_compra" 
+                      data-bs-toggle="tooltip" 
+                      data-bs-title="${{ number_format($producto->precio_compra, 0, ',', '.') }}">
+                    ${{ number_format($producto->precio_compra, 0, ',', '.') }}
+                </span>
+                <input class="edit precio_input" data-field="precio_compra" type="text" inputmode="numeric" value="{{ number_format($producto->precio_compra, 0, ',', '.') }}" hidden>
+            </td>
+        @endif
+
+        {{-- Precio Venta (siempre visible) --}}
         <td class="min-width">
             <span class="view truncate" 
-                  data-field="precio" 
+                  data-field="precio_venta" 
                   data-bs-toggle="tooltip" 
-                  data-bs-title="${{ number_format($producto->precio, 0, ',', '.') }}">
-                ${{ number_format($producto->precio, 0, ',', '.') }}
+                  data-bs-title="${{ number_format($producto->precio_venta, 0, ',', '.') }}">
+                ${{ number_format($producto->precio_venta, 0, ',', '.') }}
             </span>
-            <input class="edit precio_input" data-field="precio" type="text" inputmode="numeric" value="{{ number_format($producto->precio, 0, ',', '.') }}" hidden>
+            <input class="edit precio_input" data-field="precio_venta" type="text" inputmode="numeric" value="{{ number_format($producto->precio_venta, 0, ',', '.') }}" hidden>
         </td>
+
+        @if($isAdmin)
+            {{-- Ganancia (solo admin) --}}
+            <td class="min-width">
+                @php
+                    $ganancia = $producto->ganancia ?? 0;
+                    $margen = $producto->margen_porcentaje ?? 0;
+                    $color = $ganancia >= 0 ? '#28a745' : '#dc3545';
+                @endphp
+                <span class="view truncate" 
+                      style="color: {{ $color }}; font-weight: 600;" 
+                      data-bs-toggle="tooltip" 
+                      data-bs-title="${{ number_format($ganancia, 0, ',', '.') }} ({{ number_format($margen, 1) }}%)">
+                    ${{ number_format($ganancia, 0, ',', '.') }}
+                </span>
+            </td>
+        @endif
+        
         @if($empresa && $empresa->cobra_iva)
             <td class="min-width">
               <span class="view truncate" 
@@ -48,7 +96,8 @@
                 <input class="edit" data-field="precio_con_iva" type="text" value="{{ number_format($producto->precio_con_iva, 0, ',', '.') }}" hidden readonly>
             </td>
         @endif
-                <td class="min-width">
+        
+        <td class="min-width">
           <span class="view stock_view" 
               data-field="stock" 
               data-bs-toggle="tooltip" 
@@ -57,6 +106,7 @@
           </span>
           <input class="edit stock_input" data-field="stock" type="text" value="{{ $producto->stock }}" data-original-stock="{{ $producto->stock }}" hidden>
         </td>
+        
         @if($showActions)
         <td>
             <div class="action">
