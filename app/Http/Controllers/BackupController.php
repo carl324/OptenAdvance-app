@@ -78,28 +78,27 @@ class BackupController extends Controller
             $fileName = "opten_db_{$timestamp}.sql";
             $target = $tempDir . DIRECTORY_SEPARATOR . $fileName;
 
-            // 6) Detectar ruta de mysqldump desde Laragon portable
-            $mysqldumpPath = $this->detectLaragonMysqldump();
+            // 6) Detectar ruta de mysqldump desde OptenAdvance
+            $mysqldumpPath = $this->detectOptenAdvanceMysqldump();
             
             if (!$mysqldumpPath || !file_exists($mysqldumpPath)) {
-                Log::error('BackupController::store - mysqldump no encontrado en Laragon');
+                Log::error('BackupController::store - mysqldump no encontrado en OptenAdvance');
                 @unlink($lockFile);
-                return response()->json(['error' => 'No se encontró mysqldump en Laragon portable.'], 500);
+                return response()->json(['error' => 'No se encontró mysqldump en OptenAdvance.'], 500);
             }
 
             // 7) Construir comando mysqldump para Windows (sin ventana visible)
             $command = sprintf(
-    '"%s" --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > "%s" 2> "%s"',
-    $mysqldumpPath,
-    $dbHost,
-    $dbPort,
-    $dbUser,
-    $dbPass,
-    $dbName,
-    $target,
-    $tempDir . DIRECTORY_SEPARATOR . 'warnings.log'
-);
-
+                '"%s" --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > "%s" 2> "%s"',
+                $mysqldumpPath,
+                $dbHost,
+                $dbPort,
+                $dbUser,
+                $dbPass,
+                $dbName,
+                $target,
+                $tempDir . DIRECTORY_SEPARATOR . 'warnings.log'
+            );
 
             // Ejecutar comando sin mostrar ventana en Windows
             $output = [];
@@ -138,78 +137,26 @@ class BackupController extends Controller
     }
 
     /**
-     * Detecta la ruta de mysqldump desde Laragon portable
+     * Detecta la ruta de mysqldump desde OptenAdvance standalone
      */
-    /**
- * Detecta la ruta de mysqldump desde Laragon portable con múltiples estrategias
- */
-private function detectLaragonMysqldump()
-{
-    $basePath = base_path();
-    
-    // ESTRATEGIA 1: Buscar en múltiples niveles superiores (proyecto puede estar en www/nombre-proyecto)
-    $levelsUp = [
-        dirname($basePath),                    // ../
-        dirname(dirname($basePath)),           // ../../
-        dirname(dirname(dirname($basePath)))   // ../../../
-    ];
-    
-    foreach ($levelsUp as $laragonBase) {
-        // Buscar en bin/mysql/*/bin/mysqldump.exe
-        $mysqlDir = $laragonBase . DIRECTORY_SEPARATOR . 'laragon' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysql';
+    private function detectOptenAdvanceMysqldump()
+    {
+        // ESTRATEGIA 1: Ruta fija de OptenAdvance
+        $mysqldump = 'C:\\optenadvance\\app\\mysql\\bin\\mysqldump.exe';
+        if (file_exists($mysqldump)) {
+            Log::info("BackupController - mysqldump encontrado en OptenAdvance: {$mysqldump}");
+            return $mysqldump;
+        }
         
-        if (is_dir($mysqlDir)) {
-            $versions = @scandir($mysqlDir);
-            if ($versions) {
-                foreach ($versions as $version) {
-                    if ($version === '.' || $version === '..') continue;
-                    $mysqldump = $mysqlDir . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe';
-                    if (file_exists($mysqldump)) {
-                        Log::info("BackupController - mysqldump encontrado en: {$mysqldump}");
-                        return $mysqldump;
-                    }
-                }
-            }
+        // ESTRATEGIA 2: Buscar en PATH del sistema (si está instalado)
+        $output = [];
+        exec('where mysqldump.exe 2>nul', $output, $returnVar);
+        if ($returnVar === 0 && !empty($output[0]) && file_exists($output[0])) {
+            Log::info("BackupController - mysqldump encontrado en PATH: {$output[0]}");
+            return $output[0];
         }
+        
+        Log::error('BackupController - mysqldump NO encontrado en OptenAdvance');
+        return null;
     }
-    
-    // ESTRATEGIA 2: Buscar mysqldump en el PATH del sistema
-    $output = [];
-    exec('where mysqldump.exe 2>nul', $output, $returnVar);
-    if ($returnVar === 0 && !empty($output[0]) && file_exists($output[0])) {
-        Log::info("BackupController - mysqldump encontrado en PATH: {$output[0]}");
-        return $output[0];
-    }
-    
-    // ESTRATEGIA 3: Buscar en ubicaciones comunes de Laragon
-    $commonPaths = [
-        'C:\\laragon\\bin\\mysql',
-        'D:\\laragon\\bin\\mysql',
-        getenv('USERPROFILE') . '\\laragon\\bin\\mysql'
-    ];
-    
-    foreach ($commonPaths as $mysqlDir) {
-        if (is_dir($mysqlDir)) {
-            $versions = @scandir($mysqlDir);
-            if ($versions) {
-                foreach ($versions as $version) {
-                    if ($version === '.' || $version === '..') continue;
-                    $mysqldump = $mysqlDir . DIRECTORY_SEPARATOR . $version . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe';
-                    if (file_exists($mysqldump)) {
-                        Log::info("BackupController - mysqldump encontrado en ruta común: {$mysqldump}");
-                        return $mysqldump;
-                    }
-                }
-            }
-        }
-    }
-    
-    // Log de rutas intentadas para debugging
-    Log::error('BackupController - mysqldump NO encontrado. Rutas revisadas:', [
-        'base_path' => $basePath,
-        'levels_checked' => $levelsUp
-    ]);
-    
-    return null;
-}
 }

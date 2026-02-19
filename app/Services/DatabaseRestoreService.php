@@ -163,6 +163,16 @@ class DatabaseRestoreService
      */
     private function detectLaragonMysql(): ?string
     {
+        // ESTRATEGIA 0: Usar variable de entorno personalizada
+        $envPath = env('MYSQL_BIN_PATH');
+        if ($envPath) {
+            $mysqlExe = $envPath . DIRECTORY_SEPARATOR . 'mysql.exe';
+            if (file_exists($mysqlExe)) {
+                Log::info("DatabaseRestoreService - mysql.exe encontrado en variable de entorno: {$mysqlExe}");
+                return $mysqlExe;
+            }
+        }
+        
         $basePath = base_path();
         
         // ESTRATEGIA 1: Buscar en múltiples niveles superiores
@@ -234,6 +244,16 @@ class DatabaseRestoreService
      */
     private function detectLaragonMysqldump(): ?string
     {
+        // ESTRATEGIA 0: Usar variable de entorno personalizada
+        $envPath = env('MYSQL_BIN_PATH');
+        if ($envPath) {
+            $mysqldump = $envPath . DIRECTORY_SEPARATOR . 'mysqldump.exe';
+            if (file_exists($mysqldump)) {
+                Log::info("DatabaseRestoreService - mysqldump.exe encontrado en variable de entorno: {$mysqldump}");
+                return $mysqldump;
+            }
+        }
+        
         $basePath = base_path();
         
         // ESTRATEGIA 1: Buscar en múltiples niveles superiores

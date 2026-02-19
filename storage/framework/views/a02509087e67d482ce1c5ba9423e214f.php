@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Soporte técnico')
 
-@section('content')
+<?php $__env->startSection('title', 'Soporte técnico'); ?>
+
+<?php $__env->startSection('content'); ?>
 <br><br>
 <section class="section">
   <div class="container-fluid">
@@ -498,4 +498,6 @@
 }
 </style>
 
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\optenadvance\app\www\resources\views/soporte/index.blade.php ENDPATH**/ ?>
