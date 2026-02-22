@@ -19,13 +19,13 @@
   <style>
     /* Sidebar width adjustment */
     .sidebar-nav-wrapper {
-      width: 210px;
+      width: 190px;
       /* antes suele estar en 260–280 */
     }
 
     /* Ajuste del contenido principal */
     .main-wrapper {
-      margin-left: 210px;
+      margin-left: 190px;
     }
 
     /* Responsive: en pantallas pequeñas no tocar */
@@ -46,6 +46,7 @@
 
     /* El nav interno solo scrollea si realmente es necesario */
     .sidebar-nav {
+      margin-top: 20px;
       overflow-y: auto;
       max-height: calc(100vh - 80px);
       /* resta logo/header */
@@ -709,8 +710,8 @@
         @php $role = Auth::user()->role ?? 'empleado'; @endphp
         @if($role === 'admin')
           <li class="nav-item {{ activeRoute('ventas.create') }}">
-            <a href="{{ route('ventas.create') }}" class="d-flex align-items-center px-3 py-3 rounded">
-              <span class="icon fs-4 me-3">
+            <a href="{{ route('ventas.create') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
                 <i class="mdi mdi-cash-register"></i>
               </span>
               <span class="text fw-semibold">Caja</span>
@@ -718,8 +719,8 @@
           </li>
 
           <li class="nav-item {{ activeRoute(['ventas.index', 'ventas.show', 'ventas.devolucion', 'ventas.factura*']) }}">
-            <a href="{{ route('ventas.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-              <span class="icon fs-4 me-3">
+            <a href="{{ route('ventas.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
                 <i class="lni lni-revenue"></i>
               </span>
               <span class="text fw-semibold">Ventas</span>
@@ -727,8 +728,8 @@
           </li>
 
           <li class="nav-item {{ activeRoute(['productos.index', 'productos.create']) }}">
-            <a href="{{ route('productos.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-              <span class="icon fs-4 me-3">
+            <a href="{{ route('productos.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
                 <i class="lni lni-package"></i>
               </span>
               <span class="text fw-semibold">Productos</span>
@@ -736,33 +737,51 @@
           </li>
           <span class="divider"><hr /></span>
           <li class="nav-item {{ activeRoute('reportes.index') }}">
-            <a href="{{ route('reportes.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-              <span class="icon fs-4 me-3">
+            <a href="{{ route('reportes.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
                 <i class="lni lni-bar-chart"></i>
               </span>
               <span class="text fw-semibold">Reportes</span>
             </a>
           </li>
           <li class="nav-item {{ activeRoute('personal.index') }}">
-            <a href="{{ route('personal.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-              <span class="icon fs-4 me-3">
+            <a href="{{ route('personal.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
                 <i class="mdi mdi-briefcase-account"></i>
               </span>
               <span class="text fw-semibold">Personal</span>
             </a>
           </li>
           <li class="nav-item {{ activeRoute(['empresa.index', 'empresa.edit']) }}">
-            <a href="{{ route('empresa.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-              <span class="icon fs-4 me-3">
+            <a href="{{ route('empresa.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
                 <i class="lni lni-apartment"></i>
               </span>
               <span class="text fw-semibold">Empresa</span>
             </a>
           </li>
           <span class="divider"><hr /></span>
+
+          <li class="nav-item {{ activeRoute('db.index') }}">
+            <a href="{{ route('db.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
+                <i class="lni lni-database"></i>
+              </span>
+              <span class="text fw-semibold">Datos </span>
+            </a>
+          </li>
+          <li class="nav-item {{ activeRoute('licencia.index') }}">
+            <a href="{{ route('licencia.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
+                <i class="lni lni-certificate"></i>
+
+              </span>
+              <span class="text fw-semibold">Licencia</span>
+            </a>
+          </li>
           <li class="nav-item {{ activeRoute('soporte.index') }}">
-            <a href="{{ route('soporte.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-              <span class="icon fs-4 me-3">
+            <a href="{{ route('soporte.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
                 <i class="lni lni-cogs"></i>
               </span>
               <span class="text fw-semibold">Soporte</span>
@@ -770,8 +789,8 @@
           </li>
         @else
           <li class="nav-item {{ activeRoute('ventas.create') }}">
-            <a href="{{ route('ventas.create') }}" class="d-flex align-items-center px-3 py-3 rounded">
-              <span class="icon fs-4 me-3">
+            <a href="{{ route('ventas.create') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
                 <i class="mdi mdi-cash-register"></i>
               </span>
               <span class="text fw-semibold">Caja</span>
@@ -779,8 +798,8 @@
           </li>
 
           <li class="nav-item {{ activeRoute(['ventas.index', 'ventas.show', 'ventas.devolucion', 'ventas.factura*']) }}">
-            <a href="{{ route('ventas.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-              <span class="icon fs-4 me-3">
+            <a href="{{ route('ventas.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
                 <i class="lni lni-revenue"></i>
               </span>
               <span class="text fw-semibold">Ventas</span>
@@ -788,8 +807,8 @@
           </li>
 
           <li class="nav-item {{ activeRoute(['productos.index', 'productos.create']) }}">
-            <a href="{{ route('productos.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-              <span class="icon fs-4 me-3">
+            <a href="{{ route('productos.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
                 <i class="lni lni-package"></i>
               </span>
               <span class="text fw-semibold">Productos</span>
@@ -797,8 +816,8 @@
           </li>
           <span class="divider"><hr /></span>
           <li class="nav-item {{ activeRoute('soporte.index') }}">
-            <a href="{{ route('soporte.index') }}" class="d-flex align-items-center px-3 py-3 rounded">
-              <span class="icon fs-4 me-3">
+            <a href="{{ route('soporte.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
                 <i class="lni lni-cogs"></i>
               </span>
               <span class="text fw-semibold">Soporte</span>
@@ -828,8 +847,20 @@
               <div class="header-search d-none d-md-flex"></div>
             </div>
           </div>
+                      
           <div class="col-lg-7 col-md-7 col-6">
             <div class="header-right">
+              @if(auth()->user()->role === 'admin')
+<div class="notification-box ml-15 d-none d-md-flex">
+    <button type="button" id="notification-bell" onclick="window.location='{{ route('notifications.index') }}'" style="position: relative;">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 20.1667C9.88317 20.1667 8.88718 19.63 8.23901 18.7917H13.761C13.113 19.63 12.1169 20.1667 11 20.1667Z" fill="" />
+            <path d="M10.1157 2.74999C10.1157 2.24374 10.5117 1.83333 11 1.83333C11.4883 1.83333 11.8842 2.24374 11.8842 2.74999V2.82604C14.3932 3.26245 16.3051 5.52474 16.3051 8.24999V14.287C16.3051 14.5301 16.3982 14.7633 16.564 14.9352L18.2029 16.6342C18.4814 16.9229 18.2842 17.4167 17.8903 17.4167H4.10961C3.71574 17.4167 3.5185 16.9229 3.797 16.6342L5.43589 14.9352C5.6017 14.7633 5.69485 14.5301 5.69485 14.287V8.24999C5.69485 5.52474 7.60672 3.26245 10.1157 2.82604V2.74999Z" fill="" />
+        </svg>
+        <span id="notification-count" style="display:none; position: absolute; top: -6px; right: -6px; background-color: #f32035; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; font-weight: 600; align-items: center; justify-content: center;"></span>
+    </button>
+</div>
+@endif
               <div class="header-message-box ml-15 d-none d-md-flex">
                   <button class="dropdown-toggle" type="button" id="message" data-bs-toggle="dropdown"
                     aria-expanded="false">
@@ -1603,6 +1634,107 @@ OptenHelpers.waitForBootstrap(function() {
   document.addEventListener('DOMContentLoaded', function() {
     // Si la página se recargó con el flash message, el código de arriba ya lo manejó
   });
+});
+</script>
+<script>
+function actualizarCampana() {
+    fetch('/api/notifications/count')
+        .then(r => r.json())
+        .then(data => {
+            const span = document.getElementById('notification-count');
+            if (!span) return;
+            if (data.count > 0) {
+                span.textContent = data.count > 9 ? '9+' : data.count;
+                span.style.display = 'flex';
+            } else {
+                span.style.display = 'none';
+            }
+        })
+        .catch(() => {});
+}
+
+actualizarCampana();
+setInterval(actualizarCampana, 30000); // cada 30 segundos
+</script>
+<div class="modal fade" id="sessionModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 350px; margin: auto;"> 
+    
+    <div class="modal-content" style="border: none; border-radius: 16px; box-shadow: 0 12px 32px rgba(13, 110, 253, 0.15); background-color: #ffffff; padding: 2.5rem 2rem; text-align: center; font-family: system-ui, -apple-system, sans-serif;">
+      
+      <div style="color: #0d6efd; margin-bottom: 1rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M4.5 6a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1M6 6a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1M2 3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H2Zm0 1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/>
+        </svg>
+      </div>
+
+      <h5 style="color: #084298; font-weight: 600; font-size: 1.25rem; margin-top: 0; margin-bottom: 0.5rem;">
+        Sistema abierto
+      </h5>
+      
+      <p style="color: #5c636a; font-size: 0.95rem; line-height: 1.5; margin-top: 0; margin-bottom: 1.5rem;">
+        La sesión está activa en otra pestaña. Si continúas aquí, la otra se cerrará automáticamente.
+      </p>
+      
+      <button id="takeControlBtn" 
+        style="background-color: #0d6efd; color: #ffffff; border: none; border-radius: 8px; padding: 12px 20px; font-weight: 500; font-size: 1rem; width: 100%; cursor: pointer; transition: all 0.2s ease;"
+        onmouseover="this.style.backgroundColor='#0b5ed7'" 
+        onmouseout="this.style.backgroundColor='#0d6efd'"
+        onmousedown="this.style.transform='scale(0.98)'"
+        onmouseup="this.style.transform='scale(1)'">
+        Usar en esta pestaña
+      </button>
+
+    </div>
+  </div>
+</div>
+<script>
+const channel = new BroadcastChannel('pos_single_session');
+
+let TAB_ID = sessionStorage.getItem('pos_tab_id');
+if (!TAB_ID) {
+    TAB_ID = Date.now() + '_' + Math.random();
+    sessionStorage.setItem('pos_tab_id', TAB_ID);
+}
+
+let isActiveTab = false;
+let hasExistingTab = false;
+
+channel.onmessage = function (event) {
+    const data = event.data;
+
+    if (data.type === 'who_is_active') {
+        if (isActiveTab) {
+            channel.postMessage({ type: 'i_am_active', tabId: TAB_ID });
+        }
+    }
+
+    if (data.type === 'i_am_active' && data.tabId !== TAB_ID) {
+        hasExistingTab = true;
+    }
+
+    if (data.type === 'take_over' && data.tabId !== TAB_ID) {
+        isActiveTab = false;
+        location.reload();
+    }
+};
+
+window.addEventListener('load', () => {
+    channel.postMessage({ type: 'who_is_active' });
+
+    setTimeout(() => {
+        if (!hasExistingTab) {
+            isActiveTab = true;
+        } else {
+            const modal = new bootstrap.Modal(document.getElementById('sessionModal'));
+            modal.show();
+        }
+    }, 200);
+});
+
+document.getElementById('takeControlBtn').addEventListener('click', () => {
+    isActiveTab = true;
+    channel.postMessage({ type: 'take_over', tabId: TAB_ID });
+    bootstrap.Modal.getInstance(document.getElementById('sessionModal')).hide();
 });
 </script>
 </body>

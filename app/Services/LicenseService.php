@@ -230,6 +230,7 @@ public function install($file): array
             'start_at' => null,
             'end_at' => null,
             'days_remaining' => null,
+            'type' => null,
             'show_notification' => false,
         ];
 
@@ -250,6 +251,7 @@ public function install($file): array
 
                         $data['start_at'] = $startAt->format('M d, Y');
                         $data['end_at'] = $endAt->format('M d, Y');
+                        $data['type'] = $parts[0];
                         
                         $daysRemaining = now()->diffInDays($endAt, false);
                         $data['days_remaining'] = (int) ceil($daysRemaining);

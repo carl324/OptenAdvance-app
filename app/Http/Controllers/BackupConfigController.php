@@ -108,17 +108,11 @@ class BackupConfigController extends Controller
             
             // Intentar crear la carpeta si no existe
             if (!File::exists($carpeta)) {
-                try {
-                    File::makeDirectory($carpeta, 0755, true);
-                    Log::info('Carpeta creada exitosamente: ' . $carpeta);
-                } catch (\Exception $e) {
-                    Log::error('Error creando carpeta: ' . $e->getMessage());
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'No se pudo crear la carpeta. Verifica que la ruta sea válida y tengas permisos suficientes'
-                    ], 422);
-                }
-            }
+    return response()->json([
+        'success' => false,
+        'message' => 'La carpeta destino no existe. Verifica la ruta e inténtalo de nuevo.'
+    ], 422);
+}
             
             // Verificar permisos de escritura
             if (!File::isWritable($carpeta)) {
