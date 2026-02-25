@@ -91,7 +91,7 @@
                                 </div>
                             </div>
 
-                            <div class="card-style mb-30">
+                            <!--<div class="card-style mb-30">
                                 <h6 class="mb-20">Configuración de impuestos</h6>
                                 <div class="form-check form-switch toggle-switch d-flex align-items-center gap-3">
                                     <input id="switch-cobra-iva" name="cobra_iva" class="form-check-input" type="checkbox" {{ old('cobra_iva', $empresa->cobra_iva ?? 0) ? 'checked' : '' }} />
@@ -99,7 +99,7 @@
                                         Cobrar IVA
                                     </label>
                                 </div>
-                            </div>
+                            </div> -->
 
                             
                         </div>

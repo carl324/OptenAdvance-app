@@ -7,9 +7,12 @@ use App\Models\Venta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use App\Traits\Auditable;
 
 class CajaController extends Controller
 {
+    use Auditable;
+
     public function resumenCierre()
     {
         $caja = Caja::where('estado', 'abierta')->first();
@@ -73,24 +76,31 @@ class CajaController extends Controller
     public function abrir(Request $request)
     {
         if (Caja::where('estado', 'abierta')->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ya existe una caja abierta'
-            ], 409);
+            return response()->json(['success' => false, 'message' => 'Ya existe una caja abierta'], 409);
         }
 
         $data = $request->validate([
             'monto_apertura' => ['required', 'numeric', 'min:0'],
-            'nota_apertura' => ['nullable', 'string', 'max:255'],
+            'nota_apertura'  => ['nullable', 'string', 'max:255'],
         ]);
 
         $caja = Caja::create([
-            'user_id' => Auth::id(), // Usuario que abrió
+            'user_id'        => Auth::id(),
             'fecha_apertura' => now(),
             'monto_apertura' => $data['monto_apertura'],
-            'nota_apertura' => $data['nota_apertura'] ?? null,
-            'estado' => 'abierta',
+            'nota_apertura'  => $data['nota_apertura'] ?? null,
+            'estado'         => 'abierta',
         ]);
+
+        // ── Auditoría ──
+        self::registrar(
+            'apertura_caja',
+            'caja',
+            $caja->id,
+            null,
+            ['monto_apertura' => $data['monto_apertura'], 'nota' => $data['nota_apertura'] ?? null],
+            "Apertura de caja #{$caja->id} con fondo \${$data['monto_apertura']}"
+        );
 
         Cache::forget('app_caja_actual_data');
 
@@ -98,10 +108,7 @@ class CajaController extends Controller
             return redirect()->route('ventas.create');
         }
 
-        return response()->json([
-            'success' => true,
-            'caja_id' => $caja->id,
-        ]);
+        return response()->json(['success' => true, 'caja_id' => $caja->id]);
     }
 
     public function cerrar(Request $request)
@@ -109,63 +116,67 @@ class CajaController extends Controller
         $caja = Caja::where('estado', 'abierta')->first();
 
         if (!$caja) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No hay caja abierta'
-            ], 409);
+            return response()->json(['success' => false, 'message' => 'No hay caja abierta'], 409);
         }
 
         $data = $request->validate([
             'monto_cierre_real' => ['required', 'numeric', 'min:0'],
-            'nota_cierre' => ['nullable', 'string', 'max:255'],
-            'imprimir' => ['nullable', 'boolean'],
+            'nota_cierre'       => ['nullable', 'string', 'max:255'],
+            'imprimir'          => ['nullable', 'boolean'],
         ]);
 
-        // Recalcular totales de forma consistente con resumenCierre
         $ventasQuery = Venta::where('caja_id', $caja->id)
             ->whereNotIn('estado', ['anulada', 'cancelada']);
 
-        $totalVentas = (float) $ventasQuery->sum('total');
-
-        $totalEfectivo = (float) Venta::where('caja_id', $caja->id)
+        $totalVentas    = (float) $ventasQuery->sum('total');
+        $totalEfectivo  = (float) Venta::where('caja_id', $caja->id)
             ->where('forma_pago', 'efectivo')
             ->whereNotIn('estado', ['anulada', 'cancelada'])
             ->sum('total');
 
-        $devolucionesEfectivo = (float) Venta::where('caja_id', $caja->id)
-            ->where('forma_pago', 'efectivo')
-            ->where('estado', 'anulada')
-            ->sum('total');
-
         $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
+        $diferencia           = (float) $data['monto_cierre_real'] - $montoCierreCalculado;
 
-        $diferencia = (float) $data['monto_cierre_real'] - $montoCierreCalculado;
+        // Snapshot antes
+        $antes = [
+            'estado'         => 'abierta',
+            'monto_apertura' => (float) $caja->monto_apertura,
+            'total_ventas'   => $totalVentas,
+        ];
 
-        // No bloquear diferencias; permitir positivas o negativas
         $caja->update([
-            'fecha_cierre' => now(),
-            'total_ventas' => $totalVentas,
-            'total_efectivo' => $totalEfectivo,
-            'monto_cierre_calculado' => $montoCierreCalculado,
-            'monto_cierre_real' => $data['monto_cierre_real'],
-            'diferencia' => $diferencia,
-            'nota_cierre' => $data['nota_cierre'] ?? null,
-            'estado' => 'cerrada',
-            'user_cierre_id' => Auth::id(), // Usuario que cerró
+            'fecha_cierre'            => now(),
+            'total_ventas'            => $totalVentas,
+            'total_efectivo'          => $totalEfectivo,
+            'monto_cierre_calculado'  => $montoCierreCalculado,
+            'monto_cierre_real'       => $data['monto_cierre_real'],
+            'diferencia'              => $diferencia,
+            'nota_cierre'             => $data['nota_cierre'] ?? null,
+            'estado'                  => 'cerrada',
+            'user_cierre_id'          => Auth::id(),
         ]);
+
+        // ── Auditoría ──
+        self::registrar(
+            'cierre_caja',
+            'caja',
+            $caja->id,
+            $antes,
+            [
+                'estado'                 => 'cerrada',
+                'monto_cierre_real'      => $data['monto_cierre_real'],
+                'monto_cierre_calculado' => $montoCierreCalculado,
+                'diferencia'             => $diferencia,
+                'nota'                   => $data['nota_cierre'] ?? null,
+            ],
+            "Cierre de caja #{$caja->id}. Diferencia: \${$diferencia}"
+        );
 
         Cache::forget('app_caja_actual_data');
 
-        $printUrl = null;
-        if (!empty($data['imprimir'])) {
-            $printUrl = route('caja.cierre.print', $caja->id);
-        }
+        $printUrl = !empty($data['imprimir']) ? route('caja.cierre.print', $caja->id) : null;
 
-        return response()->json([
-            'success' => true,
-            'caja_id' => $caja->id,
-            'print_url' => $printUrl,
-        ]);
+        return response()->json(['success' => true, 'caja_id' => $caja->id, 'print_url' => $printUrl]);
     }
 
     public function printCierre(Caja $caja)

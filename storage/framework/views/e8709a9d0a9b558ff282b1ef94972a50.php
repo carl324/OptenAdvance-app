@@ -21,7 +21,7 @@
 ?>
 
 <?php $__empty_1 = true; $__currentLoopData = $productos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $producto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-    <tr id="producto-<?php echo e($producto->id); ?>">
+    <tr id="producto-<?php echo e($producto->id); ?>" data-codigo-barras="<?php echo e($producto->codigo_barras ?? ''); ?>">
         <td class="min-width">
             <p><?php echo e($producto->id); ?></p>
         </td>
@@ -114,25 +114,24 @@
           <input class="edit stock_input" data-field="stock" type="text" value="<?php echo e($producto->stock); ?>" data-original-stock="<?php echo e($producto->stock); ?>" hidden>
         </td>
         
-        <?php if($showActions): ?>
-        <td>
-            <div class="action">
-                <button type="button" class="icon-yelow" onclick="editarProducto(<?php echo e($producto->id); ?>)" data-bs-toggle="tooltip" data-bs-title="Editar">
-                    <i class="lni lni-pencil"></i>
-                </button>
-                <button type="button" class="icon-red" onclick="eliminarProducto(<?php echo e($producto->id); ?>)" data-bs-toggle="tooltip" data-bs-title="Eliminar">
-                    <i class="lni lni-trash-can"></i>
-                </button>
-                <button type="button" class="icon-green" onclick="guardarProducto(<?php echo e($producto->id); ?>)" hidden data-bs-toggle="tooltip" data-bs-title="Guardar">
-                    <i class="lni lni-checkmark-circle"></i>
-                </button>
-                <button type="button" class="icon-red" onclick="cancelarEdicion(<?php echo e($producto->id); ?>)" hidden data-bs-toggle="tooltip" data-bs-title="Cancelar">
-                    <i class="lni lni-close"></i>
-                </button>
-            </div>
-            <span class="msg"></span>
-        </td>
-        <?php endif; ?>
+<?php if($showActions): ?>
+<td>
+    <div class="producto-dropdown" id="dropdown-<?php echo e($producto->id); ?>">
+        <button type="button" class="dropdown-trigger" onclick="toggleDropdown(<?php echo e($producto->id); ?>, event)">
+            <i class="lni lni-more-alt"></i>
+        </button>
+        <div class="dropdown-menu-custom" id="dropdown-menu-<?php echo e($producto->id); ?>">
+            <button type="button" onclick="abrirModalEditar(<?php echo e($producto->id); ?>); cerrarTodosDropdowns()">
+                <i class="lni lni-pencil"></i> Editar
+            </button>
+            <button type="button" class="danger" onclick="eliminarProducto(<?php echo e($producto->id); ?>); cerrarTodosDropdowns()">
+                <i class="lni lni-trash-can"></i> Eliminar
+            </button>
+        </div>
+    </div>
+    <span class="msg" id="msg-<?php echo e($producto->id); ?>"></span>
+</td>
+<?php endif; ?>
     </tr>
 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
     <tr>

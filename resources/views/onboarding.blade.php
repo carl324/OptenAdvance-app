@@ -192,7 +192,7 @@
                     <input id="email" name="email" type="email" class="form-control-custom w-100" placeholder="admin@empresa.com">
                 </div>
 
-                <div class="col-12">
+                <!--<div class="col-12">
                     <div class="iva-card">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="cobra_iva" name="cobra_iva" value="1" style="width: 40px; height: 20px; cursor: pointer;">
@@ -204,7 +204,7 @@
                             Si activas esta opción, podrás configurar las tarifas por producto.
                         </p>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="col-12 mt-5 d-flex justify-content-end gap-3">
     <a href="{{ route('productos.index') }}" class="btn btn-main btn-skip">

@@ -21,7 +21,7 @@
 @endphp
 
 @forelse($productos as $producto)
-    <tr id="producto-{{ $producto->id }}">
+    <tr id="producto-{{ $producto->id }}" data-codigo-barras="{{ $producto->codigo_barras ?? '' }}">
         <td class="min-width">
             <p>{{ $producto->id }}</p>
         </td>
@@ -107,25 +107,24 @@
           <input class="edit stock_input" data-field="stock" type="text" value="{{ $producto->stock }}" data-original-stock="{{ $producto->stock }}" hidden>
         </td>
         
-        @if($showActions)
-        <td>
-            <div class="action">
-                <button type="button" class="icon-yelow" onclick="editarProducto({{ $producto->id }})" data-bs-toggle="tooltip" data-bs-title="Editar">
-                    <i class="lni lni-pencil"></i>
-                </button>
-                <button type="button" class="icon-red" onclick="eliminarProducto({{ $producto->id }})" data-bs-toggle="tooltip" data-bs-title="Eliminar">
-                    <i class="lni lni-trash-can"></i>
-                </button>
-                <button type="button" class="icon-green" onclick="guardarProducto({{ $producto->id }})" hidden data-bs-toggle="tooltip" data-bs-title="Guardar">
-                    <i class="lni lni-checkmark-circle"></i>
-                </button>
-                <button type="button" class="icon-red" onclick="cancelarEdicion({{ $producto->id }})" hidden data-bs-toggle="tooltip" data-bs-title="Cancelar">
-                    <i class="lni lni-close"></i>
-                </button>
-            </div>
-            <span class="msg"></span>
-        </td>
-        @endif
+@if($showActions)
+<td>
+    <div class="producto-dropdown" id="dropdown-{{ $producto->id }}">
+        <button type="button" class="dropdown-trigger" onclick="toggleDropdown({{ $producto->id }}, event)">
+            <i class="lni lni-more-alt"></i>
+        </button>
+        <div class="dropdown-menu-custom" id="dropdown-menu-{{ $producto->id }}">
+            <button type="button" onclick="abrirModalEditar({{ $producto->id }}); cerrarTodosDropdowns()">
+                <i class="lni lni-pencil"></i> Editar
+            </button>
+            <button type="button" class="danger" onclick="eliminarProducto({{ $producto->id }}); cerrarTodosDropdowns()">
+                <i class="lni lni-trash-can"></i> Eliminar
+            </button>
+        </div>
+    </div>
+    <span class="msg" id="msg-{{ $producto->id }}"></span>
+</td>
+@endif
     </tr>
 @empty
     <tr>

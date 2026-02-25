@@ -14,9 +14,11 @@ use App\Models\Producto;
 use App\Models\InventarioMovimiento;
 use App\Models\Caja;
 use App\Models\Empresa;
+use App\Traits\Auditable;
 
 class VentaController extends Controller
 {
+    use Auditable;
     /**
      * Normalizar productos según configuración de IVA de empresa
      * Soluciona deuda técnica #5: evitar repetición de lógica IVA
@@ -48,22 +50,33 @@ class VentaController extends Controller
 
     // Buscar productos (incluye IVA)
     public function buscarProductos(Request $request)
-    {
-        $query = $request->input('q', '');
+{
+    $query = $request->input('q', '');
 
-        if (strlen($query) < 2) {
-            return response()->json([]);
-        }
-
-        $productos = Producto::activos()
-    ->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($query) . '%'])
-    ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva')  // ← Agregar alias
-    ->orderByDesc('stock')
-    ->limit(10)
-    ->get();
-
-        return response()->json($this->normalizarIVA($productos));
+    if (strlen($query) < 2) {
+        return response()->json([]);
     }
+
+    // Intentar match exacto por código de barras primero
+    $porBarcode = Producto::activos()
+        ->where('codigo_barras', $query)
+        ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva')
+        ->first();
+
+    if ($porBarcode) {
+        return response()->json($this->normalizarIVA(collect([$porBarcode])));
+    }
+
+    // Si no hubo match exacto, buscar por nombre
+    $productos = Producto::activos()
+        ->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($query) . '%'])
+        ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva')
+        ->orderByDesc('stock')
+        ->limit(10)
+        ->get();
+
+    return response()->json($this->normalizarIVA($productos));
+}
 
     // Registrar venta
     public function store(Request $request)
@@ -78,8 +91,8 @@ class VentaController extends Controller
             $data = $request->validate([
                 'cliente'        => 'nullable|string|max:40',
                 'cliente_nit'    => 'nullable|string|max:40',
-                'forma_pago'     => 'sometimes|in:efectivo,transferencia,tarjeta',  // Bug #23: cambio a 'sometimes' para permitir default
-                // Solo validar existencia; no validar montos
+                'cliente_id'     => 'nullable|exists:clientes,id', 
+                'forma_pago'     => 'sometimes|in:efectivo,transferencia,tarjeta,credito', 
                 'total_pagado'   => 'required',
                 'productos'      => 'required|array|min:1',
                 'productos.*.id' => 'required|exists:productos,id',
@@ -168,14 +181,24 @@ class VentaController extends Controller
 $totalFinal = $totalNeto + $totalIva;
 
 
-            // Nota: Se permite guardar aunque `total_pagado` sea menor que `totalFinal`.
+         $formaPago = $data['forma_pago'] ?? 'efectivo';
+$esCredito = $formaPago === 'credito';
+
+if ($esCredito && empty($data['cliente_id'])) {
+    throw new \Exception('Debe seleccionar un cliente para ventas a crédito.');
+}
+
+$estadoVenta    = $esCredito ? 'credito' : 'completada';
+$saldoPendiente = $esCredito ? $totalFinal : 0;
 
             // Venta
             $venta = Venta::create([
                 'cliente' => $data['cliente'] ?? null,
+                'cliente_id'       => $data['cliente_id'] ?? null, 
                 'forma_pago' => $data['forma_pago'] ?? null,
                 'total'   => $totalFinal,
-                'estado'  => 'completada',
+                'saldo_pendiente'  => $saldoPendiente,
+                'estado'  => $estadoVenta,
                 'fecha'   => now(),
                 'user_id' => Auth::id(),
                 'caja_id' => $caja->id,
@@ -228,7 +251,12 @@ $totalFinal = $totalNeto + $totalIva;
                 );
             }
 
+            if ($esCredito && !empty($data['cliente_id'])) {
+    \App\Models\Cliente::where('id', $data['cliente_id'])
+        ->increment('saldo_pendiente', $totalFinal);
+} 
             DB::commit();
+            
 
             Log::info('Venta registrada exitosamente', [
                 'venta_id' => $venta->id,
@@ -446,7 +474,7 @@ $totalFinal = $totalNeto + $totalIva;
     }
 
     // Confirmar anulación
-    public function confirmarDevolucion(Request $request, Venta $venta)
+        public function confirmarDevolucion(Request $request, Venta $venta)
     {
         $data = $request->validate([
             'motivo' => 'required|string|min:2|max:350',
@@ -457,10 +485,8 @@ $totalFinal = $totalNeto + $totalIva;
             'motivo.max'      => 'El motivo de anulación no debe exceder los 350 caracteres.'
         ]);
 
-        // Cargar relaciones
         $venta->load('detalles', 'factura');
 
-        // Validaciones
         if ($venta->estado === 'anulada') {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'La venta ya está anulada'], 400);
@@ -475,8 +501,8 @@ $totalFinal = $totalNeto + $totalIva;
             return redirect()->back()->with('error', 'No se encuentra la factura o fecha de emisión');
         }
 
-        $fechaEmision = Carbon::parse(optional($venta->factura)->fecha_emision);
-        if (!$fechaEmision->isSameDay(Carbon::now())) {
+        $fechaEmision = \Carbon\Carbon::parse(optional($venta->factura)->fecha_emision);
+        if (!$fechaEmision->isSameDay(\Carbon\Carbon::now())) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Solo se pueden anular ventas emitidas hoy'], 400);
             }
@@ -485,38 +511,38 @@ $totalFinal = $totalNeto + $totalIva;
 
         DB::beginTransaction();
         try {
-            // Cambiar estado y (si existen) registrar motivo/fecha de anulación en la venta
+            // Snapshot antes
+            $antes = [
+                'estado' => $venta->estado,
+                'total'  => $venta->total,
+                'motivo_anulacion' => null,
+            ];
+
             $venta->estado = 'anulada';
-            if (Schema::hasColumn('ventas', 'motivo_anulacion')) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('ventas', 'motivo_anulacion')) {
                 $venta->motivo_anulacion = $data['motivo'];
             }
-            if (Schema::hasColumn('ventas', 'fecha_anulacion')) {
-                $venta->fecha_anulacion = Carbon::now();
+            if (\Illuminate\Support\Facades\Schema::hasColumn('ventas', 'fecha_anulacion')) {
+                $venta->fecha_anulacion = \Carbon\Carbon::now();
             }
             $venta->save();
 
-            // Guardar motivo de anulación en cada detalle si la columna existe en ventas_detalle
-            if (Schema::hasColumn('ventas_detalle', 'motivo_anulacion')) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('ventas_detalle', 'motivo_anulacion')) {
                 foreach ($venta->detalles as $detalle) {
                     $detalle->motivo_anulacion = $data['motivo'];
                     $detalle->save();
                 }
             }
 
-            // Restaurar stock y registrar movimientos (tipo entrada, origen venta_anulada)
             foreach ($venta->detalles as $detalle) {
                 $producto = Producto::find($detalle->producto_id);
-                
-                // Validación: el producto DEBE existir para registrar movimiento
                 if (!$producto) {
-                    throw new \Exception("El producto ID {$detalle->producto_id} no existe. No se puede anular la venta sin integridad de inventario.");
+                    throw new \Exception("El producto ID {$detalle->producto_id} no existe.");
                 }
-
                 $stockAnterior = (int) $producto->stock;
-                $cantidad = (int) $detalle->cantidad;
-                $stockNuevo = $stockAnterior + $cantidad;
-
-                $descripcion = 'Anulación venta: ' . $data['motivo'] . ". Stock anterior: {$stockAnterior}. Stock nuevo: {$stockNuevo}";
+                $cantidad      = (int) $detalle->cantidad;
+                $stockNuevo    = $stockAnterior + $cantidad;
+                $descripcion   = 'Anulación venta: ' . $data['motivo'] . ". Stock anterior: {$stockAnterior}. Stock nuevo: {$stockNuevo}";
 
                 InventarioMovimiento::entrada(
                     $detalle->producto_id,
@@ -527,6 +553,16 @@ $totalFinal = $totalNeto + $totalIva;
                     Auth::id()
                 );
             }
+
+            // ── Auditoría ──
+            self::registrar(
+                'anulacion_venta',
+                'venta',
+                $venta->id,
+                $antes,
+                ['estado' => 'anulada', 'motivo_anulacion' => $data['motivo']],
+                "Venta #{$venta->id} anulada. Motivo: {$data['motivo']}"
+            );
 
             DB::commit();
 
@@ -543,6 +579,8 @@ $totalFinal = $totalNeto + $totalIva;
             return redirect()->back()->with('error', 'Error al anular la venta: ' . $e->getMessage());
         }
     }
+
+
 
     // Obtener todos los productos
 public function obtenerTodosProductos()

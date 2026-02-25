@@ -758,6 +758,84 @@
     .striped-table td.text-centerr span {
       text-align: center !important;
     }
+    /* ========== DROPDOWN TRES PUNTOS ========== */
+.producto-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-trigger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 18px;
+    transition: all 0.2s;
+}
+
+.dropdown-trigger:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.dropdown-menu-custom {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 36px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    z-index: 999;
+    min-width: 140px;
+    overflow: hidden;
+    animation: dropdownFadeIn 0.15s ease-out;
+}
+
+.dropdown-menu-custom.open {
+    display: block;
+}
+
+@keyframes dropdownFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-menu-custom button {
+    width: 100%;
+    padding: 10px 16px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+    border-radius: 0;
+}
+
+.dropdown-menu-custom button:hover {
+    background: #f8fafc;
+}
+
+.dropdown-menu-custom button.danger {
+    color: #dc2626;
+}
+
+.dropdown-menu-custom button.danger:hover {
+    background: #fef2f2;
+}
 </style>
 
 <section class="main-content">
@@ -772,208 +850,7 @@
                 <div class="col-lg-12 px-0">
                     <div class="inventory-section">
                         <div class="row">
-                            <?php if(auth()->user()->role === 'admin'): ?>
-                            <!-- Formulario Agregar Producto -->
-                            <div class="col-lg-6">
-    <div class="product-form-card">
-        <div class="form-header">
-            <h6> Agregar Nuevo Producto </h6>
-            <p>Complete los datos del producto para registrarlo en el inventario</p>
-        </div>
-
-        <div id="alertContainer"></div>
-
-        <form id="productForm">
-            <div class="product-form">
-                <!-- Nombre del Producto -->
-                <div class="form-field full-width">
-                    <label>
-                        <i class="lni lni-text-format"></i>
-                        Nombre del Producto
-                    </label>
-                    <input type="text" placeholder="Ej: Coca Cola 350ml" id="productName" required>
-                </div>
-
-                <!-- Precio de Compra -->
-                <div class="form-field">
-                    <label>
-                        <i class="lni lni-shopping-bag"></i>
-                        Precio de Compra
-                    </label>
-                    <div class="input-with-symbol">
-                        <span class="input-symbol">$</span>
-                        <input type="text" placeholder="0" inputmode="numeric" id="precioCompra" required>
-                    </div>
-                </div>
-
-                <!-- Precio de Venta -->
-                <div class="form-field">
-                    <label>
-                        <i class="lni lni-money-protection"></i>
-                        Precio de Venta
-                    </label>
-                    <div class="input-with-symbol">
-                        <span class="input-symbol">$</span>
-                        <input type="text" placeholder="0" inputmode="numeric" id="precioVenta" required>
-                    </div>
-                </div>
-
-                <!-- Ganancia + IVA (lado a lado si cobra IVA) -->
-                <?php if($empresa && $empresa->cobra_iva): ?>
-                    <!-- Ganancia -->
-                    <div class="form-field">
-                        <label>
-                            <i class="lni lni-stats-up"></i>
-                            Ganancia por Unidad
-                        </label>
-                        <div style="display: flex; gap: 12px; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 8px;">
-                            <span id="gananciaValor" style="font-size: 18px; font-weight: 700; color: #28a745;">$0</span>
-                            <span id="gananciaMargen" style="font-size: 14px; font-weight: 600; background: #e9ecef; padding: 4px 10px; border-radius: 6px; color: #495057;">0%</span>
-                        </div>
-                    </div>
-
-                    <!-- IVA -->
-                    <div class="form-field">
-                        <label>
-                            <i class="lni lni-calculator"></i>
-                            IVA (%)
-                        </label>
-                        <div class="input-with-symbol input-with-suffix">
-                            <input type="number" placeholder="19" step="1" id="ivaPercent" value="19" min="0" max="100">
-                            <span class="input-suffix">%</span>
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <!-- Ganancia (ocupa todo el ancho si NO cobra IVA) -->
-                    <div class="form-field full-width">
-                        <label>
-                            <i class="lni lni-stats-up"></i>
-                            Ganancia por Unidad
-                        </label>
-                        <div style="display: flex; gap: 12px; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 8px;">
-                            <span id="gananciaValor" style="font-size: 18px; font-weight: 700; color: #28a745;">$0</span>
-                            <span id="gananciaMargen" style="font-size: 14px; font-weight: 600; background: #e9ecef; padding: 4px 10px; border-radius: 6px; color: #495057;">0%</span>
-                        </div>
-                    </div>
-                    <input type="hidden" id="ivaPercent" value="0">
-                <?php endif; ?>
-
-                <!-- Stock Inicial -->
-                <div class="form-field full-width">
-                    <label>
-                        <i class="lni lni-layers"></i>
-                        Stock Inicial
-                    </label>
-                    <div class="quantity-control-wrapper">
-                        <button type="button" class="quantity-btn" onclick="decreaseStock(event)">
-                            <i class="lni lni-minus"></i>
-                        </button>
-                        <input type="text" inputmode="numeric" class="quantity-display" id="stockValue" value="0" placeholder="0"/>
-                        <button type="button" class="quantity-btn" onclick="increaseStock(event)">
-                            <i class="lni lni-plus"></i>
-                        </button>
-                        <span class="quantity-label">unidades</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="submit-section">
-                <button type="button" class="btn-reset" onclick="resetForm(event)">
-                    <i class="lni lni-reload"></i> Limpiar
-                </button>
-                <button type="button" class="btn-submit" id="btnAddProduct" onclick="addProduct(event)">
-                    <i class="lni lni-checkmark-circle"></i> Agregar Producto
-                </button>
-            </div>
-        </form>
-    </div>
-    
-</div>
-
-                            <!-- Tabla de Movimientos -->
-                            <div class="col-lg-6">
-                                <div class="movements-card">
-                                    <h6><i class="lni lni-reload"></i> Movimientos Recientes</h6>
-                                    <p>Registro de entradas y salidas de productos en la tienda</p>
-
-                                    <div class="table-wrapper table-responsive">
-                                        <table class="striped-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Fecha</th>
-                                                    <th>Producto</th>
-                                                    <th>Cantidad</th>
-                                                    <th>Tipo</th>
-                                                    <th>Motivo</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php $__empty_1 = true; $__currentLoopData = $movimientos->take(5); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $m): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                                                    <tr>
-                                                        <td>
-                                                            <span class="truncate truncate-xs" 
-                                                                  data-bs-toggle="tooltip" 
-                                                                 data-bs-title="<?php echo e(formatoHoraInteligente($m->created_at) ?? '-'); ?>">
-           <?php echo e(formatoHoraInteligente($m->created_at) ?? '-'); ?>
-
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            <span class="truncate truncate-sm" 
-                                                                  data-bs-toggle="tooltip" 
-                                                                  data-bs-title="<?php echo e($m->producto_nombre ?? 'Producto #' . $m->producto_id); ?>">
-                                                                <?php echo e($m->producto_nombre ?? 'Producto #' . $m->producto_id); ?>
-
-                                                            </span>
-                                                        </td>
-                                                            <td class="text-centerr">
-                                                              <span class="truncate truncate-xs" data-bs-toggle="tooltip" data-bs-title="<?php echo e($m->cantidad); ?>">
-                                                                <?php echo e($m->cantidad); ?>
-
-                                                              </span>
-                                                            </td>
-                                                        <td>
-                                                            <?php if($m->tipo === 'entrada'): ?>
-                                                                <span class="badge-entrada">Entrada</span>
-                                                            <?php else: ?>
-                                                                <span class="badge-salida">Salida</span>
-                                                            <?php endif; ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php
-                                                                $origenLower = strtolower($m->origen ?? '');
-                                                                if($origenLower === 'registro_producto') {
-                                                                    $origenText = 'Registro';
-                                                                } elseif($origenLower === 'venta_anulada') {
-                                                                    $origenText = 'Anulada';
-                                                                } else {
-                                                                    $origenText = ucfirst($m->origen ?? '-');
-                                                                }
-                                                            ?>
-                                                            <span class="truncate truncate-sm" 
-                                                                  data-bs-toggle="tooltip" 
-                                                                  data-bs-title="<?php echo e($origenText); ?>">
-                                                                <?php echo e($origenText); ?>
-
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                                                    <tr>
-                                                        <td colspan="5" style="text-align: center; color: #999;">Sin movimientos</td>
-                                                    </tr>
-                                                <?php endif; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <?php endif; ?>
-
+                            
             <!-- Tabla de Productos -->
             <div class="row">
                 <div class="col-lg-12">
@@ -983,13 +860,6 @@
   <!-- IZQUIERDA -->
   <div>
     <h6>Tabla de Productos</h6>
-    <p style="font-size:14px; color:#64748b; margin-bottom:0;">
-      Lista de productos registrados con información de precios y stock.
-    </p>
-  </div>
-    
-  <!-- DERECHA -->
-  <div class="ms-auto">
     <div class="input-group input-group-sm search-pos" style="width:240px;">
       <span class="input-group-text bg-light border-0">
         <i class="lni lni-search-alt"></i>
@@ -1002,6 +872,16 @@
         autocomplete="off"
       />
     </div>
+  </div>
+    
+<!-- DERECHA -->
+  <div class="ms-auto d-flex align-items-center gap-2">
+    <?php if(auth()->user()->role === 'admin'): ?>
+    <button type="button" onclick="abrirModalAgregar()" class="btn btn-primary btn-sm d-flex align-items-center gap-1">
+      <i class="lni lni-plus"></i> Agregar Producto
+    </button>
+    <?php endif; ?>
+    
   </div>
 
    </div>
@@ -1044,7 +924,231 @@
         <!-- ========== tables-wrapper end ========== -->
     </div>
 </section>
+<!-- Modal Agregar Producto -->
+<div id="agregarProductoModal" class="modal-overlay" style="background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px);  align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 1000; padding: 24px;">
+  
+  <div style="background: #ffffff; width: 100%; max-width: 820px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); overflow: hidden; border: 1px solid #f1f5f9;">
+    
+    <div style="padding: 32px 40px 24px; display: flex; align-items: flex-start; justify-content: space-between;">
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <div style="width: 48px; height: 48px; background: #2478ff; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(36, 120, 255, 0.2);">
+          <i class="lni lni-package" style="font-size: 22px; color: #ffffff;"></i>
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #1e293b; letter-spacing: -0.02em;">Registrar Producto</h3>
+          <p style="margin: 2px 0 0; font-size: 0.875rem; color: #64748b;">Ingresa los detalles técnicos y comerciales</p>
+        </div>
+      </div>
+      <button type="button" onclick="cerrarModalAgregar()" style="background: #f8fafc; border: 1px solid #e2e8f0; cursor: pointer; width: 36px; height: 36px; border-radius: 10px; color: #94a3b8; display: flex; align-items: center; justify-content: center; transition: 0.2s;">
+        <i class="lni lni-close" style="font-size: 12px;"></i>
+      </button>
+    </div>
 
+    <div style="padding: 0 40px 32px;">
+      <div id="alertContainerModal"></div>
+
+      <form id="productForm">
+        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 32px;">
+          
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.025em;">Nombre del producto</label>
+              <input type="text" placeholder="Ej. Coca Cola Zero 500ml" id="productName" required 
+                     style="width: 100%; padding: 12px 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #ffffff; color: #1e293b; font-size: 0.95rem; outline: none; transition: all 0.2s;"
+                     onfocus="this.style.borderColor='#2478ff'; this.style.boxShadow='0 0 0 3px rgba(36, 120, 255, 0.1)'"
+                     onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.025em;">Código de Barras</label>
+              <div style="position: relative;">
+                <i class="lni lni-barcode" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                <input type="text" placeholder="Escanea aquí..." id="codigoBarras" autocomplete="off"
+                       style="width: 100%; padding: 12px 12px 12px 42px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem; outline: none;">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+               <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <label style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase;">Precio Compra</label>
+                  <div style="position: relative; display: flex; align-items: center;">
+                    <span style="position: absolute; left: 14px; color: #94a3b8; font-weight: 500;">$</span>
+                    <input type="text" id="precioCompra" placeholder="0" style="width: 100%; padding: 12px 12px 12px 28px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-weight: 600; outline: none;">
+                  </div>
+               </div>
+               <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <label style="font-size: 0.75rem; font-weight: 700; color: #2478ff; text-transform: uppercase;">Precio Venta</label>
+                  <div style="position: relative; display: flex; align-items: center;">
+                    <span style="position: absolute; left: 14px; color: #2478ff; font-weight: 500;">$</span>
+                    <input type="text" id="precioVenta" placeholder="0" style="width: 100%; padding: 12px 12px 12px 28px; border-radius: 10px; border: 1.5px solid #2478ff55; font-weight: 600; outline: none; background: #f0f7ff;">
+                  </div>
+               </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            
+            <div style="background: #ffffff; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center; height: 100px;">
+              <span style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Ganancia por unidad</span>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span id="gananciaValor" style="font-size: 1.75rem; font-weight: 800; color: #10b981;">$0</span>
+                <span id="gananciaMargen" style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;">0%</span>
+              </div>
+            </div>
+
+            <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; flex-grow: 1;">
+              <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 16px;">Stock Inicial</label>
+              <div style="display: flex; align-items: center; background: #ffffff; padding: 8px; border-radius: 12px; border: 1px solid #e2e8f0; justify-content: space-between;">
+                <button type="button" onclick="decreaseStock(event)" style="width: 32px; height: 32px; border-radius: 8px; border: none; background: #f1f5f9; color: #64748b; cursor: pointer;"><i class="lni lni-minus"></i></button>
+                <input type="text" id="stockValue" value="0" style="width: 50px; text-align: center; border: none; font-size: 1.25rem; font-weight: 700; color: #1e293b; outline: none;">
+                <button type="button" onclick="increaseStock(event)" style="width: 32px; height: 32px; border-radius: 8px; border: none; background: #2478ff; color: #ffffff; cursor: pointer;"><i class="lni lni-plus"></i></button>
+              </div>
+              <p style="text-align: center; margin: 12px 0 0; font-size: 0.8rem; color: #94a3b8;">Unidades en bodega</p>
+            </div>
+          </div>
+        </div>
+       <?php if($empresa && $empresa->cobra_iva): ?>
+<div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+  <label style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.025em;">IVA (%)</label>
+  <div style="position: relative; display: flex; align-items: center;">
+    <input type="number" id="ivaPercent" placeholder="19" step="1" value="19" min="0" max="100"
+           style="width: 100%; padding: 12px 36px 12px 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-weight: 600; outline: none;">
+    <span style="position: absolute; right: 14px; color: #94a3b8; font-weight: 500;">%</span>
+  </div>
+</div>
+<?php else: ?>
+<input type="hidden" id="ivaPercent" value="0">
+<?php endif; ?>
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #f1f5f9; display: flex; gap: 12px;">
+          <button type="button" onclick="resetForm(event)" style="padding: 0 16px; height: 48px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b; font-weight: 600; cursor: pointer; transition: 0.2s;">
+            <i class="lni lni-reload"></i>
+          </button>
+          <button type="button" id="btnAddProduct" onclick="addProduct(event)" 
+                  style="flex: 1; height: 48px; border-radius: 10px; border: none; background: #2478ff; color: #ffffff; font-size: 0.95rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(36, 120, 255, 0.2); display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;"
+                  onmouseover="this.style.background='#1d63d3'" 
+                  onmouseout="this.style.background='#2478ff'">
+            Guardar Producto
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Modal Editar Producto -->
+<!-- Modal Editar Producto -->
+<div id="editarProductoModal" class="modal-overlay">
+  
+  <div style="background: #ffffff; width: 100%; max-width: 920px; border-radius: 24px; padding: 0; box-shadow: 0 8px 32px rgba(0,0,0,0.10); border: 1px solid #f1f5f9; overflow: hidden;">
+    
+    <form id="editProductForm">
+      <input type="hidden" id="editProductId">
+
+      <div style="display: flex; min-height: 420px;">
+        
+        <!-- Columna izquierda -->
+        <div style="flex: 1.2; padding: 32px 40px; border-right: 1px solid #f1f5f9;">
+          <div style="margin-bottom: 24px;">
+            <span style="background: #eff6ff; color: #3b82f6; padding: 4px 10px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Editor</span>
+            <h3 style="margin: 10px 0 4px; font-size: 1.6rem; font-weight: 800; color: #0f172a; letter-spacing: -0.03em;">Editar Producto</h3>
+            <p style="font-size: 0.875rem; color: #94a3b8; line-height: 1.4; margin: 0;">Actualiza los datos del producto.</p>
+            <div id="alertContainerEditar" style="margin-top: 12px;"></div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            <div>
+              <label style="font-size: 0.7rem; font-weight: 700; color: #0f172a; text-transform: uppercase; display: block; margin-bottom: 8px;">Nombre del Producto</label>
+              <input type="text" id="editNombre" placeholder="Ej. Coca Cola 350ml" required
+                     style="width: 100%; padding: 10px 0; border: none; border-bottom: 2px solid #f1f5f9; font-size: 1.1rem; color: #0f172a; font-weight: 500; outline: none; transition: 0.3s;"
+                     onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#f1f5f9'">
+            </div>
+
+            <div>
+              <label style="font-size: 0.7rem; font-weight: 700; color: #0f172a; text-transform: uppercase; display: block; margin-bottom: 8px;">SKU / Código de Barras</label>
+              <input type="text" id="editCodigoBarras" placeholder="000000000000"
+                     style="width: 100%; padding: 10px 0; border: none; border-bottom: 2px solid #f1f5f9; font-size: 1rem; color: #64748b; font-family: monospace; outline: none;"
+                     onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#f1f5f9'">
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna derecha -->
+        <div style="flex: 1; background: #f8fafc; padding: 32px 36px; display: flex; flex-direction: column; justify-content: space-between;">
+          
+          <div style="display: flex; flex-direction: column; gap: 18px;">
+
+            <!-- Precios -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div>
+                <label style="font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 6px;">Costo</label>
+                <div style="font-size: 1.4rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 4px;">
+                  <span style="color: #cbd5e1;">$</span>
+                  <input type="text" id="editPrecioCompra" value="0"
+                         style="border: none; background: transparent; font-weight: inherit; font-size: inherit; color: inherit; width: 100%; outline: none;">
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 6px;">Venta</label>
+                <div style="font-size: 1.4rem; font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 4px;">
+                  <span style="color: #cbd5e1;">$</span>
+                  <input type="text" id="editPrecioVenta" value="0"
+                         style="border: none; background: transparent; font-weight: inherit; font-size: inherit; color: inherit; width: 100%; outline: none;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Stock -->
+            <div style="background: #ffffff; padding: 14px 18px; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <span style="display: block; font-size: 0.6rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">Stock</span>
+                <input type="text" id="editStock" value="0"
+                       style="width: 55px; border: none; font-size: 1.4rem; font-weight: 800; color: #0f172a; outline: none; background: transparent;">
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" onclick="decreaseEditStock(event)" style="width: 38px; height: 38px; border-radius: 10px; border: 1px solid #f1f5f9; background: #fff; cursor: pointer; font-size: 16px; font-weight: bold; color: #64748b;">-</button>
+                <button type="button" onclick="increaseEditStock(event)" style="width: 38px; height: 38px; border-radius: 10px; border: none; background: #3b82f6; color: #fff; cursor: pointer; font-size: 16px; font-weight: bold;">+</button>
+              </div>
+            </div>
+
+            <!-- Ganancia -->
+            <div style="text-align: center; border: 2px dashed #e2e8f0; border-radius: 14px; padding: 14px;">
+              <span style="font-size: 0.65rem; font-weight: 600; color: #94a3b8; text-transform: uppercase;">Ganancia</span>
+              <h4 id="editGananciaValor" style="margin: 4px 0 2px; font-size: 1.5rem; font-weight: 800; color: #10b981;">$0</h4>
+              <span id="editGananciaMargen" style="font-size: 0.8rem; font-weight: 700; color: #10b981;">0%</span>
+            </div>
+
+            <!-- IVA -->
+            <?php if($empresa && $empresa->cobra_iva): ?>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <label style="font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; white-space: nowrap;">IVA (%)</label>
+              <input type="number" id="editIva" step="1" min="0" max="100"
+                     style="width: 70px; padding: 6px 10px; border-radius: 8px; border: 1.5px solid #e2e8f0; font-weight: 600; outline: none;">
+            </div>
+            <?php else: ?>
+            <input type="hidden" id="editIva" value="0">
+            <?php endif; ?>
+
+          </div>
+
+          <!-- Botones -->
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+            <button type="button" id="btnGuardarEdicion" onclick="guardarEdicion(event)"
+                    style="width: 100%; height: 52px; border-radius: 14px; border: none; background: #3b82f6; color: #ffffff; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(59,130,246,0.2);"
+                    onmouseover="this.style.background='#2563eb'"
+                    onmouseout="this.style.background='#3b82f6'">
+              Guardar Cambios
+            </button>
+            <button type="button" onclick="cerrarModalEditar()"
+                    style="background: none; border: none; color: #94a3b8; font-weight: 600; font-size: 0.875rem; cursor: pointer; padding: 6px;">
+              Descartar y volver
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 <!-- Modal Eliminar Producto -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-conten">
@@ -1076,7 +1180,28 @@
 </div>
 
 <script>
-const csrf = '<?php echo e(csrf_token()); ?>';
+  const csrf = '<?php echo e(csrf_token()); ?>';
+function abrirModalAgregar() {
+    document.getElementById('agregarProductoModal').classList.add('active');
+    setTimeout(() => {
+        const input = document.getElementById('productName');
+        if (input) input.focus();
+    }, 150);
+}
+
+function cerrarModalAgregar() {
+    document.getElementById('agregarProductoModal').classList.remove('active');
+}
+
+// Cerrar modal al hacer click fuera
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('agregarProductoModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalAgregar();
+        });
+    }
+});
 let currentStock = 0;
 let lastSearchTerm = '';
 let clearSearchRequested = false;
@@ -1133,7 +1258,8 @@ function resetForm(e, clearAlert = true) {
   document.getElementById('gananciaValor').style.color = '#28a745';
   
   if (clearAlert) {
-    document.getElementById('alertContainer').innerHTML = '';
+    const ac = document.getElementById('alertContainerModal');
+    if (ac) ac.innerHTML = '';
   }
 }
 
@@ -1244,25 +1370,20 @@ const gananciaColor = ganancia >= 0 ? '#28a745' : '#dc3545';
         <input class="edit stock_input" data-field="stock" type="text" value="${p.stock}" hidden data-original-stock="${p.stock}">
       </td>
       <td>
-        <div class="action">
-          <button type="button" class="icon-yelow" onclick="editarProducto(${p.id})"data-bs-toggle="tooltip" 
-        data-bs-title="Editar">
-            <i class="lni lni-pencil"></i>
+        <div class="producto-dropdown" id="dropdown-${p.id}">
+          <button type="button" class="dropdown-trigger" onclick="toggleDropdown(${p.id}, event)">
+            <i class="lni lni-more-alt"></i>
           </button>
-          <button type="button" class="text-danger" onclick="eliminarProducto(${p.id})"data-bs-toggle="tooltip" 
-        data-bs-title="Eliminar">
-            <i class="lni lni-trash-can"></i>
-          </button>
-          <button type="button" class="icon-green" onclick="guardarProducto(${p.id})" hidden data-bs-toggle="tooltip" 
-        data-bs-title="Guardar">
-            <i class="lni lni-checkmark-circle"></i>
-          </button>
-          <button type="button" class="icon-red" onclick="cancelarEdicion(${p.id})" hidden data-bs-toggle="tooltip" 
-        data-bs-title="Cancelar">
-            <i class="lni lni-close"></i>
-          </button>
+          <div class="dropdown-menu-custom" id="dropdown-menu-${p.id}">
+            <button type="button" onclick="abrirModalEditar(${p.id}); cerrarTodosDropdowns()">
+              <i class="lni lni-pencil"></i> Editar
+            </button>
+            <button type="button" class="danger" onclick="eliminarProducto(${p.id}); cerrarTodosDropdowns()">
+              <i class="lni lni-trash-can"></i> Eliminar
+            </button>
+          </div>
         </div>
-        <span class="msg"></span>
+        <span class="msg" id="msg-${p.id}"></span>
       </td>
     </tr>
   `;
@@ -1362,6 +1483,7 @@ async function addProduct(e) {
     btn.disabled = true;
 
     try {
+        const codigoBarras = document.getElementById('codigoBarras').value.trim();
         const res = await fetch('/productos', {
             method: 'POST',
             headers: {
@@ -1369,7 +1491,7 @@ async function addProduct(e) {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ nombre, precio_compra: precioCompra, precio_venta: precioVenta, iva, stock })
+            body: JSON.stringify({ nombre, codigo_barras: codigoBarras || null, precio_compra: precioCompra, precio_venta: precioVenta, iva, stock })
         });
 
         if (res.status === 419) {
@@ -1410,7 +1532,8 @@ async function addProduct(e) {
 }
 
 function showAlert(mensaje, tipo) {
-    const container = document.getElementById('alertContainer');
+    const container = document.getElementById('alertContainerModal');
+    if (!container) return;
     container.innerHTML = `<div class="alert-custom ${tipo} show">${mensaje}</div>`;
     setTimeout(() => {
         container.innerHTML = '';
@@ -1871,6 +1994,239 @@ if (confirmBtn) {
 }
 <?php endif; ?>
 
+// ========== DROPDOWN ==========
+
+function toggleDropdown(id, event) {
+    event.stopPropagation();
+    const menu = document.getElementById(`dropdown-menu-${id}`);
+    const isOpen = menu.classList.contains('open');
+    cerrarTodosDropdowns();
+    if (!isOpen) menu.classList.add('open');
+}
+
+function cerrarTodosDropdowns() {
+    document.querySelectorAll('.dropdown-menu-custom').forEach(m => m.classList.remove('open'));
+}
+
+document.addEventListener('click', function() {
+    cerrarTodosDropdowns();
+});
+
+// ========== MODAL EDITAR ==========
+
+let currentEditStock = 0;
+
+function abrirModalEditar(id) {
+    const tr = document.getElementById(`producto-${id}`);
+    if (!tr) return;
+
+    // Leer datos de la fila
+    const nombre = tr.querySelector('span.view[data-field="nombre"]')?.innerText?.trim() || '';
+    const precioCompra = tr.querySelector('span.view[data-field="precio_compra"]')?.innerText?.trim() || '0';
+    const precioVenta = tr.querySelector('span.view[data-field="precio_venta"]')?.innerText?.trim() || '0';
+    const iva = tr.querySelector('span.view[data-field="iva"]')?.innerText?.replace('%', '').trim() || '0';
+    const stock = tr.querySelector('.stock_view')?.innerText?.trim() || '0';
+    const codigoBarras = tr.dataset.codigoBarras || '';
+
+    // Rellenar modal
+    document.getElementById('editProductId').value = id;
+    document.getElementById('editNombre').value = nombre;
+    document.getElementById('editCodigoBarras').value = codigoBarras;
+    document.getElementById('editPrecioCompra').value = precioCompra.replace('$', '');
+    document.getElementById('editPrecioVenta').value = precioVenta.replace('$', '');
+
+    const editIva = document.getElementById('editIva');
+    if (editIva) editIva.value = iva === '-' ? '0' : iva;
+
+    currentEditStock = parseInt(stock) || 0;
+    document.getElementById('editStock').value = currentEditStock;
+
+    // Subtitle con nombre
+    
+
+    // Limpiar alerta
+    document.getElementById('alertContainerEditar').innerHTML = '';
+
+    // Calcular ganancia inicial
+    calcularGananciaEditar();
+
+    // Abrir
+    document.getElementById('editarProductoModal').classList.add('active');
+    setTimeout(() => document.getElementById('editNombre').focus(), 150);
+
+    // Cerrar al click fuera
+    document.getElementById('editarProductoModal').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModalEditar();
+    }, { once: true });
+}
+
+function cerrarModalEditar() {
+    document.getElementById('editarProductoModal').classList.remove('active');
+    document.getElementById('alertContainerEditar').innerHTML = '';
+}
+
+function increaseEditStock(e) {
+    e.preventDefault();
+    currentEditStock++;
+    document.getElementById('editStock').value = currentEditStock;
+}
+
+function decreaseEditStock(e) {
+    e.preventDefault();
+    if (currentEditStock > 0) {
+        currentEditStock--;
+        document.getElementById('editStock').value = currentEditStock;
+    }
+}
+
+function calcularGananciaEditar() {
+    const compra = parseCOP(document.getElementById('editPrecioCompra').value);
+    const venta = parseCOP(document.getElementById('editPrecioVenta').value);
+    const ganancia = venta - compra;
+    const margen = compra > 0 ? ((ganancia / compra) * 100).toFixed(1) : 0;
+
+    const valEl = document.getElementById('editGananciaValor');
+    const margenEl = document.getElementById('editGananciaMargen');
+
+    valEl.textContent = '$' + formatCOP(ganancia);
+    margenEl.textContent = margen + '%';
+
+    if (ganancia < 0) {
+        valEl.style.color = '#dc2626';
+        margenEl.style.background = '#fef2f2';
+        margenEl.style.color = '#dc2626';
+    } else if (ganancia === 0) {
+        valEl.style.color = '#64748b';
+        margenEl.style.background = '#f1f5f9';
+        margenEl.style.color = '#64748b';
+    } else {
+        valEl.style.color = '#10b981';
+        margenEl.style.background = '#dcfce7';
+        margenEl.style.color = '#166534';
+    }
+}
+
+// Listeners tiempo real en modal editar
+document.addEventListener('DOMContentLoaded', function() {
+    const editCompra = document.getElementById('editPrecioCompra');
+    const editVenta = document.getElementById('editPrecioVenta');
+    const editStockInput = document.getElementById('editStock');
+
+    if (editCompra) {
+        editCompra.addEventListener('input', function() {
+            const digits = this.value.replace(/\D/g, '');
+            const val = parseInt(digits || '0', 10);
+            this.value = formatCOP(val);
+            calcularGananciaEditar();
+        });
+    }
+    if (editVenta) {
+        editVenta.addEventListener('input', function() {
+            const digits = this.value.replace(/\D/g, '');
+            const val = parseInt(digits || '0', 10);
+            this.value = formatCOP(val);
+            calcularGananciaEditar();
+        });
+    }
+    if (editStockInput) {
+        editStockInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            currentEditStock = parseInt(this.value || 0);
+        });
+    }
+});
+
+async function guardarEdicion(e) {
+    e.preventDefault();
+
+    const id = document.getElementById('editProductId').value;
+    const nombre = document.getElementById('editNombre').value.trim();
+    const precioCompra = parseCOP(document.getElementById('editPrecioCompra').value);
+    const precioVenta = parseCOP(document.getElementById('editPrecioVenta').value);
+    const iva = parseFloat(document.getElementById('editIva').value) || 0;
+    const stock = currentEditStock;
+    const codigoBarras = document.getElementById('editCodigoBarras').value.trim();
+
+    if (!nombre) {
+        showAlertEditar('El nombre es requerido', 'error');
+        return;
+    }
+    if (precioVenta <= 0) {
+        showAlertEditar('El precio de venta debe ser mayor a 0', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btnGuardarEdicion');
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`/productos/${id}`, {
+            method: 'PUT',
+            headers: {
+                'X-CSRF-TOKEN': csrf,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ nombre, precio_compra: precioCompra, precio_venta: precioVenta, iva, stock, codigo_barras: codigoBarras || null })
+        });
+
+        if (res.status === 419) {
+            showAlertEditar('Sesión expirada. Redirigiendo...', 'error');
+            setTimeout(() => window.location.href = '/login', 1500);
+            return;
+        }
+
+        const result = await res.json();
+        if (!res.ok) throw result;
+
+        // Actualizar fila en tabla
+        const tr = document.getElementById(`producto-${id}`);
+        if (tr) {
+            const nombreSpan = tr.querySelector('span.view[data-field="nombre"]');
+            if (nombreSpan) nombreSpan.innerText = nombre;
+
+            const compraSpan = tr.querySelector('span.view[data-field="precio_compra"]');
+            if (compraSpan) compraSpan.innerText = '$' + formatCOP(precioCompra);
+
+            const ventaSpan = tr.querySelector('span.view[data-field="precio_venta"]');
+            if (ventaSpan) ventaSpan.innerText = '$' + formatCOP(precioVenta);
+
+            const ivaSpan = tr.querySelector('span.view[data-field="iva"]');
+            if (ivaSpan) ivaSpan.innerText = iva > 0 ? iva + '%' : '-';
+
+            if (result.producto?.precio_con_iva !== undefined) {
+                const pcIva = tr.querySelector('.precio_con_iva_span');
+                if (pcIva) pcIva.innerText = '$' + formatCOP(result.producto.precio_con_iva);
+            }
+
+            const stockView = tr.querySelector('.stock_view');
+            if (stockView) stockView.innerText = stock;
+            const stockInput = tr.querySelector('.stock_input');
+            if (stockInput) { stockInput.value = stock; stockInput.dataset.originalStock = stock; }
+
+            tr.dataset.codigoBarras = codigoBarras;
+
+            tr.style.background = '#eff6ff';
+            setTimeout(() => { tr.style.background = ''; }, 1600);
+        }
+
+        showAlertEditar('Producto actualizado correctamente', 'success');
+        setTimeout(() => cerrarModalEditar(), 1200);
+
+    } catch (error) {
+        showAlertEditar(error.message || 'Error al actualizar', 'error');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function showAlertEditar(mensaje, tipo) {
+    const container = document.getElementById('alertContainerEditar');
+    if (!container) return;
+    container.innerHTML = `<div class="alert-custom ${tipo} show">${mensaje}</div>`;
+    if (tipo === 'success') return;
+    setTimeout(() => { container.innerHTML = ''; }, 4000);
+}
 function disableRow(tr, state) {
     tr.querySelectorAll('button, input, select').forEach(e => e.disabled = state);
 }

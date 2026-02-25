@@ -12,22 +12,25 @@ class Venta extends Model
 
     protected $fillable = [
         'cliente',
-        'cliente_nombre',  // nuevo
-        'cliente_nit',     // nuevo
-        'numero_factura',  // nuevo
-        'fecha_emision',   // nuevo
-        'forma_pago',      // nuevo
+        'cliente_nombre',
+        'cliente_nit',
+        'numero_factura',
+        'fecha_emision',
+        'forma_pago',
         'total',
         'estado',
         'fecha',
         'user_id',
         'caja_id',
+        'cliente_id',
+        'saldo_pendiente',
     ];
 
     protected $casts = [
-        'total' => 'float',
-        'fecha' => 'datetime',
-        'fecha_emision' => 'date',
+        'total'           => 'float',
+        'fecha'           => 'datetime',
+        'fecha_emision'   => 'date',
+        'saldo_pendiente' => 'integer',
     ];
 
     public function detalles()
@@ -45,6 +48,16 @@ class Venta extends Model
         return $this->belongsTo(Caja::class, 'caja_id');
     }
 
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
+    public function abonos()
+    {
+        return $this->hasMany(Abono::class);
+    }
+
     public function scopeCompletadas($query)
     {
         return $query->where('estado', 'completada');
@@ -53,5 +66,15 @@ class Venta extends Model
     public function scopeAnuladas($query)
     {
         return $query->where('estado', 'anulada');
+    }
+
+    public function scopeCreditos($query)
+    {
+        return $query->where('estado', 'credito');
+    }
+
+    public function scopeParciales($query)
+    {
+        return $query->where('estado', 'parcial');
     }
 }

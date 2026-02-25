@@ -607,20 +607,76 @@ inputMonto.form?.addEventListener('submit', () => {
                                 <i class="lni lni-apartment" style="font-size: 20px; display: block; margin-bottom: 5px;"></i>
                                 <span style="font-size: 12px;">Transferencia</span>
                             </button>
+                            <button type="button" class="q-btn" style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer;" onclick="seleccionarPago('credito')" id="pago-credito">
+    <i class="lni lni-handshake" style="font-size: 20px; display: block; margin-bottom: 5px;"></i>
+    <span style="font-size: 12px;">Crédito</span>
+</button>
                         </div>
                         <input type="hidden" id="forma_pago" value="efectivo" />
                     </div>
 
                     <div class="divider-v" style="width: 1px; background: #e0e0e0; margin: 0 20px;"></div>
 
-                    <div class="col">
-                        <label>Nombre del cliente</label>
-                        <input type="text" id="cliente" class="modal-input form-control form-control-sm mb-2" placeholder="Nombre del cliente" maxlength="40" oninput="validarCaracteres(this, 40, 'contador-cliente')" />
-                        <small class="text-muted" id="contador-cliente" style="font-size: 11px; display: none;"></small>
-                        <label>NIT / Documento</label>
-                        <input type="text" id="cliente_nit" class="modal-input form-control form-control-sm" placeholder="00000000" maxlength="40" oninput="validarCaracteres(this, 40, 'contador-nit')" />
-                        <small class="text-muted" id="contador-nit" style="font-size: 11px; display: none;"></small>
-              </div>
+<div class="col">
+    <label style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;">Cliente</label>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+        <div style="position:relative;flex:1;">
+            <input type="text" id="buscar-cliente-input" class="modal-input form-control form-control-sm" placeholder="Buscar por nombre o teléfono..." autocomplete="off" oninput="buscarClientePOS(this.value)" style="margin-bottom:0;" />
+            <div id="lista-clientes-sugeridos" style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;max-height:160px;overflow-y:auto;display:none;position:absolute;z-index:9999;width:100%;box-shadow:0 4px 12px rgba(0,0,0,0.08);top:100%;left:0;"></div>
+        </div>
+        <button type="button" title="Registrar cliente rápido" onclick="toggleRegistroRapido()" id="btn-registro-rapido" style="flex-shrink:0;width:38px;height:38px;border:1.5px solid #e0e0e0;border-radius:10px;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">
+            <i class="lni lni-plus" style="font-size:16px;color:#3b82f6;"></i>
+        </button>
+    </div>
+
+    
+    <div id="cliente-seleccionado" style="display:none;margin-top:8px;padding:8px 12px;background:#eff6ff;border-radius:8px;font-size:13px;color:#1e40af;justify-content:space-between;align-items:center;">
+        <span id="cliente-seleccionado-nombre"></span>
+        <button type="button" onclick="limpiarClienteSeleccionado()" style="background:none;border:none;cursor:pointer;color:#64748b;font-size:18px;padding:0;line-height:1;">×</button>
+    </div>
+
+    <div class="text-danger text-xs mt-1" id="error-cliente-credito"></div>
+
+    
+    <div id="panel-registro-rapido" style="display:none;margin-top:12px;border-top:1px solid #f1f5f9;padding-top:12px;">
+        <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px;">Nuevo cliente</p>
+        
+        <div style="margin-bottom:16px;">
+            <input type="text" id="rr-nombre" placeholder="Nombre *" autocomplete="off"
+                style="width:100%;border:none;border-bottom:1.5px solid #e2e8f0;padding:6px 0;font-size:14px;outline:none;background:transparent;transition:border-color 0.2s;"
+                onfocus="this.style.borderBottomColor='#3b82f6'"
+                onblur="this.style.borderBottomColor='#e2e8f0'" />
+        </div>
+        <div style="margin-bottom:16px;">
+            <input type="text" id="rr-telefono" placeholder="Teléfono" autocomplete="off"
+                style="width:100%;border:none;border-bottom:1.5px solid #e2e8f0;padding:6px 0;font-size:14px;outline:none;background:transparent;transition:border-color 0.2s;"
+                onfocus="this.style.borderBottomColor='#3b82f6'"
+                onblur="this.style.borderBottomColor='#e2e8f0'" />
+        </div>
+
+        <div class="text-danger text-xs mb-2" id="error-rr"></div>
+
+        <div style="display:flex;gap:8px;">
+            <button type="button" onclick="toggleRegistroRapido()" style="flex:1;padding:8px;border:1.5px solid #e0e0e0;border-radius:8px;background:white;font-size:13px;cursor:pointer;color:#64748b;">
+                Cancelar
+            </button>
+            <button type="button" onclick="guardarRegistroRapido()" style="flex:1;padding:8px;border:none;border-radius:8px;background:#3b82f6;color:white;font-size:13px;font-weight:600;cursor:pointer;">
+                <span id="rr-btn-text">Guardar</span>
+            </button>
+        </div>
+    </div>
+
+    
+    <div id="bloque-credito-aviso" style="display:none;margin-top:12px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:12px;color:#c2410c;">
+        <i class="lni lni-warning me-1"></i> Para crédito debes seleccionar un cliente.
+    </div>
+
+    
+    <input type="hidden" id="cliente" value="" />
+    <input type="hidden" id="cliente_nit" value="" />
+    <input type="hidden" id="cliente_id" value="" />
+</div>
+                    
 
                 </div>
                    
@@ -696,6 +752,112 @@ inputMonto.form?.addEventListener('submit', () => {
 
 <script>
     
+    let clienteSeleccionadoId = null;
+let buscarClienteTimer = null;
+
+function buscarClientePOS(q) {
+    clearTimeout(buscarClienteTimer);
+    const lista = document.getElementById('lista-clientes-sugeridos');
+    if (!lista) return;
+    if (q.length < 2) { lista.style.display = 'none'; return; }
+
+    buscarClienteTimer = setTimeout(async () => {
+        const res = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(q)}`, {
+            headers: { 'Accept': 'application/json' }
+        });
+        const clientes = await res.json();
+        lista.innerHTML = '';
+        if (!clientes.length) {
+            lista.innerHTML = '<div style="padding:10px;font-size:13px;color:#64748b;">Sin resultados — usa el botón + para registrar</div>';
+            lista.style.display = 'block';
+            return;
+        }
+        clientes.forEach(c => {
+            const item = document.createElement('div');
+            item.style.cssText = 'padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f1f5f9;';
+            item.innerHTML = `<strong>${c.nombre}</strong><br><span style="color:#64748b;font-size:11px;">${c.telefono || ''} ${c.nit ? '· '+c.nit : ''}</span>`;
+            item.onmouseover = () => item.style.background = '#f8fafc';
+            item.onmouseout  = () => item.style.background = 'white';
+            item.onclick = () => seleccionarCliente(c);
+            lista.appendChild(item);
+        });
+        lista.style.display = 'block';
+    }, 300);
+}
+
+function seleccionarCliente(c) {
+    clienteSeleccionadoId = c.id;
+    document.getElementById('cliente_id').value = c.id;
+    document.getElementById('cliente').value = c.nombre;
+    document.getElementById('cliente_nit').value = c.nit || '';
+    document.getElementById('buscar-cliente-input').value = c.nombre;
+    document.getElementById('cliente-seleccionado-nombre').textContent = '✓ ' + c.nombre;
+    document.getElementById('cliente-seleccionado').style.display = 'flex';
+    document.getElementById('error-cliente-credito').textContent = '';
+    document.getElementById('lista-clientes-sugeridos').style.display = 'none';
+}
+
+function limpiarClienteSeleccionado() {
+    clienteSeleccionadoId = null;
+    document.getElementById('cliente_id').value = '';
+    document.getElementById('cliente').value = '';
+    document.getElementById('cliente_nit').value = '';
+    document.getElementById('buscar-cliente-input').value = '';
+    document.getElementById('cliente-seleccionado').style.display = 'none';
+}
+
+function toggleRegistroRapido() {
+    const panel = document.getElementById('panel-registro-rapido');
+    const btn = document.getElementById('btn-registro-rapido');
+    const abierto = panel.style.display !== 'none';
+
+    if (abierto) {
+        panel.style.display = 'none';
+        btn.style.borderColor = '#e0e0e0';
+        btn.querySelector('i').style.transform = 'rotate(0deg)';
+    } else {
+        panel.style.display = 'block';
+        btn.style.borderColor = '#3b82f6';
+        btn.querySelector('i').style.transform = 'rotate(45deg)';
+        document.getElementById('rr-nombre').value = document.getElementById('buscar-cliente-input').value.trim();
+        document.getElementById('rr-telefono').value = '';
+        document.getElementById('error-rr').textContent = '';
+        setTimeout(() => document.getElementById('rr-nombre').focus(), 50);
+    }
+}
+
+async function guardarRegistroRapido() {
+    const nombre = document.getElementById('rr-nombre').value.trim();
+    const telefono = document.getElementById('rr-telefono').value.trim();
+    document.getElementById('error-rr').textContent = '';
+
+    if (!nombre) {
+        document.getElementById('error-rr').textContent = 'El nombre es obligatorio.';
+        return;
+    }
+
+    const btn = document.getElementById('rr-btn-text');
+    btn.textContent = 'Guardando...';
+
+    try {
+        const res = await fetch('/clientes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfTokenGlobal, 'Accept': 'application/json' },
+            body: JSON.stringify({ nombre, telefono: telefono || null })
+        });
+        const data = await res.json();
+        if (data.success) {
+            toggleRegistroRapido(); 
+            seleccionarCliente(data.cliente);
+        } else {
+            document.getElementById('error-rr').textContent = data.errors?.nombre?.[0] || 'Error al guardar.';
+        }
+    } catch(e) {
+        document.getElementById('error-rr').textContent = 'Error de conexión.';
+    } finally {
+        btn.textContent = 'Guardar';
+    }
+}
 // ========== VALIDACIÓN DE ELEMENTOS DOM AL INICIAR ==========
 function validarElementosDOM() {
     const elementos = {
@@ -1098,9 +1260,22 @@ function calcularPorCobrar() {
 // Seleccionar método de pago
 function seleccionarPago(metodo) {
     document.getElementById('forma_pago').value = metodo;
-    document.getElementById('pago-efectivo').style.borderColor = metodo === 'efectivo' ? '#4CAF50' : 'transparent';
-    document.getElementById('pago-tarjeta').style.borderColor = metodo === 'tarjeta' ? '#4CAF50' : 'transparent';
-    document.getElementById('pago-transferencia').style.borderColor = metodo === 'transferencia' ? '#4CAF50' : 'transparent';
+    ['efectivo','tarjeta','transferencia','credito'].forEach(m => {
+        const btn = document.getElementById('pago-' + m);
+        if (btn) btn.style.borderColor = metodo === m ? '#4CAF50' : 'transparent';
+    });
+
+    const aviso = document.getElementById('bloque-credito-aviso');
+    if (metodo === 'credito') {
+        if (aviso) aviso.style.display = 'block';
+        document.getElementById('total_pagado').value = '0';
+        document.getElementById('total_pagado').disabled = true;
+    } else {
+        if (aviso) aviso.style.display = 'none';
+        document.getElementById('total_pagado').disabled = false;
+        document.getElementById('total_pagado').value = '';
+        limpiarClienteSeleccionado();
+    }
 }
 
 // Confirmar venta
@@ -1138,6 +1313,11 @@ async function finalizarVenta() {
     const cliente_nit = document.getElementById('cliente_nit').value.trim() || null;
     const forma_pago = document.getElementById('forma_pago').value;
     const totalPagadoInput = document.getElementById('total_pagado');
+    if (forma_pago === 'credito' && !clienteSeleccionadoId) {
+    const err = document.getElementById('error-cliente-credito');
+    if (err) err.textContent = 'Debes seleccionar un cliente para ventas a crédito.';
+    return;
+}
     // Validación visual: si está vacío al presionar Finalizar, mostrar sólo el mensaje inline del campo
     if (!totalPagadoInput || totalPagadoInput.value.trim() === '') {
         if (totalPagadoInput) {
@@ -1176,6 +1356,7 @@ async function finalizarVenta() {
     const data = {
         cliente: cliente,
         cliente_nit: cliente_nit,
+        cliente_id: clienteSeleccionadoId || null,
         forma_pago: forma_pago,
         total_pagado: total_pagado,
         productos: carrito.map(item => ({
@@ -1303,8 +1484,7 @@ function nuevaVenta() {
 // Limpiar venta
 function limpiarVenta() {
     carrito = [];
-    document.getElementById('cliente').value = '';
-    document.getElementById('cliente_nit').value = '';
+    limpiarClienteSeleccionado(); 
     document.getElementById('forma_pago').value = 'efectivo';
     inputBuscar.value = '';
     actualizarCarrito();

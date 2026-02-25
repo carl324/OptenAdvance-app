@@ -744,6 +744,14 @@
               <span class="text fw-semibold">Reportes</span>
             </a>
           </li>
+          <li class="nav-item <?php echo e(activeRoute('clientes.index')); ?>">
+            <a href="<?php echo e(route('clientes.index')); ?>" class="d-flex align-items-center px-3 py-2 rounded">
+              <span class="icon fs-5 me-3">
+                <i class="lni lni-users"></i>
+              </span>
+              <span class="text fw-semibold">Clientes</span>
+            </a>
+          </li>
           <li class="nav-item <?php echo e(activeRoute('personal.index')); ?>">
             <a href="<?php echo e(route('personal.index')); ?>" class="d-flex align-items-center px-3 py-2 rounded">
               <span class="icon fs-5 me-3">
@@ -752,37 +760,23 @@
               <span class="text fw-semibold">Personal</span>
             </a>
           </li>
-          <li class="nav-item <?php echo e(activeRoute(['empresa.index', 'empresa.edit'])); ?>">
-            <a href="<?php echo e(route('empresa.index')); ?>" class="d-flex align-items-center px-3 py-2 rounded">
-              <span class="icon fs-5 me-3">
-                <i class="lni lni-apartment"></i>
-              </span>
-              <span class="text fw-semibold">Empresa</span>
-            </a>
-          </li>
+          
           <span class="divider"><hr /></span>
 
-          <li class="nav-item <?php echo e(activeRoute('db.index')); ?>">
-            <a href="<?php echo e(route('db.index')); ?>" class="d-flex align-items-center px-3 py-2 rounded">
+          
+          <li class="nav-item <?php echo e(activeRoute(['ajustes.index', 'empresa.index', 'db.index', 'licencia.index'])); ?>">
+            <a href="<?php echo e(route('ajustes.index')); ?>" class="d-flex align-items-center px-3 py-2 rounded">
               <span class="icon fs-5 me-3">
-                <i class="lni lni-database"></i>
-              </span>
-              <span class="text fw-semibold">Datos </span>
-            </a>
-          </li>
-          <li class="nav-item <?php echo e(activeRoute('licencia.index')); ?>">
-            <a href="<?php echo e(route('licencia.index')); ?>" class="d-flex align-items-center px-3 py-2 rounded">
-              <span class="icon fs-5 me-3">
-                <i class="lni lni-certificate"></i>
+                <i class="lni lni-cog"></i>
 
               </span>
-              <span class="text fw-semibold">Licencia</span>
+              <span class="text fw-semibold">Ajustes</span>
             </a>
           </li>
           <li class="nav-item <?php echo e(activeRoute('soporte.index')); ?>">
             <a href="<?php echo e(route('soporte.index')); ?>" class="d-flex align-items-center px-3 py-2 rounded">
               <span class="icon fs-5 me-3">
-                <i class="lni lni-cogs"></i>
+                <i class="mdi mdi-headset"></i>
               </span>
               <span class="text fw-semibold">Soporte</span>
             </a>

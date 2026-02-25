@@ -16,6 +16,8 @@ use App\Http\Middleware\CheckLicense;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\AuditoriaController;
 
 // ========== RUTAS SUPER ADMIN ==========
 Route::get('/superadmin/login', [SuperAdminController::class, 'showLogin'])
@@ -80,8 +82,18 @@ Route::middleware(['ensure.admin.exists'])->group(function () {
         // ========== SOLO ADMIN ==========
         Route::middleware('role:admin')->group(function () {
             // Vistas
+
             Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
             Route::get('/base-de-datos', fn() => view('db.index'))->name('db.index');
+            Route::get('/ajustes', fn() => view('ajustes.index'))->name('ajustes.index');
+            Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
+            Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
+            Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
+            Route::put('/clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
+            Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
+            Route::get('/api/clientes/buscar', [ClienteController::class, 'buscar'])->name('clientes.buscar');
+            Route::post('/clientes/{cliente}/abonar', [ClienteController::class, 'abonar'])->name('clientes.abonar');
+            Route::get('/clientes/{cliente}', [ClienteController::class, 'show'])->name('clientes.show');
             Route::get('/licencia', fn() => view('licencia.index'))->name('licencia.index');
             Route::get('/empresa', [EmpresaController::class, 'edit'])->name('empresa.index');
             Route::post('/empresa', [EmpresaController::class, 'update'])->name('empresa.update');

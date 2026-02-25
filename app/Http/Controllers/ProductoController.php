@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Traits\Auditable;
 
 class ProductoController extends Controller
 {
+    use Auditable;
     // Listar productos activos
     public function index(Request $request)
     {
@@ -82,7 +84,8 @@ class ProductoController extends Controller
             'precio_compra' => 'required|numeric|gte:0',
             'precio_venta' => 'required|numeric|gt:0',
             'stock'  => 'required|integer|min:0',
-            'iva'    => 'required|numeric|min:0|max:100',
+            'iva'          => 'required|numeric|min:0|max:100',
+            'codigo_barras' => 'nullable|string|max:50|unique:productos,codigo_barras',
         ]);
 
         // Normalizar nombre
@@ -117,13 +120,14 @@ class ProductoController extends Controller
             // Crear producto con stock inicial en una única transacción
             // Esto garantiza que ambas operaciones (crear + registrar movimiento) son atómicas
             $producto = Producto::create([
-                'nombre' => $data['nombre'],
-                'precio_compra' => $data['precio_compra'],
-                'precio_venta' => $data['precio_venta'],
-                'iva' => $data['iva'],
-                'precio_con_iva' => $data['precio_con_iva'],
-                'stock'  => $stockInicial,  // Crear directamente con stock correcto
-            ]);
+    'nombre'        => $data['nombre'],
+    'codigo_barras' => $data['codigo_barras'] ?? null,
+    'precio_compra' => $data['precio_compra'],
+    'precio_venta'  => $data['precio_venta'],
+    'iva'           => $data['iva'],
+    'precio_con_iva'=> $data['precio_con_iva'],
+    'stock'         => $stockInicial,
+]);
 
             // Registrar movimiento inicial SIEMPRE si hay stock
             $movimiento = null;
@@ -173,161 +177,154 @@ class ProductoController extends Controller
     }
 
     // Actualizar producto (incluye stock con movimiento)
-    public function update(Request $request, $id)
+     public function update(Request $request, $id)
     {
         try {
-            Log::info('=== INICIO UPDATE PRODUCTO ===');
-            Log::info('ID: ' . $id);
-            Log::info('Data recibida: ' . json_encode($request->all()));
-
             $data = $request->validate([
-                'nombre' => 'sometimes|string|max:100',
+                'nombre'        => 'sometimes|string|max:100',
                 'precio_compra' => 'sometimes|numeric|gte:0',
-                'precio_venta' => 'sometimes|numeric|gt:0',
-                'iva' => 'sometimes|numeric|min:0|max:100',
-                'stock' => 'sometimes|integer|min:0',
+                'precio_venta'  => 'sometimes|numeric|gt:0',
+                'iva'           => 'sometimes|numeric|min:0|max:100',
+                'stock'         => 'sometimes|integer|min:0',
+                'codigo_barras' => 'sometimes|nullable|string|max:50|unique:productos,codigo_barras,' . $id,
             ]);
 
-            Log::info('Data validada: ' . json_encode($data));
-
             $producto = Producto::findOrFail($id);
-            Log::info('Producto encontrado: ' . $producto->nombre);
 
-            // Normalizar nombre si viene
             if (isset($data['nombre'])) {
                 $nombreNormalizado = trim(mb_strtolower($data['nombre']));
-                
-                // Evitar duplicados al editar
                 $existe = Producto::whereRaw('LOWER(nombre) = ?', [$nombreNormalizado])
                     ->where('id', '!=', $producto->id)
                     ->where('activo', 1)
                     ->exists();
-
                 if ($existe) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Ya existe otro producto con ese nombre'
-                    ], 409);
+                    return response()->json(['success' => false, 'message' => 'Ya existe otro producto con ese nombre'], 409);
                 }
             }
 
             DB::beginTransaction();
 
-            // Lock de fila para prevenir race conditions en concurrencia
             $producto = Producto::where('id', $producto->id)->lockForUpdate()->first();
             $stockAnterior = $producto->stock;
-            Log::info('Stock anterior: ' . $stockAnterior);
 
-            // Actualizar campos básicos
-            if (isset($data['nombre'])) {
-                $producto->nombre = $data['nombre'];
-            }
-            if (isset($data['precio_compra'])) {
-                $producto->precio_compra = $data['precio_compra'];
-            }
-            if (isset($data['precio_venta'])) {
-                $producto->precio_venta = $data['precio_venta'];
-            }
-            if (isset($data['iva'])) {
-                $producto->iva = $data['iva'];
-            }
+            // Snapshot antes — solo campos que pueden cambiar
+            $antes = [
+                'nombre'       => $producto->nombre,
+                'precio_venta' => $producto->precio_venta,
+                'precio_compra'=> $producto->precio_compra,
+                'iva'          => $producto->iva,
+                'stock'        => $producto->stock,
+            ];
 
-            // Recalcular precio con IVA si cambió precio o iva
+            // Detectar qué cambió para auditoría específica
+            $cambioNombre  = isset($data['nombre'])        && $data['nombre'] !== $producto->nombre;
+            $cambioPrecio  = isset($data['precio_venta'])  && (float)$data['precio_venta'] !== (float)$producto->precio_venta;
+            $cambioStock   = isset($data['stock'])         && (int)$data['stock'] !== (int)$producto->stock;
+
+            if (isset($data['nombre']))        $producto->nombre        = $data['nombre'];
+            if (isset($data['precio_compra'])) $producto->precio_compra = $data['precio_compra'];
+            if (isset($data['precio_venta']))  $producto->precio_venta  = $data['precio_venta'];
+            if (isset($data['iva']))           $producto->iva           = $data['iva'];
+            if (array_key_exists('codigo_barras', $data)) $producto->codigo_barras = $data['codigo_barras'];
+
             if (isset($data['precio_venta']) || isset($data['iva'])) {
                 $producto->precio_con_iva = (int) round($producto->precio_venta * (1 + ($producto->iva / 100)));
             }
 
-            // Guardar cambios básicos primero
             $producto->save();
-            Log::info('Producto guardado con campos básicos');
 
-            // Manejar stock DESPUÉS de guardar lo demás
             if (isset($data['stock'])) {
-                $stockNuevo = (int)$data['stock'];
-                Log::info('Stock nuevo: ' . $stockNuevo);
-                
-                $diferencia = $stockNuevo - $stockAnterior;
-                Log::info('Diferencia: ' . $diferencia);
+                $stockNuevo  = (int) $data['stock'];
+                $diferencia  = $stockNuevo - $stockAnterior;
 
-                // Validar que no vaya a quedar en negativo
-                if ($stockNuevo < 0) {
-                    throw new \Exception("El stock no puede ser negativo");
-                }
+                if ($stockNuevo < 0) throw new \Exception("El stock no puede ser negativo");
 
                 if ($diferencia !== 0) {
-                    // ✅ Usar entrada/salida según si aumenta o disminuye
                     if ($diferencia > 0) {
-                        // Stock aumentó = ENTRADA
-                        Log::info('Registrando ENTRADA de ' . abs($diferencia));
-                        InventarioMovimiento::entrada(
-                            $producto->id,
-                            abs($diferencia),
-                            'ajuste',
-                            $producto->id,
-                            "Ajuste manual: de {$stockAnterior} a {$stockNuevo} (+{$diferencia})",
-                            Auth::id()
-                        );
+                        InventarioMovimiento::entrada($producto->id, abs($diferencia), 'ajuste', $producto->id, "Ajuste manual: de {$stockAnterior} a {$stockNuevo}", Auth::id());
                     } else {
-                        // Stock disminuyó = SALIDA
-                        Log::info('Registrando SALIDA de ' . abs($diferencia));
-                        InventarioMovimiento::salida(
-                            $producto->id,
-                            abs($diferencia),
-                            'ajuste',
-                            $producto->id,
-                            "Ajuste manual: de {$stockAnterior} a {$stockNuevo} ({$diferencia})",
-                            Auth::id()
-                        );
+                        InventarioMovimiento::salida($producto->id, abs($diferencia), 'ajuste', $producto->id, "Ajuste manual: de {$stockAnterior} a {$stockNuevo}", Auth::id());
                     }
-
-                    // Refrescar el producto para obtener el stock actualizado
                     $producto->refresh();
-                    Log::info('Stock después del movimiento: ' . $producto->stock);
                 }
             }
 
-            DB::commit();
-            Log::info('=== FIN UPDATE PRODUCTO EXITOSO ===');
+            $despues = [
+                'nombre'       => $producto->nombre,
+                'precio_venta' => $producto->precio_venta,
+                'precio_compra'=> $producto->precio_compra,
+                'iva'          => $producto->iva,
+                'stock'        => $producto->stock,
+            ];
 
-            return response()->json([
-                'success' => true,
-                'producto' => $producto->fresh()
-            ]);
+            // ── Auditoría: una entrada por tipo de cambio detectado ──
+            if ($cambioNombre) {
+                self::registrar('cambio_nombre_producto', 'producto', $producto->id,
+                    ['nombre' => $antes['nombre']],
+                    ['nombre' => $despues['nombre']],
+                    "Nombre cambiado de '{$antes['nombre']}' a '{$despues['nombre']}'"
+                );
+            }
+
+            if ($cambioPrecio) {
+                self::registrar('cambio_precio_producto', 'producto', $producto->id,
+                    ['precio_venta' => $antes['precio_venta']],
+                    ['precio_venta' => $despues['precio_venta']],
+                    "Precio cambiado de \${$antes['precio_venta']} a \${$despues['precio_venta']}"
+                );
+            }
+
+            if ($cambioStock) {
+                self::registrar('ajuste_inventario', 'producto', $producto->id,
+                    ['stock' => $antes['stock']],
+                    ['stock' => $despues['stock']],
+                    "Stock ajustado de {$antes['stock']} a {$despues['stock']}"
+                );
+            }
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'producto' => $producto->fresh()]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::warning('Error de validación en update: ' . json_encode($e->errors()));
-            return response()->json([
-                'success' => false,
-                'message' => 'Datos inválidos'
-            ], 422);
-
+            return response()->json(['success' => false, 'message' => 'Datos inválidos'], 422);
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('ERROR EN UPDATE: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'No se pudo actualizar el producto'
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'No se pudo actualizar el producto'], 500);
         }
     }
 
-    // Eliminación lógica
     public function destroy($id)
     {
         try {
             $producto = Producto::findOrFail($id);
+
+            // Snapshot antes de eliminar
+            $antes = [
+                'nombre'       => $producto->nombre,
+                'precio_venta' => $producto->precio_venta,
+                'stock'        => $producto->stock,
+                'activo'       => 1,
+            ];
+
             $producto->update(['activo' => 0]);
+
+            // ── Auditoría ──
+            self::registrar(
+                'eliminacion_producto',
+                'producto',
+                $producto->id,
+                $antes,
+                ['activo' => 0],
+                "Producto '{$producto->nombre}' desactivado"
+            );
 
             return response()->json(['success' => true]);
 
         } catch (\Throwable $e) {
             Log::error('Error al eliminar producto: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'No se pudo eliminar el producto'
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'No se pudo eliminar el producto'], 500);
         }
     }
 }

@@ -13,7 +13,7 @@ Schedule::command('licencia:verificar')
     ->withoutOverlapping();
 
 Schedule::command('backup:automatico')
-    ->everyminute()
+    ->hourly()
     ->withoutOverlapping();
 
 Schedule::command('disco:verificar')
