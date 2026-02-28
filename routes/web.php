@@ -106,8 +106,10 @@ Route::middleware(['ensure.admin.exists'])->group(function () {
             // Reportes
             Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
             Route::get('/reportes/export', [ReporteController::class, 'export'])->name('reportes.export');
-            Route::get('/api/reportes', [ReporteController::class, 'apiData'])->name('reportes.api');
-            Route::get('/api/reportes/stats', [ReporteController::class, 'apiStats'])->name('reportes.api.stats');
+            Route::get('/api/reportes/kpis', [ReporteController::class, 'apiKpis'])->name('reportes.api.kpis');
+            Route::get('/api/reportes/tendencia', [ReporteController::class, 'apiTendencia'])->name('reportes.api.tendencia');
+            Route::get('/api/reportes/cajeros', [ReporteController::class, 'apiCajeros'])->name('reportes.api.cajeros');
+            Route::get('/api/reportes/productos', [ReporteController::class, 'apiProductos'])->name('reportes.api.productos');
             Route::get('/api/reportes/export', [ReporteController::class, 'apiExport'])->name('reportes.api.export');
             Route::get('/reportes/ventas/{id}/detalles', [ReporteController::class, 'ventaDetalles']);
 

@@ -15,64 +15,6 @@ class ReporteController extends Controller
     // Límite máximo de filas permitidas en exportación (protección de rendimiento)
     private const MAX_EXPORT_ROWS = 10000;
 
-    // Flag informativo: los reportes representan datos históricos
-    // es_dato_historico = true
-    public function index(Request $request)
-    {
-        $tipo = $request->input('tipo', 'ventas');
-
-        // Validación defensiva de inputs: fechas, estado y order
-        $fecha_inicio = $this->sanitizeDate($request->input('fecha_inicio'));
-        $fecha_fin = $this->sanitizeDate($request->input('fecha_fin'));
-        $estado = $this->sanitizeEstado($request->input('estado'));
-
-        $empresa = Empresa::first();
-
-        // Preparar filtros (se pasan sólo valores saneados)
-        $filtros = [
-            'fecha_inicio' => $fecha_inicio,
-            'fecha_fin' => $fecha_fin,
-            'estado' => $estado,
-            'order' => $this->sanitizeOrder($request->input('order', 'desc')),
-        ];
-
-        // Usar el modelo Reporte para obtener los datos
-        switch ($tipo) {
-            case 'ventas':
-                // Ahora mostramos ventas (no detalle)
-                $data = Reporte::ventas($filtros)->paginate(15)->withQueryString();
-                break;
-            
-            case 'inventario_movimientos':
-                $data = Reporte::inventarioMovimientos($filtros)->paginate(15)->withQueryString();
-                break;
-            
-            default:
-                $data = collect();
-        }
-
-        // Añadir campo informativo por fila: origen_reporte (solo para UI)
-        if (isset($data) && method_exists($data, 'getCollection')) {
-            $data->setCollection($data->getCollection()->map(function ($item) use ($tipo) {
-                if (($tipo ?? '') === 'inventario_movimientos') {
-                    $item->origen_reporte = 'inventario';
-                } else {
-                    $item->origen_reporte = 'venta';
-                }
-                return $item;
-            }));
-        }
-
-        // Flag explicito para dejar claro que reportes muestran datos históricos
-        $es_dato_historico = true;
-
-        return view('reportes.index', compact('empresa', 'tipo', 'fecha_inicio', 'fecha_fin', 'data', 'es_dato_historico'));
-    }
-
-    /**
-     * Obtiene los detalles de una venta específica (para el modal)
-     * Carga relaciones para evitar N+1 queries
-     */
     public function ventaDetalles($id)
     {
         $empresa = Empresa::first();
@@ -227,8 +169,8 @@ class ReporteController extends Controller
         }
 
         $row = 2;
-$totalIva = 0;
-$totalTotal = 0;
+        $totalIva = 0;
+        $totalTotal = 0;
 
 // Cargar usuarios relacionados en una sola consulta para evitar N+1
 $userIds = $ventas->pluck('user_id')->filter()->unique()->values()->all();
@@ -537,239 +479,254 @@ foreach ($ventas as $venta) {
         return null;
     }
 
-    /**
-     * API: Obtiene datos de reportes en formato JSON para AJAX
-     */
-    public function apiData(Request $request)
-    {
-        $tipo = $request->input('tipo', 'ventas');
-        $search = $request->input('search', '');  // ← Búsqueda server-side
-        $fecha_inicio = $this->sanitizeDate($request->input('fecha_inicio'));
-        $fecha_fin = $this->sanitizeDate($request->input('fecha_fin'));
-        $page = max(1, (int)$request->input('page', 1));
-
-        // Si no hay fechas, usar últimos 30 días
-        if (!$fecha_inicio || !$fecha_fin) {
-            $fecha_fin = date('Y-m-d');
-            $fecha_inicio = date('Y-m-d', strtotime('-30 days'));
-        }
-
-        // Preparar filtros
-        $filtros = [
-            'fecha_inicio' => $fecha_inicio,
-            'fecha_fin' => $fecha_fin,
-            'estado' => null,
-            'order' => 'desc',
-            'search' => $search,  // ← Pasar búsqueda a filtros
-        ];
-
-        // Obtener datos según tipo
-        if ($tipo === 'cajas') {
-    // Cajas: LEFT JOIN con users dos veces para apertura y cierre
-    $query = \DB::table('cajas as c')
-        ->leftJoin('users as ua', 'ua.id', '=', 'c.user_id')
-        ->leftJoin('users as uc', 'uc.id', '=', 'c.user_cierre_id')
-        ->whereBetween('c.created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
-        ->when($search, function ($q) use ($search) {
-            $term = '%' . strtolower($search) . '%';
-            return $q->where(function($subQ) use ($term) {
-                $subQ->whereRaw('LOWER(ua.name) LIKE ?', [$term])
-                     ->orWhereRaw('LOWER(uc.name) LIKE ?', [$term])
-                     ->orWhereRaw('LOWER(c.estado) LIKE ?', [$term]);
-            });
-        })
-        ->select(
-            'c.fecha_apertura',
-            'c.fecha_cierre',
-            \DB::raw('ua.name as user_apertura_name'),
-            \DB::raw('uc.name as user_cierre_name'),
-            'c.total_ventas',
-            'c.total_efectivo',
-            'c.monto_cierre_calculado',
-            'c.monto_cierre_real',
-            'c.diferencia',
-            'c.estado'
-        )
-        ->orderBy('c.fecha_apertura', 'desc');
-
-    $data = $query->paginate(15)->appends($request->query());
-} elseif ($tipo === 'movimientos') {
-            // Eager loading de producto + búsqueda server-side
-            $query = \App\Models\InventarioMovimiento::with('producto')
-                ->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
-                ->when($search, function ($q) use ($search) {
-                    // Buscar en nombre del producto o cantidad
-                    return $q->whereHas('producto', function ($sq) use ($search) {
-                        $sq->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($search) . '%']);
-                    })->orWhereRaw('CAST(cantidad AS CHAR) LIKE ?', ['%' . $search . '%']);
-                })
-                ->orderBy('created_at', 'desc');
-            $data = $query->paginate(15)->appends($request->query());  // ← Conservar parámetros
-        } else {
-            // Ventas con eager loading + búsqueda server-side
-            $query = \App\Models\Venta::with('factura')
-                ->whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
-                ->when($search, function ($q) use ($search) {
-                    // Buscar en número de factura o cliente
-                    return $q->whereHas('factura', function ($sq) use ($search) {
-                        $sq->whereRaw('LOWER(numero) LIKE ?', ['%' . strtolower($search) . '%'])
-                           ->orWhereRaw('LOWER(cliente_nombre) LIKE ?', ['%' . strtolower($search) . '%']);
-                    });
-                })
-                ->orderBy('created_at', 'desc');
-            $data = $query->paginate(15)->appends($request->query());  // ← Conservar parámetros
-        }
-
-        // Calcular estadísticas
-        $stats = $this->calcularEstadisticas($tipo, $fecha_inicio, $fecha_fin);
-
-        // Formatear datos para JSON
-        $formattedData = $data->map(function($item) use ($tipo) {
-            if ($tipo === 'movimientos') {
-                return [
-                    'id' => $item->id,
-                    'created_at' => $item->created_at,
-                    'producto_id' => $item->producto_id,
-                    'producto_nombre' => optional($item->producto)->nombre ?? 'Producto #' . $item->producto_id,
-                    'cantidad' => $item->cantidad,
-                    'tipo' => $item->tipo,
-                    'origen' => $item->origen,
-                ];
-            } elseif ($tipo === 'cajas') {
-    // El query de cajas devuelve columnas con user_apertura_name y user_cierre_name
-    return [
-        'fecha_apertura' => $item->fecha_apertura,
-        'fecha_cierre' => $item->fecha_cierre,
-        'user_apertura_name' => $item->user_apertura_name,
-        'user_cierre_name' => $item->user_cierre_name,
-        'total_ventas' => isset($item->total_ventas) ? (float)$item->total_ventas : null,
-        'total_efectivo' => isset($item->total_efectivo) ? (float)$item->total_efectivo : null,
-        'monto_cierre_calculado' => isset($item->monto_cierre_calculado) ? (float)$item->monto_cierre_calculado : null,
-        'monto_cierre_real' => isset($item->monto_cierre_real) ? (float)$item->monto_cierre_real : null,
-        'diferencia' => isset($item->diferencia) ? (float)$item->diferencia : null,
-        'estado' => $item->estado,
-    ];
-} else {
-                return [
-                    'id' => $item->id,
-                    'fecha' => $item->created_at,
-                    'factura_numero' => optional($item->factura)->numero,
-                    'cliente_nombre' => optional($item->factura)->cliente_nombre,
-                    'total' => $item->total,
-                    'estado' => $item->estado,
-                ];
-            }
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => $formattedData,
-            'stats' => $stats,
-            'pagination' => [
-                'current_page' => $data->currentPage(),
-                'last_page' => $data->lastPage(),
-                'total' => $data->total(),
-                'per_page' => $data->perPage(),
-            ]
-        ]);
-    }
-
-    /**
-     * API: Obtiene estadísticas independientes de forma global
-     * Las estadísticas se calculan SIEMPRE considerando TODOS los tipos
-     * Sin depender del filtro de tipo en la vista
-     * Optimizado con query agregada (menos queries a BD)
-     */
-public function apiStats(Request $request)
+/**
+ * API: Retorna KPIs del mes actual vs mes anterior
+ */
+public function apiKpis(Request $request)
 {
     try {
-        $fecha_inicio = $this->sanitizeDate($request->input('fecha_inicio'));
-        $fecha_fin = $this->sanitizeDate($request->input('fecha_fin'));
+        $hoy = \Carbon\Carbon::now();
+        $inicioMesActual = $hoy->copy()->startOfMonth()->toDateString();
+        $finMesActual = $hoy->copy()->toDateString();
+        $inicioMesAnterior = $hoy->copy()->subMonth()->startOfMonth()->toDateString();
+        $finMesAnterior = $hoy->copy()->subMonth()->endOfMonth()->toDateString();
 
-        if (!$fecha_inicio || !$fecha_fin) {
-            $fecha_fin = date('Y-m-d');
-            $fecha_inicio = date('Y-m-d', strtotime('-30 days'));
-        }
+        // Mes actual
+        $ventasActual = \App\Models\Venta::whereBetween('created_at', [$inicioMesActual . ' 00:00:00', $finMesActual . ' 23:59:59'])
+            ->where('estado', '!=', 'anulada');
 
-        // ✅ Query optimizada que excluye movimientos de ventas anuladas
-        $inventarioStats = \DB::table('inventario_movimientos as im')
-            ->leftJoin('ventas as v', function($join) {
-                $join->on('im.referencia_id', '=', 'v.id')
-                     ->where('im.origen', '=', 'venta');
-            })
-            ->whereBetween('im.created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
-            ->selectRaw('
-                COUNT(*) as total,
-                SUM(CASE 
-                    WHEN im.tipo = ? THEN 1 
-                    WHEN im.tipo = ? AND v.estado = ? THEN 1 
-                    ELSE 0 
-                END) as entradas,
-                SUM(CASE 
-                    WHEN im.tipo = ? AND (v.id IS NULL OR v.estado != ?) THEN 1 
-                    ELSE 0 
-                END) as salidas
-            ', ['entrada', 'salida', 'anulada', 'salida', 'anulada'])
-            ->first();
+        $totalActual   = (clone $ventasActual)->sum('total');
+        $countActual   = (clone $ventasActual)->count();
+        $ticketActual  = $countActual > 0 ? $totalActual / $countActual : 0;
 
-        $ingresos = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])
-            ->where('estado', '!=', 'anulada')
-            ->sum('total');
-        
+        // Ganancia actual: JOIN con ventas_detalle y productos
+        $gananciaActual = \DB::table('ventas_detalle as vd')
+            ->join('ventas as v', 'v.id', '=', 'vd.venta_id')
+            ->join('productos as p', 'p.id', '=', 'vd.producto_id')
+            ->whereBetween('v.created_at', [$inicioMesActual . ' 00:00:00', $finMesActual . ' 23:59:59'])
+            ->where('v.estado', '!=', 'anulada')
+            ->selectRaw('SUM((vd.precio_unitario - p.precio_compra) * vd.cantidad) as ganancia')
+            ->value('ganancia') ?? 0;
+
+        // Mes anterior (para comparativo)
+        $ventasAnterior = \App\Models\Venta::whereBetween('created_at', [$inicioMesAnterior . ' 00:00:00', $finMesAnterior . ' 23:59:59'])
+            ->where('estado', '!=', 'anulada');
+
+        $totalAnterior  = (clone $ventasAnterior)->sum('total');
+        $countAnterior  = (clone $ventasAnterior)->count();
+        $ticketAnterior = $countAnterior > 0 ? $totalAnterior / $countAnterior : 0;
+
+        $gananciaAnterior = \DB::table('ventas_detalle as vd')
+            ->join('ventas as v', 'v.id', '=', 'vd.venta_id')
+            ->join('productos as p', 'p.id', '=', 'vd.producto_id')
+            ->whereBetween('v.created_at', [$inicioMesAnterior . ' 00:00:00', $finMesAnterior . ' 23:59:59'])
+            ->where('v.estado', '!=', 'anulada')
+            ->selectRaw('SUM((vd.precio_unitario - p.precio_compra) * vd.cantidad) as ganancia')
+            ->value('ganancia') ?? 0;
+
+        // Helper para calcular variación %
+        $variacion = function($actual, $anterior) {
+            if ($anterior == 0) return null;
+            return round((($actual - $anterior) / $anterior) * 100, 1);
+        };
+
         return response()->json([
             'success' => true,
-            'stats' => [
-                'movimientos' => (int)($inventarioStats->total ?? 0),
-                'entradas' => (int)($inventarioStats->entradas ?? 0),
-                'salidas' => (int)($inventarioStats->salidas ?? 0),
-                'ingresos' => (float)($ingresos ?? 0),
-            ]
+            'kpis' => [
+                'total_vendido'    => (float) $totalActual,
+                'num_ventas'       => (int)   $countActual,
+                'ticket_promedio'  => (float) $ticketActual,
+                'ganancia'         => (float) $gananciaActual,
+            ],
+            'variaciones' => [
+                'total_vendido'    => $variacion($totalActual,   $totalAnterior),
+                'num_ventas'       => $variacion($countActual,   $countAnterior),
+                'ticket_promedio'  => $variacion($ticketActual,  $ticketAnterior),
+                'ganancia'         => $variacion($gananciaActual,$gananciaAnterior),
+            ],
+            'periodo' => $hoy->locale('es')->monthName . ' ' . $hoy->year,
         ]);
     } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'stats' => [
-                'movimientos' => 0,
-                'entradas' => 0,
-                'salidas' => 0,
-                'ingresos' => 0,
-            ]
-        ], 200);
+        Log::error('apiKpis: ' . $e->getMessage());
+        return response()->json(['success' => false], 500);
     }
 }
 
-    /**
-     * Calcula estadísticas para las tarjetas
-     */
-private function calcularEstadisticas($tipo, $fecha_inicio, $fecha_fin)
+/**
+ * API: Datos para la gráfica de tendencia de ventas
+ * agrupacion: 'diario' | 'semanal' | 'mensual'
+ */
+public function apiTendencia(Request $request)
 {
-    // Inicializar TODAS las variables primero
-    $movimientos = 0;
-    $entradas = 0;
-    $salidas = 0;
-    $ingresos = 0;
+    try {
+        $agrupacion = in_array($request->input('agrupacion'), ['diario', 'semanal', 'mensual'])
+            ? $request->input('agrupacion')
+            : 'mensual';
 
-    if ($tipo === 'movimientos') {
-        $movimientos = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->count();
-        $entradas = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->where('tipo', 'entrada')->count();
-        $salidas = \App\Models\InventarioMovimiento::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->where('tipo', 'salida')->count();
-    } elseif ($tipo === 'cajas') {
-        $movimientos = \DB::table('cajas')->whereBetween('fecha_apertura', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59'])->count();
-    } else {
-        // Para ventas: contar TODAS, pero sumar solo las NO anuladas
-        $ventas = \App\Models\Venta::whereBetween('created_at', [$fecha_inicio . ' 00:00:00', $fecha_fin . ' 23:59:59']);
-        $movimientos = (clone $ventas)->count();  // ← Todas las ventas (incluidas anuladas)
-        $ingresos = (clone $ventas)->where('estado', '!=', 'anulada')->sum('total');  // ← Solo ventas NO anuladas
+        $hoy = \Carbon\Carbon::now();
+
+        // Definir rango según agrupación
+        switch ($agrupacion) {
+            case 'diario':
+                $inicio = $hoy->copy()->startOfDay();
+                $fin    = $hoy->copy()->endOfDay();
+                $format = '%H:00'; // agrupar por hora
+                break;
+            case 'semanal':
+                $inicio = $hoy->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+                $fin    = $hoy->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+                $format = '%Y-%m-%d'; // agrupar por día
+                break;
+            default: // mensual
+                $inicio = $hoy->copy()->startOfMonth();
+                $fin    = $hoy->copy()->endOfMonth();
+                $format = '%Y-%m-%d'; // agrupar por día
+                break;
+        }
+
+        $datos = \DB::table('ventas')
+            ->whereBetween('created_at', [$inicio, $fin])
+            ->where('estado', '!=', 'anulada')
+            ->selectRaw("DATE_FORMAT(created_at, '{$format}') as periodo, SUM(total) as total, COUNT(*) as cantidad")
+            ->groupBy('periodo')
+            ->orderBy('periodo')
+            ->get();
+
+        return response()->json([
+            'success'     => true,
+            'agrupacion'  => $agrupacion,
+            'labels'      => $datos->pluck('periodo'),
+            'totales'     => $datos->pluck('total')->map(fn($v) => (float)$v),
+            'cantidades'  => $datos->pluck('cantidad')->map(fn($v) => (int)$v),
+        ]);
+    } catch (\Exception $e) {
+        Log::error('apiTendencia: ' . $e->getMessage());
+        return response()->json(['success' => false], 500);
     }
-
-    return [
-        'movimientos' => $movimientos,
-        'entradas' => $entradas,
-        'salidas' => $salidas,
-        'ingresos' => $ingresos,
-    ];
 }
 
+/**
+ * API: Datos para la gráfica de ventas por cajero
+ */
+public function apiCajeros(Request $request)
+{
+    try {
+        $agrupacion = in_array($request->input('agrupacion'), ['diario', 'semanal', 'mensual'])
+            ? $request->input('agrupacion')
+            : 'mensual';
+
+        $hoy = \Carbon\Carbon::now();
+
+        switch ($agrupacion) {
+            case 'diario':
+                $inicio = $hoy->copy()->startOfDay();
+                $fin    = $hoy->copy()->endOfDay();
+                break;
+            case 'semanal':
+                $inicio = $hoy->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+                $fin    = $hoy->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+                break;
+            default:
+                $inicio = $hoy->copy()->startOfMonth();
+                $fin    = $hoy->copy()->endOfMonth();
+                break;
+        }
+
+        $cajeros = \DB::table('ventas as v')
+            ->join('users as u', 'u.id', '=', 'v.user_id')
+            ->whereBetween('v.created_at', [$inicio, $fin])
+            ->selectRaw('
+                u.name as cajero,
+                SUM(CASE WHEN v.estado != ? THEN v.total ELSE 0 END) as total_ventas,
+                SUM(CASE WHEN v.estado = ? THEN 1 ELSE 0 END) as anuladas,
+                COUNT(CASE WHEN v.estado != ? THEN 1 END) as num_ventas
+            ', ['anulada', 'anulada', 'anulada'])
+            ->groupBy('u.id', 'u.name')
+            ->orderByDesc('total_ventas')
+            ->get();
+
+        $total = count($cajeros);
+
+        return response()->json([
+            'success'  => true,
+            'total'    => $total,
+            'cajeros'  => $cajeros->take(5)->map(fn($c) => [
+                'cajero'       => $c->cajero,
+                'total_ventas' => (float) $c->total_ventas,
+                'anuladas'     => (int)   $c->anuladas,
+                'num_ventas'   => (int)   $c->num_ventas,
+            ]),
+            'hay_mas'  => $total > 5,
+        ]);
+    } catch (\Exception $e) {
+        Log::error('apiCajeros: ' . $e->getMessage());
+        return response()->json(['success' => false], 500);
+    }
+}
+
+/**
+ * API: Top 7 productos más vendidos
+ */
+public function apiProductos(Request $request)
+{
+    try {
+        $agrupacion = in_array($request->input('agrupacion'), ['diario', 'semanal', 'mensual'])
+            ? $request->input('agrupacion')
+            : 'mensual';
+
+        $hoy = \Carbon\Carbon::now();
+
+        switch ($agrupacion) {
+            case 'diario':
+                $inicio = $hoy->copy()->startOfDay();
+                $fin    = $hoy->copy()->endOfDay();
+                break;
+            case 'semanal':
+                $inicio = $hoy->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+                $fin    = $hoy->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+                break;
+            default:
+                $inicio = $hoy->copy()->startOfMonth();
+                $fin    = $hoy->copy()->endOfMonth();
+                break;
+        }
+
+        $productos = \DB::table('ventas_detalle as vd')
+            ->join('ventas as v',    'v.id', '=', 'vd.venta_id')
+            ->join('productos as p', 'p.id', '=', 'vd.producto_id')
+            ->whereBetween('v.created_at', [$inicio, $fin])
+            ->where('v.estado', '!=', 'anulada')
+            ->selectRaw('
+                p.nombre,
+                p.precio_venta,
+                SUM(vd.cantidad) as unidades,
+                SUM(vd.precio_unitario * vd.cantidad) as total_vendido,
+                SUM((vd.precio_unitario - p.precio_compra) * vd.cantidad) as ganancia
+            ')
+            ->groupBy('p.id', 'p.nombre', 'p.precio_venta')
+            ->orderByDesc('unidades')
+            ->limit(7)
+            ->get();
+
+        return response()->json([
+            'success'   => true,
+            'productos' => $productos->map(fn($p) => [
+                'nombre'        => $p->nombre,
+                'precio_venta'  => (float) $p->precio_venta,
+                'unidades'      => (int)   $p->unidades,
+                'total_vendido' => (float) $p->total_vendido,
+                'ganancia'      => (float) $p->ganancia,
+            ]),
+        ]);
+    } catch (\Exception $e) {
+        Log::error('apiProductos: ' . $e->getMessage());
+        return response()->json(['success' => false], 500);
+    }
+}
+public function index(Request $request)
+{
+    return view('reportes.index');
+}
     /**
      * API: Exporta datos en Excel
      */
