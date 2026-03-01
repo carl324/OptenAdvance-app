@@ -60,7 +60,7 @@ class VentaController extends Controller
     // Intentar match exacto por código de barras primero
     $porBarcode = Producto::activos()
         ->where('codigo_barras', $query)
-        ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva')
+        ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva', 'unidad')
         ->first();
 
     if ($porBarcode) {
@@ -70,7 +70,7 @@ class VentaController extends Controller
     // Si no hubo match exacto, buscar por nombre
     $productos = Producto::activos()
         ->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($query) . '%'])
-        ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva')
+        ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva', 'unidad')
         ->orderByDesc('stock')
         ->limit(10)
         ->get();
@@ -96,7 +96,7 @@ class VentaController extends Controller
                 'total_pagado'   => 'required',
                 'productos'      => 'required|array|min:1',
                 'productos.*.id' => 'required|exists:productos,id',
-                'productos.*.cantidad' => 'required|integer|min:1',
+                'productos.*.cantidad' => 'required|numeric|min:0.01',
                 'productos.*.precio'   => 'required|numeric|min:0',
                 'productos.*.iva'      => 'nullable|numeric|min:0|max:100',
             ]);
@@ -586,7 +586,7 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
 public function obtenerTodosProductos()
 {
     $productos = Producto::activos()
-        ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva')  // ← Agregar alias
+        ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva', 'unidad')  
         ->orderByDesc('stock')
         ->get();
 

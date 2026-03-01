@@ -1062,7 +1062,7 @@ function actualizarTablaProductos(filtrados = null) {
             <tr>
                 <td>
                     <div class="product">
-                        <p class="text-sm" style="cursor: pointer;" onclick="agregarAlCarrito({id: ${p.id}, nombre: '${escapeHtml(p.nombre)}', precio: ${p.precio}, stock: ${p.stock}, iva: ${COBRA_IVA ? (p.iva || 0) : 0}})">
+                        <p class="text-sm" style="cursor: pointer;" onclick="agregarAlCarrito({id: ${p.id}, nombre: '${escapeHtml(p.nombre)}', precio: ${p.precio}, stock: ${p.stock}, iva: ${COBRA_IVA ? (p.iva || 0) : 0}, unidad: '${escapeHtml(p.unidad || 'Unidad')}'})">
                             ${p.nombre}
                         </p>
                     </div>
@@ -1117,15 +1117,18 @@ function agregarAlCarrito(producto) {
         const ivaValor = ivaRate > 0 ? precioBase * ivaRate / 100 : 0;
         const subtotalConIva = precioBase + ivaValor;
         
-        carrito.push({
-            id: producto.id,
-            nombre: producto.nombre,
-            precio: precioBase,
-            cantidad: 1,
-            stock: producto.stock,
-            iva: ivaRate,
-            subtotalConIva: subtotalConIva
-        });
+        const UNIDADES_ENTERAS = ['Unidad','Par','Docena','Caja','Paquete','Sobre','Frasco','Botella','Lata','Tubo'];
+carrito.push({
+    id: producto.id,
+    nombre: producto.nombre,
+    precio: precioBase,
+    cantidad: 1,
+    stock: producto.stock,
+    iva: ivaRate,
+    subtotalConIva: subtotalConIva,
+    unidad: producto.unidad || 'Unidad',
+    esEntero: UNIDADES_ENTERAS.includes(producto.unidad || 'Unidad')
+});
     }
 
     actualizarCarrito();
@@ -1155,12 +1158,16 @@ function actualizarCarrito() {
             <tr data-item-id="${item.id}">
                 <td class="text-sm">${item.nombre}</td>
                 <td class="text-sm text-center">
-                    <div class="d-inline-flex align-items-center gap-1">
-                        <button class="btn btn-light btn-sm px-2" onclick="cambiarCantidad(${index}, ${item.cantidad - 1})" ${item.cantidad === 1 ? 'disabled' : ''}>−</button>
-                        <span class="px-2 cantidad-display">${item.cantidad}</span>
-                        <button class="btn btn-light btn-sm px-2" onclick="cambiarCantidad(${index}, ${item.cantidad + 1})">+</button>
-                    </div>
-                </td>
+    <div class="d-inline-flex align-items-center gap-1">
+        <button class="btn btn-light btn-sm px-2" onclick="cambiarCantidad(${index}, ${item.cantidad - (item.esEntero ? 1 : 0.5)})" ${item.cantidad <= (item.esEntero ? 1 : 0.01) ? 'disabled' : ''}>−</button>
+        <input type="text" class="cantidad-display text-center" value="${item.cantidad}" 
+               style="width:55px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;"
+               onchange="cambiarCantidadDirecta(${index}, this.value)"
+               inputmode="${item.esEntero ? 'numeric' : 'decimal'}">
+        <button class="btn btn-light btn-sm px-2" onclick="cambiarCantidad(${index}, ${item.cantidad + (item.esEntero ? 1 : 0.5)})">+</button>
+    </div>
+    <small style="color:#94a3b8;font-size:0.7rem;">${item.unidad}</small>
+</td>
                 <td class="text-sm text-end d-flex justify-content-end align-items-center gap-2">
                     <span>${formatoPrecio(totalConIva)}</span>
                     <button class="btn btn-light btn-sm" onclick="confirmarEliminar(${index})" title="Eliminar">
@@ -1179,29 +1186,49 @@ function actualizarCarrito() {
 
 // Cambiar cantidad
 function cambiarCantidad(index, nuevaCantidad) {
-    nuevaCantidad = parseInt(nuevaCantidad);
-    
-    // VALIDACIÓN 1: Verificar que el índice exista en el carrito
     if (index < 0 || index >= carrito.length) {
-        mostrarAlertaCarrito('Error al modificar cantidad. Por favor, intenta de nuevo.');
+        mostrarAlertaCarrito('Error al modificar cantidad.');
         return;
     }
-    
-    // VALIDACIÓN 2: Verificar que la cantidad sea válida
-    if (isNaN(nuevaCantidad) || nuevaCantidad < 1) {
-        return; // Bloquear si intenta ir por debajo de 1
-    }
 
-    // VALIDACIÓN 3: Verificar stock disponible
-    if (nuevaCantidad > carrito[index].stock) {
-        mostrarAlertaCarrito(`${carrito[index].nombre}  No tiene más stock disponible`);
+    const item = carrito[index];
+    nuevaCantidad = Math.round(parseFloat(nuevaCantidad) * 100) / 100;
+
+    if (isNaN(nuevaCantidad) || nuevaCantidad <= 0) return;
+
+    if (nuevaCantidad > item.stock) {
+        mostrarAlertaCarrito(`${item.nombre} no tiene más stock disponible`);
         return;
     }
 
     carrito[index].cantidad = nuevaCantidad;
     actualizarCarrito();
 }
-
+function cambiarCantidadDirecta(index, valor) {
+    if (index < 0 || index >= carrito.length) return;
+    const item = carrito[index];
+    
+    // Convertir coma a punto
+    const parsed = parseFloat(String(valor).replace(',', '.'));
+    
+    if (isNaN(parsed) || parsed <= 0) {
+        mostrarAlertaCarrito('Cantidad inválida');
+        actualizarCarrito();
+        return;
+    }
+    
+    // Si es unidad entera, redondear
+    const nuevaCantidad = item.esEntero ? Math.round(parsed) : Math.round(parsed * 100) / 100;
+    
+    if (nuevaCantidad > item.stock) {
+        mostrarAlertaCarrito(`${item.nombre} no tiene suficiente stock`);
+        actualizarCarrito();
+        return;
+    }
+    
+    carrito[index].cantidad = nuevaCantidad;
+    actualizarCarrito();
+}
 // Confirmar eliminar
 function confirmarEliminar(index) {
     carrito.splice(index, 1);

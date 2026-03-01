@@ -20,7 +20,7 @@ class AuthController extends Controller
         ]);
 
         // POS local → NO recordar sesión
-        $remember = false;
+        $remember = $request->boolean('remember');
 
         if (!Auth::attempt($credentials, $remember)) {
             return back()

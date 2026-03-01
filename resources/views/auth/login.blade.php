@@ -164,6 +164,14 @@ input[type="password"] {
                       <!-- end col -->
                      
                       <!-- end col -->
+                       <div class="col-12 mb-3">
+  <div class="form-check">
+    <input class="form-check-input" type="checkbox" name="remember" id="remember">
+    <label class="form-check-label text-sm" for="remember" style="color:#64748b;">
+      Mantener sesión iniciada
+    </label>
+  </div>
+</div>
                       <div class="col-12"><br><br>
   <div class="button-group d-flex justify-content-center flex-wrap">
     <button class="main-btn primary-btn btn-hover w-100 text-center">

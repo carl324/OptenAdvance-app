@@ -83,9 +83,11 @@ class ProductoController extends Controller
             'nombre' => 'required|string|max:100',
             'precio_compra' => 'required|numeric|gte:0',
             'precio_venta' => 'required|numeric|gt:0',
-            'stock'  => 'required|integer|min:0',
+            'stock'  => 'required|numeric|min:0',
+            'unidad' => 'required|string|in:Unidad,Par,Docena,Caja,Paquete,Sobre,Frasco,Botella,Lata,Tubo,Gramo,Kilogramo,Libra,Tonelada,Onza,Mililitro,Litro,Galón,Metro cúbico,Milímetro,Centímetro,Metro,Metro lineal,Kilómetro,Pulgada,Pie,Metro cuadrado,Centímetro cuadrado,Hectárea',
             'iva'          => 'required|numeric|min:0|max:100',
             'codigo_barras' => 'nullable|string|max:50|unique:productos,codigo_barras',
+
         ]);
 
         // Normalizar nombre
@@ -127,6 +129,7 @@ class ProductoController extends Controller
     'iva'           => $data['iva'],
     'precio_con_iva'=> $data['precio_con_iva'],
     'stock'         => $stockInicial,
+    'unidad'        => $data['unidad'],
 ]);
 
             // Registrar movimiento inicial SIEMPRE si hay stock
@@ -185,7 +188,8 @@ class ProductoController extends Controller
                 'precio_compra' => 'sometimes|numeric|gte:0',
                 'precio_venta'  => 'sometimes|numeric|gt:0',
                 'iva'           => 'sometimes|numeric|min:0|max:100',
-                'stock'         => 'sometimes|integer|min:0',
+                'stock'         => 'sometimes|numeric|min:0',
+                'unidad'        => 'sometimes|string|in:Unidad,Par,Docena,Caja,Paquete,Sobre,Frasco,Botella,Lata,Tubo,Gramo,Kilogramo,Libra,Tonelada,Onza,Mililitro,Litro,Galón,Metro cúbico,Milímetro,Centímetro,Metro,Metro lineal,Kilómetro,Pulgada,Pie,Metro cuadrado,Centímetro cuadrado,Hectárea',
                 'codigo_barras' => 'sometimes|nullable|string|max:50|unique:productos,codigo_barras,' . $id,
             ]);
 
@@ -219,13 +223,15 @@ class ProductoController extends Controller
             // Detectar qué cambió para auditoría específica
             $cambioNombre  = isset($data['nombre'])        && $data['nombre'] !== $producto->nombre;
             $cambioPrecio  = isset($data['precio_venta'])  && (float)$data['precio_venta'] !== (float)$producto->precio_venta;
-            $cambioStock   = isset($data['stock'])         && (int)$data['stock'] !== (int)$producto->stock;
+            $cambioStock   = isset($data['stock'])         && (float)$data['stock'] !== (float)$producto->stock;
+            $cambioUnidad  = isset($data['unidad'])        && $data['unidad'] !== $producto->unidad;
 
             if (isset($data['nombre']))        $producto->nombre        = $data['nombre'];
             if (isset($data['precio_compra'])) $producto->precio_compra = $data['precio_compra'];
             if (isset($data['precio_venta']))  $producto->precio_venta  = $data['precio_venta'];
             if (isset($data['iva']))           $producto->iva           = $data['iva'];
             if (array_key_exists('codigo_barras', $data)) $producto->codigo_barras = $data['codigo_barras'];
+            if (isset($data['unidad'])) $producto->unidad = $data['unidad'];
 
             if (isset($data['precio_venta']) || isset($data['iva'])) {
                 $producto->precio_con_iva = (int) round($producto->precio_venta * (1 + ($producto->iva / 100)));
@@ -234,12 +240,12 @@ class ProductoController extends Controller
             $producto->save();
 
             if (isset($data['stock'])) {
-                $stockNuevo  = (int) $data['stock'];
+                $stockNuevo = (float) $data['stock'];
                 $diferencia  = $stockNuevo - $stockAnterior;
 
                 if ($stockNuevo < 0) throw new \Exception("El stock no puede ser negativo");
 
-                if ($diferencia !== 0) {
+                if (abs($diferencia) > 0.001) {
                     if ($diferencia > 0) {
                         InventarioMovimiento::entrada($producto->id, abs($diferencia), 'ajuste', $producto->id, "Ajuste manual: de {$stockAnterior} a {$stockNuevo}", Auth::id());
                     } else {

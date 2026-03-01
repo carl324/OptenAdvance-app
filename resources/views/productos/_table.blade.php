@@ -21,7 +21,7 @@
 @endphp
 
 @forelse($productos as $producto)
-    <tr id="producto-{{ $producto->id }}" data-codigo-barras="{{ $producto->codigo_barras ?? '' }}">
+    <tr id="producto-{{ $producto->id }}" data-codigo-barras="{{ $producto->codigo_barras ?? '' }}" data-unidad="{{ $producto->unidad ?? 'Unidad' }}">
         <td class="min-width">
             <p>{{ $producto->id }}</p>
         </td>
@@ -102,7 +102,7 @@
               data-field="stock" 
               data-bs-toggle="tooltip" 
               data-bs-title="{{ $producto->stock }}">
-            {{ $producto->stock }}
+            {{ $producto->stock }} <small style="color:#94a3b8;font-size:0.75rem;">{{ $producto->unidad ?? 'und' }}</small>
           </span>
           <input class="edit stock_input" data-field="stock" type="text" value="{{ $producto->stock }}" data-original-stock="{{ $producto->stock }}" hidden>
         </td>

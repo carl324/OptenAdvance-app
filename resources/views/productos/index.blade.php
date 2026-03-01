@@ -968,7 +968,51 @@
                        style="width: 100%; padding: 12px 12px 12px 42px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem; outline: none;">
               </div>
             </div>
-
+<div style="display: flex; flex-direction: column; gap: 6px;">
+  <label style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.025em;">Unidad de Medida</label>
+  <select id="unidadMedida"
+    style="width: 100%; padding: 12px 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #ffffff; color: #1e293b; font-size: 0.95rem; outline: none;">
+    <optgroup label="Básicas">
+      <option value="Unidad">Unidad (und)</option>
+      <option value="Par">Par</option>
+      <option value="Docena">Docena</option>
+      <option value="Caja">Caja</option>
+      <option value="Paquete">Paquete</option>
+      <option value="Sobre">Sobre</option>
+      <option value="Frasco">Frasco</option>
+      <option value="Botella">Botella</option>
+      <option value="Lata">Lata</option>
+      <option value="Tubo">Tubo</option>
+    </optgroup>
+    <optgroup label="Peso">
+      <option value="Gramo">Gramo (g)</option>
+      <option value="Kilogramo">Kilogramo (kg)</option>
+      <option value="Libra">Libra (lb)</option>
+      <option value="Tonelada">Tonelada (t)</option>
+      <option value="Onza">Onza (oz)</option>
+    </optgroup>
+    <optgroup label="Volumen">
+      <option value="Mililitro">Mililitro (ml)</option>
+      <option value="Litro">Litro (L)</option>
+      <option value="Galón">Galón (gal)</option>
+      <option value="Metro cúbico">Metro cúbico (m³)</option>
+    </optgroup>
+    <optgroup label="Longitud">
+      <option value="Milímetro">Milímetro (mm)</option>
+      <option value="Centímetro">Centímetro (cm)</option>
+      <option value="Metro">Metro (m)</option>
+      <option value="Metro lineal">Metro lineal</option>
+      <option value="Kilómetro">Kilómetro (km)</option>
+      <option value="Pulgada">Pulgada (in)</option>
+      <option value="Pie">Pie (ft)</option>
+    </optgroup>
+    <optgroup label="Área">
+      <option value="Metro cuadrado">Metro cuadrado (m²)</option>
+      <option value="Centímetro cuadrado">Centímetro cuadrado (cm²)</option>
+      <option value="Hectárea">Hectárea (ha)</option>
+    </optgroup>
+  </select>
+</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                <div style="display: flex; flex-direction: column; gap: 6px;">
                   <label style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase;">Precio Compra</label>
@@ -990,7 +1034,7 @@
           <div style="display: flex; flex-direction: column; gap: 16px;">
             
             <div style="background: #ffffff; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center; height: 100px;">
-              <span style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Ganancia por unidad</span>
+              <span id="gananciaLabel" style="font-size: 0.75rem; font-weight: 600; color: #64748b;  margin-bottom: 4px;">Ganancia por   und</span>
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <span id="gananciaValor" style="font-size: 1.75rem; font-weight: 800; color: #10b981;">$0</span>
                 <span id="gananciaMargen" style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;">0%</span>
@@ -1070,6 +1114,51 @@
                      onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#f1f5f9'">
             </div>
           </div>
+          <div>
+  <label style="font-size: 0.7rem; font-weight: 700; color: #0f172a; text-transform: uppercase; display: block; margin-bottom: 8px;">Unidad de Medida</label>
+  <select id="editUnidad"
+    style="width: 100%; padding: 10px 12px; border: none; border-bottom: 2px solid #f1f5f9; font-size: 1rem; color: #0f172a; outline: none; background: transparent;">
+    <optgroup label="Básicas">
+      <option value="Unidad">Unidad (und)</option>
+      <option value="Par">Par</option>
+      <option value="Docena">Docena</option>
+      <option value="Caja">Caja</option>
+      <option value="Paquete">Paquete</option>
+      <option value="Sobre">Sobre</option>
+      <option value="Frasco">Frasco</option>
+      <option value="Botella">Botella</option>
+      <option value="Lata">Lata</option>
+      <option value="Tubo">Tubo</option>
+    </optgroup>
+    <optgroup label="Peso">
+      <option value="Gramo">Gramo (g)</option>
+      <option value="Kilogramo">Kilogramo (kg)</option>
+      <option value="Libra">Libra (lb)</option>
+      <option value="Tonelada">Tonelada (t)</option>
+      <option value="Onza">Onza (oz)</option>
+    </optgroup>
+    <optgroup label="Volumen">
+      <option value="Mililitro">Mililitro (ml)</option>
+      <option value="Litro">Litro (L)</option>
+      <option value="Galón">Galón (gal)</option>
+      <option value="Metro cúbico">Metro cúbico (m³)</option>
+    </optgroup>
+    <optgroup label="Longitud">
+      <option value="Milímetro">Milímetro (mm)</option>
+      <option value="Centímetro">Centímetro (cm)</option>
+      <option value="Metro">Metro (m)</option>
+      <option value="Metro lineal">Metro lineal</option>
+      <option value="Kilómetro">Kilómetro (km)</option>
+      <option value="Pulgada">Pulgada (in)</option>
+      <option value="Pie">Pie (ft)</option>
+    </optgroup>
+    <optgroup label="Área">
+      <option value="Metro cuadrado">Metro cuadrado (m²)</option>
+      <option value="Centímetro cuadrado">Centímetro cuadrado (cm²)</option>
+      <option value="Hectárea">Hectárea (ha)</option>
+    </optgroup>
+  </select>
+</div>
         </div>
 
         <!-- Columna derecha -->
@@ -1180,7 +1269,22 @@
 </div>
 
 <script>
-  const csrf = '{{ csrf_token() }}';
+const csrf = '{{ csrf_token() }}';
+const UNIDAD_ABREV = {
+  'Unidad':'und','Par':'par','Docena':'doc','Caja':'caja','Paquete':'paq',
+  'Sobre':'sob','Frasco':'fco','Botella':'bot','Lata':'lata','Tubo':'tubo',
+  'Gramo':'g','Kilogramo':'kg','Libra':'lb','Tonelada':'t','Onza':'oz',
+  'Mililitro':'ml','Litro':'L','Galón':'gal','Metro cúbico':'m³',
+  'Milímetro':'mm','Centímetro':'cm','Metro':'m','Metro lineal':'m lineal',
+  'Kilómetro':'km','Pulgada':'in','Pie':'ft','Metro cuadrado':'m²',
+  'Centímetro cuadrado':'cm²','Hectárea':'ha'
+};
+
+document.getElementById('unidadMedida')?.addEventListener('change', function() {
+    const abrev = UNIDAD_ABREV[this.value] || this.value;
+    const label = document.getElementById('gananciaLabel');
+    if (label) label.textContent = `Ganancia por ${abrev}`;
+});
 function abrirModalAgregar() {
     document.getElementById('agregarProductoModal').classList.add('active');
     setTimeout(() => {
@@ -1229,10 +1333,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const stockInput = document.getElementById('stockValue');
     if (stockInput) {
         stockInput.addEventListener('input', function() {
-            // Solo números
-            this.value = this.value.replace(/\D/g, '');
-            currentStock = parseInt(this.value || 0);
-        });
+    this.value = this.value.replace(/[^0-9,]/g, '');
+    currentStock = parseFloat(this.value.replace(',', '.') || 0);
+});
+
+stockInput.addEventListener('blur', function() {
+    currentStock = parseFloat(this.value.replace(',', '.') || 0);
+});
         
         // Actualizar currentStock al perder foco
         stockInput.addEventListener('blur', function() {
@@ -1245,6 +1352,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function resetForm(e, clearAlert = true) {
   e.preventDefault();
+  document.getElementById('unidadMedida').value = 'Unidad';
   document.getElementById('productForm').reset();
   document.getElementById('precioCompra').value = '';
   document.getElementById('precioVenta').value = '';
@@ -1338,7 +1446,7 @@ const margen = precioCompraInt > 0 ? ((ganancia / precioCompraInt) * 100).toFixe
 const gananciaColor = ganancia >= 0 ? '#28a745' : '#dc3545';
 
   const rowHtml = `
-    <tr id="producto-${p.id}">
+    <tr id="producto-${p.id}" data-unidad="${escapeHtml(p.unidad || 'Unidad')}">
       <td class="min-width"><p>${p.id}</p></td>
       <td class="min-width">
         <span class="view truncate truncate-long" data-field="nombre" data-bs-toggle="tooltip" data-bs-title="${escapeHtml(p.nombre)}">${escapeHtml(p.nombre)}</span>
@@ -1456,12 +1564,12 @@ const gananciaColor = ganancia >= 0 ? '#28a745' : '#dc3545';
 
 async function addProduct(e) {
     e.preventDefault();
-    
+    const unidad = document.getElementById('unidadMedida').value;
     const nombre = document.getElementById('productName').value.trim();
     const precioCompra = parseCOP(document.getElementById('precioCompra').value);
     const precioVenta = parseCOP(document.getElementById('precioVenta').value);
     const iva = parseFloat(document.getElementById('ivaPercent').value) || 0;
-    const stock = currentStock;
+    const stock = parseFloat(String(currentStock).replace(',', '.')) || 0;
 
     if (!nombre) {
         showAlert('El nombre del producto es requerido', 'error');
@@ -1491,7 +1599,7 @@ async function addProduct(e) {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ nombre, codigo_barras: codigoBarras || null, precio_compra: precioCompra, precio_venta: precioVenta, iva, stock })
+            body: JSON.stringify({ nombre, codigo_barras: codigoBarras || null, precio_compra: precioCompra, precio_venta: precioVenta, iva, stock, unidad })
         });
 
         if (res.status === 419) {
@@ -2021,6 +2129,7 @@ function abrirModalEditar(id) {
     if (!tr) return;
 
     // Leer datos de la fila
+   const unidad = tr.dataset.unidad || 'Unidad'; document.getElementById('editUnidad').value = unidad;
     const nombre = tr.querySelector('span.view[data-field="nombre"]')?.innerText?.trim() || '';
     const precioCompra = tr.querySelector('span.view[data-field="precio_compra"]')?.innerText?.trim() || '0';
     const precioVenta = tr.querySelector('span.view[data-field="precio_venta"]')?.innerText?.trim() || '0';
@@ -2038,7 +2147,7 @@ function abrirModalEditar(id) {
     const editIva = document.getElementById('editIva');
     if (editIva) editIva.value = iva === '-' ? '0' : iva;
 
-    currentEditStock = parseInt(stock) || 0;
+    currentEditStock = parseFloat(String(stock).replace(',', '.')) || 0;
     document.getElementById('editStock').value = currentEditStock;
 
     // Subtitle con nombre
@@ -2138,7 +2247,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function guardarEdicion(e) {
     e.preventDefault();
-
+    const unidad = document.getElementById('editUnidad').value;   
     const id = document.getElementById('editProductId').value;
     const nombre = document.getElementById('editNombre').value.trim();
     const precioCompra = parseCOP(document.getElementById('editPrecioCompra').value);
@@ -2167,7 +2276,7 @@ async function guardarEdicion(e) {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ nombre, precio_compra: precioCompra, precio_venta: precioVenta, iva, stock, codigo_barras: codigoBarras || null })
+            body: JSON.stringify({ nombre, precio_compra: precioCompra, precio_venta: precioVenta, iva, stock, codigo_barras: codigoBarras || null, unidad })
         });
 
         if (res.status === 419) {
@@ -2205,6 +2314,7 @@ async function guardarEdicion(e) {
             if (stockInput) { stockInput.value = stock; stockInput.dataset.originalStock = stock; }
 
             tr.dataset.codigoBarras = codigoBarras;
+            tr.dataset.unidad = unidad;
 
             tr.style.background = '#eff6ff';
             setTimeout(() => { tr.style.background = ''; }, 1600);

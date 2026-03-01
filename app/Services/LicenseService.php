@@ -97,11 +97,8 @@ public function install($file): array
 
         // Validar hardware
         if ($machineHash !== $this->machineHash()) {
-            return [
-                'success' => false,
-                'message' => 'Esta licencia no es válida para este equipo'
-            ];
-        }
+    return $this->persistState('trial_first', null, $now);
+}
 
         // TODO OK - Ahora sí guardar
         $directory = dirname($this->path);
