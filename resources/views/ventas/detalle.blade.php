@@ -170,23 +170,112 @@
                 </div>
 
             </div>
-                        @if(strtolower($venta->estado ?? '') === 'anulada')
-                        @php
-                                // Preferir motivo en la propia venta si existe, si no, tomar de los detalles
-                                $motivo = $venta->motivo_anulacion ?? null;
-                                if (empty($motivo)) {
-                                        $motivos = $venta->detalles->pluck('motivo_anulacion')->filter()->unique()->values();
-                                        $motivo = $motivos->isNotEmpty() ? $motivos->implode('\n') : null;
-                                }
-                        @endphp
-                        <div class="note-wrapper warning-alert py-4 px-sm-3 px-lg-5">
-                                <div class="alert">
-                                    <h5 class="text-bold mb-15">Motivo de anulación</h5>
-                                    <p class="text-sm text-gray">
-                                        {{ $motivo ?? 'No especificado' }}
-                                    </p>
-                                </div>
-                        </div>
-                        @endif
+                      {{-- Motivo anulación --}}
+@if(strtolower($venta->estado ?? '') === 'anulada')
+    @php
+        $motivo = $venta->motivo_anulacion ?? null;
+        if (empty($motivo)) {
+            $motivos = $venta->detalles->pluck('motivo_anulacion')->filter()->unique()->values();
+            $motivo = $motivos->isNotEmpty() ? $motivos->implode('\n') : null;
+        }
+    @endphp
+    <div class="note-wrapper warning-alert py-4 px-sm-3 px-lg-5">
+        <div class="alert">
+            <h5 class="text-bold mb-15">Motivo de anulación</h5>
+            <p class="text-sm text-gray">{{ $motivo ?? 'No especificado' }}</p>
+        </div>
+    </div>
+@endif
+
+{{-- Historial de devoluciones --}}
+@if(isset($devoluciones) && $devoluciones->count() > 0)
+<div class="container-fluid mt-10 mb-30">
+    <div class="card-style">
+        <div class="d-flex align-items-center gap-2 mb-20">
+            <i class="lni lni-reload" style="color:#f59e0b;font-size:20px;"></i>
+            <h6 class="mb-0">Devoluciones registradas</h6>
+        </div>
+
+        @foreach($devoluciones as $dev)
+        <div style="border:1px solid #f1f5f9;border-radius:12px;padding:16px;margin-bottom:16px;">
+            {{-- Header devolución --}}
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <span style="background:#fff7ed;color:#c2410c;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;">
+                        Devolución #{{ $dev->id }}
+                    </span>
+                    <span class="text-sm text-gray">
+                        {{ \Carbon\Carbon::parse($dev->fecha)->locale('es')->translatedFormat('d F Y, h:i a') }}
+                    </span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    @php
+                        $metodoIcono = match($dev->metodo_reembolso) {
+                            'efectivo' => 'lni lni-money-location',
+                            'transferencia' => 'lni lni-apartment',
+                            'nota_credito' => 'lni lni-credit-cards',
+                            default => 'lni lni-wallet'
+                        };
+                        $metodoTexto = match($dev->metodo_reembolso) {
+                            'efectivo' => 'Efectivo',
+                            'transferencia' => 'Transferencia',
+                            'nota_credito' => 'Nota crédito',
+                            default => $dev->metodo_reembolso
+                        };
+                    @endphp
+                    <i class="{{ $metodoIcono }}" style="color:#4A6CF7;"></i>
+                    <span class="text-sm">{{ $metodoTexto }}</span>
+                </div>
+            </div>
+
+            {{-- Productos devueltos --}}
+            <div class="table-responsive mb-3">
+                <table class="table" style="margin-bottom:0;">
+                    <thead>
+                        <tr>
+                            <th><span class="text-sm">Producto</span></th>
+                            <th class="text-center"><span class="text-sm">Cantidad</span></th>
+                            <th class="text-end"><span class="text-sm">Subtotal</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($dev->detalles as $dd)
+                        <tr>
+                            <td><span class="text-sm">{{ optional($dd->producto)->nombre ?? 'Producto #'.$dd->producto_id }}</span></td>
+                            <td class="text-center"><span class="status-btn warning-btn">{{ $dd->cantidad_devuelta }}</span></td>
+                            <td class="text-end"><span class="text-sm fw-500">${{ number_format($dd->subtotal,0,',','.') }}</span></td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- Footer devolución --}}
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 pt-3 border-top">
+                <div>
+                    <p class="text-sm text-gray mb-1">
+                        <strong>Motivo:</strong> {{ optional($dev->motivo)->nombre ?? '-' }}
+                    </p>
+                    @if($dev->observacion)
+                    <p class="text-sm text-gray mb-1">
+                        <strong>Observación:</strong> {{ $dev->observacion }}
+                    </p>
+                    @endif
+                    <p class="text-sm text-gray mb-0">
+                        <strong>Registrado por:</strong> {{ optional($dev->user)->name ?? '-' }}
+                    </p>
+                </div>
+                <div class="text-end">
+                    <p class="text-xs text-gray mb-1">Monto calculado</p>
+                    <p class="text-sm mb-1">${{ number_format($dev->monto_calculado,0,',','.') }}</p>
+                    <p class="text-xs text-gray mb-1">Monto real entregado</p>
+                    <h6 class="mb-0 fw-bold" style="color:#d9534f;">${{ number_format($dev->monto_real,0,',','.') }}</h6>
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
 </section>
 @endsection

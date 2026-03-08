@@ -106,6 +106,21 @@
             <i class="lni lni-chevron-right ms-auto" style="color:#94a3b8;"></i>
           </div>
         </a>
+        <!-- Devoluciones -->
+<a href="{{ route('configuracion.devoluciones') }}" class="text-decoration-none">
+  <div class="d-flex align-items-center gap-3 p-3" style="border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; transition: all 0.2s; cursor: pointer;"
+       onmouseover="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 4px 20px rgba(245,158,11,0.10)'"
+       onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+    <div style="width:40px; height:40px; background:#fffbeb; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+      <i class="lni lni-reload" style="font-size:19px; color:#f59e0b;"></i>
+    </div>
+    <div>
+      <div style="font-size:14px; font-weight:700; color:#1e293b; margin-bottom:1px;">Devoluciones</div>
+      <div style="font-size:12px; color:#64748b;">Días permitidos y motivos de devolución</div>
+    </div>
+    <i class="lni lni-chevron-right ms-auto" style="color:#94a3b8;"></i>
+  </div>
+</a>
 
       </div>
     </div>

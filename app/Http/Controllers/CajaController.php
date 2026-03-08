@@ -25,38 +25,29 @@ class CajaController extends Controller
         }
 
         // Considerar solo ventas válidas (no anuladas/canceladas) para totales
-        $ventasQuery = Venta::where('caja_id', $caja->id)
-            ->whereNotIn('estado', ['anulada', 'cancelada']);
+       
 
-        $cantidadVentas = $ventasQuery->count();
-        $totalIngresos = (float) $ventasQuery->sum('total');
+        $stats = Venta::where('caja_id', $caja->id)
+    ->selectRaw("
+        COUNT(CASE WHEN estado NOT IN ('anulada','cancelada') THEN 1 END) as cantidad_ventas,
+        COALESCE(SUM(CASE WHEN estado NOT IN ('anulada','cancelada') THEN total ELSE 0 END), 0) as total_ingresos,
+        COALESCE(SUM(CASE WHEN forma_pago='efectivo' AND estado NOT IN ('anulada','cancelada') THEN total ELSE 0 END), 0) as total_efectivo,
+        COALESCE(SUM(CASE WHEN forma_pago='tarjeta' AND estado NOT IN ('anulada','cancelada') THEN total ELSE 0 END), 0) as total_tarjeta,
+        COALESCE(SUM(CASE WHEN forma_pago='transferencia' AND estado NOT IN ('anulada','cancelada') THEN total ELSE 0 END), 0) as total_transferencia,
+        COALESCE(SUM(CASE WHEN forma_pago='efectivo' AND estado='anulada' THEN total ELSE 0 END), 0) as devoluciones_efectivo
+    ")
+    ->first();
 
-        // Efectivo físico corresponde solo a pagos en efectivo y no anulados
-        $totalEfectivo = (float) Venta::where('caja_id', $caja->id)
-            ->where('forma_pago', 'efectivo')
-            ->whereNotIn('estado', ['anulada', 'cancelada'])
-            ->sum('total');
+$cantidadVentas      = (int) $stats->cantidad_ventas;
+$totalIngresos       = (float) $stats->total_ingresos;
+$totalEfectivo       = (float) $stats->total_efectivo;
+$totalTarjeta        = (float) $stats->total_tarjeta;
+$totalTransferencia  = (float) $stats->total_transferencia;
+$devolucionesEfectivo = (float) $stats->devoluciones_efectivo;
+$totalOtros          = $totalIngresos - ($totalEfectivo + $totalTarjeta + $totalTransferencia);
+$montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
 
-        $totalTarjeta = (float) Venta::where('caja_id', $caja->id)
-            ->where('forma_pago', 'tarjeta')
-            ->whereNotIn('estado', ['anulada', 'cancelada'])
-            ->sum('total');
 
-        $totalTransferencia = (float) Venta::where('caja_id', $caja->id)
-            ->where('forma_pago', 'transferencia')
-            ->whereNotIn('estado', ['anulada', 'cancelada'])
-            ->sum('total');
-
-        $totalOtros = $totalIngresos - ($totalEfectivo + $totalTarjeta + $totalTransferencia);
-
-        // Devoluciones en efectivo: ventas anuladas pagadas en efectivo (si existen)
-        $devolucionesEfectivo = (float) Venta::where('caja_id', $caja->id)
-            ->where('forma_pago', 'efectivo')
-            ->where('estado', 'anulada')
-            ->sum('total');
-
-        // monto_cierre_calculado = monto_apertura + total_efectivo - devoluciones_en_efectivo
-        $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
 
         return response()->json([
             'success' => true,
@@ -125,14 +116,17 @@ class CajaController extends Controller
             'imprimir'          => ['nullable', 'boolean'],
         ]);
 
-        $ventasQuery = Venta::where('caja_id', $caja->id)
-            ->whereNotIn('estado', ['anulada', 'cancelada']);
 
-        $totalVentas    = (float) $ventasQuery->sum('total');
-        $totalEfectivo  = (float) Venta::where('caja_id', $caja->id)
-            ->where('forma_pago', 'efectivo')
-            ->whereNotIn('estado', ['anulada', 'cancelada'])
-            ->sum('total');
+
+        $stats = Venta::where('caja_id', $caja->id)
+    ->selectRaw("
+        COALESCE(SUM(CASE WHEN estado NOT IN ('anulada','cancelada') THEN total ELSE 0 END), 0) as total_ventas,
+        COALESCE(SUM(CASE WHEN forma_pago='efectivo' AND estado NOT IN ('anulada','cancelada') THEN total ELSE 0 END), 0) as total_efectivo
+    ")
+    ->first();
+
+$totalVentas   = (float) $stats->total_ventas;
+$totalEfectivo = (float) $stats->total_efectivo;
 
         $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
         $diferencia           = (float) $data['monto_cierre_real'] - $montoCierreCalculado;

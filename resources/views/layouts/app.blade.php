@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="/assets/css/materialdesignicons.min.css" />
   <link rel="stylesheet" href="/assets/css/fullcalendar.css" />
   <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/truncate-tooltips.css" />
   <style>
     /* Sidebar width adjustment */
     .sidebar-nav-wrapper {
@@ -1731,7 +1732,22 @@ document.getElementById('takeControlBtn').addEventListener('click', () => {
     bootstrap.Modal.getInstance(document.getElementById('sessionModal')).hide();
 });
 </script>
-</body>
+<script>
+window.initTooltips = function(scope) {
+    var container = scope || document;
+    requestAnimationFrame(function() {
+        container.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+    if (el.scrollWidth > el.offsetWidth) {
+        new bootstrap.Tooltip(el, { container: 'body' });
+    }
+});
+    });
+};
+// Inicializar tooltips globales al cargar
+OptenHelpers.waitForBootstrap(function() {
+    window.initTooltips();
+});
+</script>
 </body>
 
 </html>

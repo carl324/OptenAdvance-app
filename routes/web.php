@@ -18,6 +18,8 @@ use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\AuditoriaController;
+use App\Http\Controllers\DevolucionController;
+use App\Http\Controllers\ConfiguracionDevolucionController;
 
 // ========== RUTAS SUPER ADMIN ==========
 Route::get('/superadmin/login', [SuperAdminController::class, 'showLogin'])
@@ -138,8 +140,17 @@ Route::middleware(['ensure.admin.exists'])->group(function () {
             Route::post('/caja/cerrar', [CajaController::class, 'cerrar'])->name('caja.cerrar');
             Route::get('/caja/cierre/resumen', [CajaController::class, 'resumenCierre'])->name('caja.cierre.resumen');
             Route::get('/caja/cierre/print/{caja}', [CajaController::class, 'printCierre'])->name('caja.cierre.print');
+// Devoluciones
 
-            // Ventas
+Route::get('/ventas/{venta}/devolucion', [DevolucionController::class, 'create'])->name('ventas.devolucion');
+Route::post('/ventas/{venta}/devolucion', [DevolucionController::class, 'store'])->name('ventas.devolucion.store');
+Route::get('/ajustes/devoluciones', [ConfiguracionDevolucionController::class, 'devoluciones'])->name('configuracion.devoluciones');
+Route::post('/ajustes/devoluciones/dias', [ConfiguracionDevolucionController::class, 'guardarDias'])->name('configuracion.dias');
+Route::post('/ajustes/motivos-devolucion', [ConfiguracionDevolucionController::class, 'storeMotivoDevolucion'])->name('motivos-devolucion.store');
+Route::put('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionController::class, 'updateMotivoDevolucion'])->name('motivos-devolucion.update');
+Route::patch('/ajustes/motivos-devolucion/{motivo}/toggle', [ConfiguracionDevolucionController::class, 'toggleMotivoDevolucion'])->name('motivos-devolucion.toggle');
+Route::delete('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionController::class, 'destroyMotivoDevolucion'])->name('motivos-devolucion.destroy');
+// Ventas
             Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
             Route::get('/ventas/nueva', [VentaController::class, 'create'])->name('ventas.create');
             Route::post('/ventas', [VentaController::class, 'store'])->name('ventas.store');
@@ -148,8 +159,7 @@ Route::middleware(['ensure.admin.exists'])->group(function () {
             Route::get('/ventas/{venta}/factura', [VentaController::class, 'factura'])->name('ventas.factura');
             Route::get('/ventas/{venta}/factura/pdf', [VentaController::class, 'descargarPDF'])->name('ventas.factura.pdf');
             Route::get('/ventas/{venta}/factura/impresion', [VentaController::class, 'impresion'])->name('ventas.factura.impresion');
-            Route::post('/ventas/{venta}/devolucion', [VentaController::class, 'confirmarDevolucion'])->name('ventas.devolucion.confirmar');
-
+Route::post('/ventas/{venta}/anular', [VentaController::class, 'confirmarDevolucion'])->name('ventas.devolucion.confirmar-anulacion');
             // Productos
             Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
             Route::get('/api/productos', [VentaController::class, 'obtenerTodosProductos'])->name('productos.todos');

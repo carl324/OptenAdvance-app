@@ -17,7 +17,7 @@ class CheckLicense
         $status = $licenseService->status();
 
         // Estados bloqueantes
-        if ($status === 'expired') {
+        if (in_array($status, ['expired'])) {
             // Si es una petición AJAX/fetch
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([

@@ -232,11 +232,11 @@ class Reporte extends Model
         }
 
         return [
-            'total_ventas' => $query->count(),
-            'monto_total' => $query->sum('total'),
-            'promedio_venta' => $query->avg('total'),
-            'ventas_completadas' => $query->where('estado', 'completada')->count(),
-            'ventas_anuladas' => $query->where('estado', 'anulada')->count(),
-        ];
+    'total_ventas'       => (clone $query)->count(),
+    'monto_total'        => (clone $query)->sum('total'),
+    'promedio_venta'     => (clone $query)->avg('total'),
+    'ventas_completadas' => (clone $query)->where('estado', 'completada')->count(),
+    'ventas_anuladas'    => (clone $query)->where('estado', 'anulada')->count(),
+];
     }
 }

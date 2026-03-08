@@ -1,8 +1,6 @@
-@extends('layouts.app')
+<?php $__env->startSection('title', 'Nueva Venta'); ?>
 
-@section('title', 'Nueva Venta')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <style>
 /* =========================
    SECCIÓN: SUMMARY / TOTALES
@@ -376,7 +374,7 @@ textarea {
 </style>
 
 
-@if(!$cajaAbierta)
+<?php if(!$cajaAbierta): ?>
 <section class="section pt-30 caja-scope">
   <div class="container-fluid">
     <div class="card-style mb-30 p-0 overflow-hidden">
@@ -398,7 +396,7 @@ textarea {
               <i class="lni lni-unlock me-2"></i>
               Abrir caja
             </button>
-            <a href="{{ route('ventas.index') }}" style="color: inherit; text-decoration: none;"><button class="main-btn light-btn btn-hover {{ activeRoute(['ventas.index', 'ventas.show', 'ventas.devolucion', 'ventas.factura*']) }}">
+            <a href="<?php echo e(route('ventas.index')); ?>" style="color: inherit; text-decoration: none;"><button class="main-btn light-btn btn-hover <?php echo e(activeRoute(['ventas.index', 'ventas.show', 'ventas.devolucion', 'ventas.factura*'])); ?>">
               <i class="lni lni-revenue"></i>
                Ver ventas 
             </button> </a>
@@ -422,8 +420,8 @@ textarea {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <form method="POST" action="{{ route('caja.abrir') }}">
-                @csrf
+            <form method="POST" action="<?php echo e(route('caja.abrir')); ?>">
+                <?php echo csrf_field(); ?>
                 <div class="modal-body" style="padding: 10px 30px 20px 30px;">
                     
                     <div style="margin-bottom: 20px;">
@@ -489,9 +487,9 @@ inputMonto.form?.addEventListener('submit', () => {
         </div>
     </div>
 </div>
-@endif
+<?php endif; ?>
 
-@if($cajaAbierta)
+<?php if($cajaAbierta): ?>
 <section class="section">
     <div class="container-fluid">
         <div class="title-wrapper pt-30"></div>
@@ -524,14 +522,14 @@ inputMonto.form?.addEventListener('submit', () => {
                                 <tr>
                                     <th><h6 class="text-sm text-medium">Producto</h6></th>
                                     <th class="min-width"><h6 class="text-sm text-medium">Precio</h6></th>
-                                    @if($empresa && $empresa->cobra_iva)
+                                    <?php if($empresa && $empresa->cobra_iva): ?>
                                     <th class="min-width"><h6 class="text-sm text-medium">IVA</h6></th>
-                                    @endif
+                                    <?php endif; ?>
                                     <th class="min-width"><h6 class="text-sm text-medium">Stock</h6></th>
                                 </tr>
                             </thead>
                             <tbody id="tabla-productos">
-                                <tr><td colspan="{{ ($empresa && $empresa->cobra_iva) ? 4 : 3 }}" style="text-align: center; padding: 20px;">Cargando productos...</td></tr>
+                                <tr><td colspan="<?php echo e(($empresa && $empresa->cobra_iva) ? 4 : 3); ?>" style="text-align: center; padding: 20px;">Cargando productos...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -640,7 +638,7 @@ inputMonto.form?.addEventListener('submit', () => {
         </button>
     </div>
 
-    {{-- Cliente seleccionado chip --}}
+    
     <div id="cliente-seleccionado" style="display:none;margin-top:8px;padding:8px 12px;background:#eff6ff;border-radius:8px;font-size:13px;color:#1e40af;justify-content:space-between;align-items:center;">
         <span id="cliente-seleccionado-nombre"></span>
         <button type="button" onclick="limpiarClienteSeleccionado()" style="background:none;border:none;cursor:pointer;color:#64748b;font-size:18px;padding:0;line-height:1;">×</button>
@@ -648,7 +646,7 @@ inputMonto.form?.addEventListener('submit', () => {
 
     <div class="text-danger text-xs mt-1" id="error-cliente-credito"></div>
 
-    {{-- Registro rápido inline --}}
+    
     <div id="panel-registro-rapido" style="display:none;margin-top:12px;border-top:1px solid #f1f5f9;padding-top:12px;">
         <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px;">Nuevo cliente</p>
         
@@ -677,12 +675,12 @@ inputMonto.form?.addEventListener('submit', () => {
         </div>
     </div>
 
-    {{-- Aviso crédito --}}
+    
     <div id="bloque-credito-aviso" style="display:none;margin-top:12px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:12px;color:#c2410c;">
         <i class="lni lni-warning me-1"></i> Para crédito debes seleccionar un cliente.
     </div>
 
-    {{-- Campos ocultos --}}
+    
     <input type="hidden" id="cliente" value="" />
     <input type="hidden" id="cliente_nit" value="" />
     <input type="hidden" id="cliente_id" value="" />
@@ -919,7 +917,7 @@ const UNIDAD_ABREV = {
   'Kilómetro':'km','Pulgada':'in','Pie':'ft','Metro cuadrado':'m²',
   'Centímetro cuadrado':'cm²','Hectárea':'ha'
 };
-const COBRA_IVA = @json((bool)($empresa && $empresa->cobra_iva));
+const COBRA_IVA = <?php echo json_encode((bool)($empresa && $empresa->cobra_iva), 15, 512) ?>;
 
 // Obtener elementos DOM de forma segura
 const inputBuscar = document.getElementById('buscar-producto');
@@ -1627,6 +1625,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-@endif
+<?php endif; ?>
 
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\optenadvance\app\www\resources\views/ventas/create.blade.php ENDPATH**/ ?>

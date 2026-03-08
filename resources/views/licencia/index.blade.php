@@ -1,30 +1,11 @@
 @extends('layouts.app')
 
-@section('title','Empresa')
+@section('title','licencia')
 
 @section('content')
 
 
 
-    @php
-        // Flag: SOLO si existe al menos un producto ACTIVO con iva > 0
-        // Nota: se calcula en la vista usando la colección $productos.
-        // Si $productos no viene inyectado en esta vista, se usa un fallback local
-        // (sin modificar backend) para mantener el comportamiento.
-        if (!isset($productos)) {
-            $productos = \App\Models\Producto::select('activo', 'iva')->get();
-        }
-
-        $existenProductosConIVA = false;
-        foreach ($productos as $p) {
-            $activo = (bool)($p->activo ?? false);
-            $ivaVal = is_numeric($p->iva ?? null) ? (float)$p->iva : 0;
-            if ($activo && $ivaVal > 0) {
-                $existenProductosConIVA = true;
-                break;
-            }
-        }
-    @endphp
 
     <div class="wrap">
         <section class="tab-components">
@@ -69,7 +50,6 @@
     <div class="row">
         <div class="col-lg-12">
             
-            <!-- 🆕 NUEVA SECCIÓN: Código de Equipo -->
             
 
             <div class="row">
@@ -457,19 +437,14 @@ function updateLicenseUI(data) {
         'trial_active': {
             html: '<i class="lni lni-checkmark-circle"></i> Trial Activa',
             style: 'background: #dbeafe; color: #1e40af;'
-        },
-        'trial_first': {
-            html: '<i class="lni lni-warning"></i> Sin Licencia',
-            style: 'background: #fef3c7; color: #92400e;'
-        },
+        },'trial_first': {
+    html: '<i class="lni lni-warning"></i> modo de prueba',
+    style: 'background: #fef3c7; color: #92400e;'
+},
         'expired': {
             html: '<i class="lni lni-close-circle"></i> Expirada',
             style: 'background: #fee2e2; color: #991b1b;'
         },
-        'trial_hardware': {
-            html: '<i class="lni lni-warning"></i> Hardware Cambiado',
-            style: 'background: #fed7aa; color: #9a3412;'
-        }
     };
 
     const config = statusConfig[data.status] || statusConfig['expired'];
@@ -825,11 +800,7 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
     function handleBackupClick(e) {
         e.preventDefault();
 
-        const checkbox = document.getElementById('confirm_backup_checkbox');
-        const btn = document.getElementById('btn-backup');
-        const btnText = document.getElementById('btn-backup-text');
-        const form = document.getElementById('backup-form');
-
+        
         if (!checkbox) return;
 
         const label = checkbox.closest('label');
@@ -859,19 +830,11 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
         var csrfMeta = document.querySelector('meta[name="csrf-token"]');
         var csrf = (csrfMeta && csrfMeta.getAttribute('content')) ? csrfMeta.getAttribute('content') : '{{ csrf_token() }}';
         var empresaId = {{ $empresa->id ?? 'null' }};
-        var existenProductosConIVA = {{ $existenProductosConIVA ? 'true' : 'false' }};
+       
 
-        // Switch cobrador IVA
-        var switchInput = document.getElementById('switch-cobra-iva');
-        var modal = document.getElementById('modal-iva');
-        var modalInstance = new bootstrap.Modal(modal);
-        var btnConfirmar = document.getElementById('btn-iva-confirmar');
-        var btnCancelar = document.getElementById('btn-iva-cancelar');
-        var cierreModalPendiente = null;
-        var modalAbierto = false;
 
         // Estado único de cobra_iva
-        var estadoCobraIVA = switchInput.checked;
+      
 
         function mostrarMensaje(msg, ok) {
             var div = document.createElement('div');
@@ -955,116 +918,7 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
         }
 
         // Guardar campo vía AJAX (enviar solo campo+valor)
-        function guardarEmpresaAJAX(campo, valor) {
-            // No tocar feedback del switch IVA ni backup
-            if (campo !== 'cobra_iva') {
-                setFieldSaving(campo);
-            }
-
-            var payload = {
-                _token: csrf,
-                campo: campo,
-                valor: valor
-            };
-
-            fetch("{{ route('empresa.update') }}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrf,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(resp => {
-                if (resp.status === 419) {
-                    if (campo !== 'cobra_iva') {
-                        setFieldError(campo, 'No se pudo guardar. Recarga la página e intenta de nuevo.');
-                    }
-                    throw new Error('session_expired');
-                }
-                if (resp.status === 422) {
-                    return resp.json().then(errData => {
-                        var msg = errData.message || 'Error de validación';
-                        // Mostrar solo el error del campo validado
-                        if (errData.errors && errData.errors[campo] && errData.errors[campo].length) {
-                            msg = errData.errors[campo][0];
-                        }
-                        if (campo !== 'cobra_iva') {
-                            setFieldError(campo, msg);
-                        }
-                        throw new Error('validation_error');
-                    });
-                }
-
-                if (resp.status >= 500) {
-                    if (campo !== 'cobra_iva') {
-                        setFieldError(campo, 'No se pudo guardar. Intenta de nuevo.');
-                    }
-                    throw new Error('server_error');
-                }
-
-                return resp.json();
-            })
-            .then(data => {
-                if (campo !== 'cobra_iva') {
-                    if (data && (data.success || data.message)) {
-                        setFieldSuccess(campo);
-                    } else {
-                        setFieldError(campo, 'No se pudo guardar.');
-                    }
-                }
-            })
-            .catch((err) => {
-                if (err.message === 'session_expired' || err.message === 'validation_error') {
-                    return;
-                }
-                if (campo !== 'cobra_iva') {
-                    setFieldError(campo, 'No se pudo guardar. Intenta de nuevo.');
-                }
-            });
-        }
-
-        // Inputs texto/email
-        ['nombre','nit','moneda','telefono','email'].forEach(function(name){
-            var input = document.getElementById(name);
-            if (input) {
-                input.addEventListener('change', function(){
-                    guardarEmpresaAJAX(input.name, input.value);
-                });
-            }
-        });
-
-        // Input dirección (text)
-        var inputDireccion = document.getElementById('direccion');
-        if (inputDireccion) {
-            inputDireccion.addEventListener('change', function(){
-                guardarEmpresaAJAX('direccion', inputDireccion.value);
-            });
-        }
-
-        // Switch cobra_iva
-        function toggleSwitch() {
-            if (modalAbierto) return; // bloquear interacciones mientras el modal está activo
-
-            var nuevoValor = !estadoCobraIVA;
-
-            // Si se intenta apagar y hay productos con IVA, mostrar advertencia
-            if (estadoCobraIVA && !nuevoValor && existenProductosConIVA) {
-                abrirModal(function confirmarApagado(){
-                    estadoCobraIVA = false;
-                    switchInput.checked = false;
-                    guardarEmpresaAJAX('cobra_iva', 0);
-                    cerrarModal();
-                });
-                return;
-            }
-
-            // Cambio directo sin fricción
-            estadoCobraIVA = nuevoValor;
-            switchInput.checked = estadoCobraIVA;
-            guardarEmpresaAJAX('cobra_iva', estadoCobraIVA ? 1 : 0);
-        }
+      
         switchInput.addEventListener('change', toggleSwitch);
 
         // Acciones modal
@@ -1084,136 +938,6 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
         });
     });
     </script>
-<!-- <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const inputCarpetaDisplay = document.getElementById('carpeta_destino_display'); // input de texto
-    const btnGuardar = document.querySelector('[data-guardar-config]');
-    const selectHora = document.querySelector('[name="hora_backup"]');
-    const selectRetencion = document.querySelector('[name="retencion"]');
-    const inputPrefijo = document.querySelector('[name="prefijo_nombre"]');
-    
-    let rutaCarpeta = null;
 
-    cargarConfiguracion();
-
-    btnGuardar.addEventListener('click', guardarConfiguracion);
-
-    document.querySelectorAll('input[name="backup_frequency_cloud"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            document.querySelectorAll('.frecuencia-card').forEach(card => {
-                card.style.borderColor = '#e2e8f0';
-                card.style.background = 'white';
-            });
-            
-            const card = this.nextElementSibling;
-            card.style.borderColor = '#3b82f6';
-            card.style.background = '#eff6ff';
-        });
-    });
-
-    async function cargarConfiguracion() {
-        try {
-            const response = await fetch('/backup-config/obtener');
-            const data = await response.json();
-
-            if (data.success && data.config) {
-                const config = data.config;
-
-                if (config.carpeta_destino) {
-                    inputCarpetaDisplay.value = config.carpeta_destino;
-                    rutaCarpeta = config.carpeta_destino;
-                }
-
-                inputPrefijo.value = config.prefijo_nombre_archivo || 'backup_opten';
-                selectHora.value = config.hora_backup || '02:00';
-                selectRetencion.value = config.retencion || 30;
-
-                if (config.frecuencia) {
-                    const radio = document.querySelector(`input[name="backup_frequency_cloud"][value="${config.frecuencia}"]`);
-                    if (radio) {
-                        radio.checked = true;
-                        radio.dispatchEvent(new Event('change'));
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error cargando configuración:', error);
-        }
-    }
-
-    async function guardarConfiguracion() {
-        const frecuenciaRadio = document.querySelector('input[name="backup_frequency_cloud"]:checked');
-        const rutaInput = inputCarpetaDisplay.value.trim();
-
-        if (!rutaInput) {
-            mostrarMensaje('Debe ingresar la ruta de destino', 'error');
-            return;
-        }
-
-        if (!frecuenciaRadio) {
-            mostrarMensaje('Debe seleccionar una frecuencia', 'error');
-            return;
-        }
-
-        const formData = {
-            carpeta_destino: rutaInput,
-            prefijo_nombre_archivo: inputPrefijo.value || 'backup_opten',
-            frecuencia: frecuenciaRadio.value,
-            hora_backup: selectHora.value,
-            retencion: parseInt(selectRetencion.value)
-        };
-
-        const btnSpan = btnGuardar.querySelector('span');
-        const originalText = btnSpan.textContent;
-        btnGuardar.disabled = true;
-        btnSpan.textContent = 'Guardando...';
-
-        try {
-            const response = await fetch('/backup-config/guardar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                mostrarMensaje(data.message, 'success');
-                rutaCarpeta = data.config.carpeta_destino;
-            } else {
-                mostrarMensaje(data.message, 'error');
-            }
-        } catch (error) {
-            mostrarMensaje('Error al guardar configuración', 'error');
-            console.error('Error:', error);
-        } finally {
-            btnGuardar.disabled = false;
-            btnSpan.textContent = originalText;
-        }
-    }
-
-    function mostrarMensaje(mensaje, tipo) {
-        const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
-        const icon = tipo === 'success' ? 'lni-checkmark-circle' : 'lni-close-circle';
-
-        const alert = document.createElement('div');
-        alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
-        alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-        alert.innerHTML = `
-            <i class="lni ${icon} me-2"></i>
-            ${mensaje}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.body.appendChild(alert);
-
-        setTimeout(() => {
-            alert.remove();
-        }, 5000);
-    }
-});
-</script> -->
 
     @endsection

@@ -49,15 +49,25 @@ class VentaController extends Controller
     }
 
     // Buscar productos (incluye IVA)
-    public function buscarProductos(Request $request)
+public function buscarProductos(Request $request)
 {
     $query = $request->input('q', '');
+
+    // Carga inicial — top 10 por stock
+    if ($query === '__top__') {
+        $productos = Producto::activos()
+            ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva', 'unidad')
+            ->orderByDesc('stock')
+            ->limit(4)
+            ->get();
+        return response()->json($this->normalizarIVA($productos));
+    }
 
     if (strlen($query) < 2) {
         return response()->json([]);
     }
 
-    // Intentar match exacto por código de barras primero
+    // Match exacto por código de barras
     $porBarcode = Producto::activos()
         ->where('codigo_barras', $query)
         ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva', 'unidad')
@@ -67,9 +77,9 @@ class VentaController extends Controller
         return response()->json($this->normalizarIVA(collect([$porBarcode])));
     }
 
-    // Si no hubo match exacto, buscar por nombre
+    // Búsqueda por nombre
     $productos = Producto::activos()
-        ->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($query) . '%'])
+        ->where('nombre', 'LIKE', '%' . $query . '%')
         ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva', 'unidad')
         ->orderByDesc('stock')
         ->limit(10)
@@ -444,17 +454,23 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
             }
         }
 
-        return view('ventas.detalle', compact(
-            'venta',
-            'factura',
-            'empresa',
-            'subtotal',
-            'totalIva',
-            'total',
-            'totalPagado',
-            'cambio',
-            'vendedorNombre'
-        ));
+$devoluciones = \App\Models\Devolucion::with(['detalles.producto', 'motivo', 'user'])
+    ->where('venta_id', $venta->id)
+    ->orderByDesc('fecha')
+    ->get();
+
+return view('ventas.detalle', compact(
+    'venta',
+    'factura',
+    'empresa',
+    'subtotal',
+    'totalIva',
+    'total',
+    'totalPagado',
+    'cambio',
+    'vendedorNombre',
+    'devoluciones'
+));
     }
 
     // Mostrar formulario de anulación (modal)
@@ -519,20 +535,12 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
             ];
 
             $venta->estado = 'anulada';
-            if (\Illuminate\Support\Facades\Schema::hasColumn('ventas', 'motivo_anulacion')) {
-                $venta->motivo_anulacion = $data['motivo'];
-            }
-            if (\Illuminate\Support\Facades\Schema::hasColumn('ventas', 'fecha_anulacion')) {
-                $venta->fecha_anulacion = \Carbon\Carbon::now();
-            }
+            $venta->motivo_anulacion = $data['motivo'];
+            $venta->fecha_anulacion = \Carbon\Carbon::now();
             $venta->save();
 
-            if (\Illuminate\Support\Facades\Schema::hasColumn('ventas_detalle', 'motivo_anulacion')) {
-                foreach ($venta->detalles as $detalle) {
-                    $detalle->motivo_anulacion = $data['motivo'];
-                    $detalle->save();
-                }
-            }
+            VentaDetalle::where('venta_id', $venta->id)
+             ->update(['motivo_anulacion' => $data['motivo']]);
 
             foreach ($venta->detalles as $detalle) {
                 $producto = Producto::find($detalle->producto_id);

@@ -96,7 +96,9 @@ public function install($file): array
         }
 
         // Validar hardware
-        if ($machineHash !== $this->machineHash()) {
+if ($machineHash !== $this->machineHash()) {
+    $now = Carbon::now();
+    DB::table('license_state')->where('id', 1)->delete();
     return $this->persistState('trial_first', null, $now);
 }
 
@@ -145,10 +147,22 @@ public function install($file): array
     {
         $now = Carbon::now();
 
-        // 1. Archivo no existe → primer trial
-        if (!file_exists($this->path)) {
-            return $this->persistState('trial_first', null, $now);
-        }
+// 1. Archivo no existe → verificar trial
+if (!file_exists($this->path)) {
+    $row = DB::table('license_state')->first();
+
+    if (!$row) {
+        return $this->persistState('trial_first', null, $now);
+    }
+
+    $trialStart = Carbon::parse($row->created_at);
+    if ($now->diffInDays($trialStart, false) >= 3) {
+        return $this->persistState('expired', null, $now);
+    }
+
+    return $this->persistState('trial_active', null, $now);
+}
+
 
         $raw = @file_get_contents($this->path);
         if ($raw === false || strlen($raw) < 17) {
@@ -191,9 +205,10 @@ public function install($file): array
         }
 
         // 4. Hardware (con caché del hash)
-        if ($machineHash !== $this->machineHash()) {
-            return $this->persistState('trial_hardware', $machineHash, $now);
-        }
+if ($machineHash !== $this->machineHash()) {
+    DB::table('license_state')->where('id', 1)->delete();
+    return $this->persistState('trial_first', null, $now);
+}
 
         // 5. Vencimiento real
         if ($now->gt(Carbon::parse($endAt))) {
@@ -264,21 +279,30 @@ public function install($file): array
         return $data;
     }
 
-    private function persistState(string $status, ?string $machineHash, $now): string
-    {
-        DB::table('license_state')->updateOrInsert(
-            ['id' => 1],
-            [
-                'status' => $status,
-                'machine_hash' => $machineHash ?? $this->machineHash(),
-                'last_valid_check_at' => $now,
-                'updated_at' => $now,
-                'created_at' => $now,
-            ]
-        );
+private function persistState(string $status, ?string $machineHash, $now): string
+{
+    $exists = DB::table('license_state')->where('id', 1)->exists();
 
-        return $status;
+    if ($exists) {
+        DB::table('license_state')->where('id', 1)->update([
+            'status'              => $status,
+            'machine_hash'        => $machineHash ?? $this->machineHash(),
+            'last_valid_check_at' => $now,
+            'updated_at'          => $now,
+        ]);
+    } else {
+        DB::table('license_state')->insert([
+            'id'                  => 1,
+            'status'              => $status,
+            'machine_hash'        => $machineHash ?? $this->machineHash(),
+            'last_valid_check_at' => $now,
+            'updated_at'          => $now,
+            'created_at'          => $now,
+        ]);
     }
+
+    return $status;
+}
 
     /**
      * Machine hash con caché - SINCRONIZADO CON CONTROLADOR
@@ -395,5 +419,9 @@ private function machineHash(): string
         
         return hash('sha256', $fingerprint . 'FIXED_SALT');
     });
+}
+public function getMachineHashPublic(): string
+{
+    return $this->machineHash();
 }
 }

@@ -22,7 +22,7 @@ class ProductoController extends Controller
         // Búsqueda server-side con when()
         $productos = Producto::activos()
             ->when($search, function ($query, $search) {
-                return $query->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($search) . '%']);
+                return $query->where('nombre', 'LIKE', '%' . $search . '%');
             })
             ->orderBy('id', 'desc')
             ->paginate(10)
@@ -32,18 +32,19 @@ class ProductoController extends Controller
 
         // Obtener últimos movimientos de inventario con nombre del producto
         $movimientos = DB::table('inventario_movimientos')
-            ->leftJoin('productos', 'productos.id', '=', 'inventario_movimientos.producto_id')
-            ->select(
-                'inventario_movimientos.id',
-                'inventario_movimientos.producto_id',
-                'inventario_movimientos.tipo',
-                'inventario_movimientos.cantidad',
-                'inventario_movimientos.origen',
-                'inventario_movimientos.created_at',
-                'productos.nombre as producto_nombre'
-            )
-            ->orderBy('inventario_movimientos.created_at', 'desc')
-            ->get();
+    ->leftJoin('productos', 'productos.id', '=', 'inventario_movimientos.producto_id')
+    ->select(
+        'inventario_movimientos.id',
+        'inventario_movimientos.producto_id',
+        'inventario_movimientos.tipo',
+        'inventario_movimientos.cantidad',
+        'inventario_movimientos.origen',
+        'inventario_movimientos.created_at',
+        'productos.nombre as producto_nombre'
+    )
+    ->orderBy('inventario_movimientos.created_at', 'desc')
+    ->limit(100)
+    ->get();
 
         // Si es solicitud AJAX, devolver JSON con HTML renderizado
         if ($request->ajax() || $request->wantsJson()) {
@@ -98,12 +99,12 @@ class ProductoController extends Controller
 
 
         // Evitar duplicados activos
-        $existe = Producto::whereRaw('LOWER(nombre) = ?', [$data['nombre']])
+        $existe = Producto::where('nombre', $data['nombre'])
             ->where('activo', 1)
             ->exists();
 
         if ($existe) {
-            $productoExistente = Producto::whereRaw('LOWER(nombre) = ?', [$data['nombre']])
+            $productoExistente = Producto::where('nombre', $data['nombre'])
                 ->where('activo', 1)
                 ->first();
 
@@ -197,7 +198,7 @@ class ProductoController extends Controller
 
             if (isset($data['nombre'])) {
                 $nombreNormalizado = trim(mb_strtolower($data['nombre']));
-                $existe = Producto::whereRaw('LOWER(nombre) = ?', [$nombreNormalizado])
+                $existe = Producto::where('nombre', $nombreNormalizado)
                     ->where('id', '!=', $producto->id)
                     ->where('activo', 1)
                     ->exists();

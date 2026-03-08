@@ -132,23 +132,26 @@
                     );
                   @endphp
                   <div class="action-buttons">
-                    <a href="{{ route('ventas.detalle', $venta) }}" class="btn-action btn-print">
-                      <i class="mdi mdi-file-document-outline"></i> Detalles
-                    </a>
-                    @if($puedeAnular)
-                      <button class="btn-action btn-cancel btn-anular" 
-                              data-url="{{ route('ventas.devolucion.confirmar', $venta) }}"
-                              data-invoice="{{ $venta->factura->numero ?? 'FA-'.$venta->id }}">
-                        <i class="lni lni-close"></i> Anular
-                      </button>
-                    @else
-                      @if($venta->estado !== 'anulada')
-                        <button class="btn-action btn-disabled " data-bs-toggle="tooltip" data-bs-title="Solo se puede anular el mismo día">
-                          <i class="lni lni-close"></i> Anular
-                        </button>
-                      @endif
-                    @endif
-                  </div>
+    <a href="{{ route('ventas.detalle', $venta) }}" class="btn-action btn-print">
+        <i class="mdi mdi-file-document-outline"></i> Detalles
+    </a>
+    <a href="{{ route('ventas.devolucion', $venta) }}" class="btn-action btn-devolucion">
+        <i class="lni lni-reload"></i> Devolución
+    </a>
+    @if($puedeAnular)
+        <button class="btn-action btn-cancel btn-anular" 
+                data-url="{{ route('ventas.devolucion.confirmar-anulacion', $venta) }}"
+                data-invoice="{{ $venta->factura->numero ?? 'FA-'.$venta->id }}">
+            <i class="lni lni-close"></i> Anular
+        </button>
+    @else
+        @if($venta->estado !== 'anulada')
+            <button class="btn-action btn-disabled" data-bs-toggle="tooltip" data-bs-title="Solo se puede anular el mismo día">
+                <i class="lni lni-close"></i> Anular
+            </button>
+        @endif
+    @endif
+</div>
                 </td>
               </tr>
               @endforeach
@@ -983,15 +986,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Acciones
       let acciones = '<div class="action-buttons">';
-      acciones += '<a href="/ventas/' + item.id + '/detalle"  class="btn-action btn-print"><i class="mdi mdi-file-document-outline"></i> Detalles</a>';
-      if (item.puede_anular) {
-        acciones += '<button class="btn-action btn-cancel btn-anular" data-url="/ventas/' + item.id + '/devolucion" data-invoice="' + numeroFactura + '"><i class="lni lni-close"></i> Anular</button>';
-      } else {
-        if (estado !== 'anulada') {
-          acciones += '<button class="btn-action btn-disabled " disabled data-bs-toggle="tooltip" data-bs-title="Solo se puede anular el mismo día"><i class="lni lni-close"></i> Anular</button>';
-        }
-      }
-      acciones += '</div>';
+acciones += '<a href="/ventas/' + item.id + '/detalle" class="btn-action btn-print"><i class="mdi mdi-file-document-outline"></i> Detalles</a>';
+acciones += '<a href="/ventas/' + item.id + '/devolucion" class="btn-action btn-devolucion"><i class="lni lni-reload"></i> Devolución</a>';
+if (item.puede_anular) {
+    acciones += '<button class="btn-action btn-cancel btn-anular" data-url="/ventas/' + item.id + '/anular" data-invoice="' + numeroFactura + '"><i class="lni lni-close"></i> Anular</button>';
+} else {
+    if (estado !== 'anulada') {
+        acciones += '<button class="btn-action btn-disabled" disabled data-bs-toggle="tooltip" data-bs-title="Solo se puede anular el mismo día"><i class="lni lni-close"></i> Anular</button>';
+    }
+}
+acciones += '</div>';
 
       cols.push('<td>' + acciones + '</td>');
 

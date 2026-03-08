@@ -14,13 +14,12 @@ class ClienteController extends Controller
         $query = Cliente::orderBy('nombre');
 
         if ($search = trim($request->input('search', ''))) {
-            $query->where(function ($q) use ($search) {
-                $like = '%' . strtolower($search) . '%';
-                $q->whereRaw('LOWER(nombre) LIKE ?', [$like])
-                  ->orWhereRaw('LOWER(telefono) LIKE ?', [$like])
-                  ->orWhereRaw('LOWER(nit) LIKE ?', [$like]);
-            });
-        }
+    $query->where(function ($q) use ($search) {
+        $q->where('nombre', 'LIKE', '%' . $search . '%')
+          ->orWhere('telefono', 'LIKE', '%' . $search . '%')
+          ->orWhere('nit', 'LIKE', '%' . $search . '%');
+    });
+}
 
         $clientes = $query->paginate(15)->appends($request->query());
 
@@ -102,9 +101,9 @@ class ClienteController extends Controller
             return response()->json([]);
         }
 
-        $clientes = Cliente::whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($q) . '%'])
-            ->orWhereRaw('LOWER(nit) LIKE ?', ['%' . strtolower($q) . '%'])
-            ->orWhereRaw('LOWER(telefono) LIKE ?', ['%' . strtolower($q) . '%'])
+        $clientes = Cliente::where('nombre', 'LIKE', '%' . $q . '%')
+    ->orWhere('nit', 'LIKE', '%' . $q . '%')
+    ->orWhere('telefono', 'LIKE', '%' . $q . '%')
             ->select('id', 'nombre', 'telefono', 'nit', 'saldo_pendiente', 'cupo_credito')
             ->limit(10)
             ->get();

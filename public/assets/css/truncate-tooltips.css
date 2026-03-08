@@ -1,0 +1,335 @@
+/**
+ * ========== TRUNCADO DE TEXTO CON TOOLTIPS ==========
+ * Sistema profesional de truncado de texto para evitar scroll horizontal
+ * Uso: Copiar estas clases en tu CSS global o archivo separado
+ * 
+ * Requisitos:
+ * - Bootstrap 5+
+ * - Popper.js (incluido en bootstrap.bundle.js)
+ * 
+ * Autor: POS-MVP
+ * Fecha: 12 de enero de 2026
+ */
+
+/* ========== CLASES BASE DE TRUNCADO ========== */
+
+/**
+ * Clase principal de truncado
+ * Aplica: white-space: nowrap + overflow: hidden + text-overflow: ellipsis
+ * 
+ * Uso:
+ * <span class="truncate">Texto muy largo que se trunca...</span>
+ */
+.truncate {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  /* Importante: permitir que el width del parent lo controle */
+}
+
+/* ========== VARIANTES DE ANCHO ========== */
+
+/**
+ * .truncate-long: 180px
+ * Para textos largos (nombres de productos, descripciones cortas)
+ * 
+ * Ejemplo:
+ * <span class="truncate truncate-long">Coca Cola Premium Botella Plástica 350ml</span>
+ */
+.truncate-long {
+  max-width: 180px;
+}
+
+/**
+ * .truncate-medium: 120px
+ * Para textos medianos (motivos, estados, referencias)
+ * 
+ * Ejemplo:
+ * <span class="truncate truncate-medium">Venta Anulada Por Cliente</span>
+ */
+.truncate-medium {
+  max-width: 120px;
+}
+
+/**
+ * .truncate-short: 80px
+ * Para textos cortos (fechas, IDs, valores numéricos)
+ * 
+ * Ejemplo:
+ * <span class="truncate truncate-short">12/01/2026 14:30</span>
+ */
+.truncate-short {
+  max-width: 80px;
+}
+
+/**
+ * .truncate-xs: 60px (opcional)
+ * Para valores muy cortos
+ */
+.truncate-xs {
+  max-width: 60px;
+}
+
+/**
+ * .truncate-xl: 250px (opcional)
+ * Para textos muy largos
+ */
+.truncate-xl {
+  max-width: 250px;
+}
+
+/* ========== ESTILOS DEL TOOLTIP ========== */
+
+/**
+ * Personalización del tooltip de Bootstrap
+ * Se aplica al contenedor interno del tooltip
+ */
+.tooltip-inner {
+  /* Ancho máximo del tooltip */
+  max-width: 300px;
+  
+  /* Permitir que el texto se ajuste en múltiples líneas */
+  word-wrap: break-word;
+  white-space: normal;
+  
+  /* Espaciado interno */
+  padding: 8px 10px;
+  
+  /* Tipografía */
+  font-size: 13px;
+  line-height: 1.4;
+  
+  /* Color (hereda de Bootstrap, pero personalizable) */
+  /* background: #000; */
+  /* color: #fff; */
+}
+
+/**
+ * Flecha del tooltip (posición top)
+ * Asegura que la flecha esté correctamente posicionada
+ */
+.bs-tooltip-auto[data-popper-placement^="top"] > .tooltip-arrow,
+.bs-tooltip-top > .tooltip-arrow {
+  bottom: calc(-1 * var(--bs-tooltip-arrow-height));
+}
+
+.bs-tooltip-auto[data-popper-placement^="bottom"] > .tooltip-arrow,
+.bs-tooltip-bottom > .tooltip-arrow {
+  top: calc(-1 * var(--bs-tooltip-arrow-height));
+}
+
+.bs-tooltip-auto[data-popper-placement^="left"] > .tooltip-arrow,
+.bs-tooltip-left > .tooltip-arrow {
+  right: calc(-1 * var(--bs-tooltip-arrow-height));
+}
+
+.bs-tooltip-auto[data-popper-placement^="right"] > .tooltip-arrow,
+.bs-tooltip-right > .tooltip-arrow {
+  left: calc(-1 * var(--bs-tooltip-arrow-height));
+}
+
+/* ========== ESTILOS PARA CELDAS DE TABLA ========== */
+
+/**
+ * Asegurar que las celdas contenedoras funcionen correctamente
+ */
+.table td.min-width {
+  /* Permitir que el truncate dentro funcione */
+  overflow: visible;
+  
+  /* Evitar que la celda sea más ancha del necesario */
+  max-width: 200px;
+}
+
+/**
+ * Efecto hover opcional para mejorar UX
+ */
+.truncate {
+  cursor: help; /* Indicar que hay más información disponible */
+  transition: opacity 0.2s ease;
+}
+
+.truncate:hover {
+  opacity: 0.85;
+}
+
+/* ========== VARIANTES TEMÁTICAS (OPCIONAL) ========== */
+
+/**
+ * Truncate con énfasis (para valores importantes)
+ */
+.truncate.truncate-bold {
+  font-weight: 600;
+}
+
+/**
+ * Truncate con color de texto (para estados)
+ */
+.truncate.truncate-success {
+  color: #10b981;
+}
+
+.truncate.truncate-danger {
+  color: #ef4444;
+}
+
+.truncate.truncate-warning {
+  color: #f59e0b;
+}
+
+.truncate.truncate-info {
+  color: #3b82f6;
+}
+
+.truncate.truncate-muted {
+  color: #6b7280;
+}
+
+/* ========== RESPONSIVIDAD ========== */
+
+/**
+ * Ajustes para pantallas móviles
+ */
+@media (max-width: 768px) {
+  /* Reducir anchos en móvil */
+  .truncate-long {
+    max-width: 120px;
+  }
+  
+  .truncate-medium {
+    max-width: 90px;
+  }
+  
+  .truncate-short {
+    max-width: 60px;
+  }
+  
+  /* Tooltip más pequeño en móvil */
+  .tooltip-inner {
+    max-width: 200px;
+    font-size: 12px;
+  }
+}
+
+/**
+ * Ajustes para pantallas muy pequeñas
+ */
+@media (max-width: 480px) {
+  .truncate-long {
+    max-width: 100px;
+  }
+  
+  .truncate-medium {
+    max-width: 70px;
+  }
+  
+  .truncate-short {
+    max-width: 50px;
+  }
+  
+  .tooltip-inner {
+    max-width: 180px;
+    font-size: 11px;
+  }
+}
+
+/**
+ * Ajustes para pantallas grandes
+ */
+@media (min-width: 1400px) {
+  .truncate-long {
+    max-width: 200px;
+  }
+  
+  .truncate-medium {
+    max-width: 140px;
+  }
+  
+  .tooltip-inner {
+    max-width: 350px;
+  }
+}
+
+/* ========== COMPATIBILIDAD Y ESTADOS ========== */
+
+/**
+ * Asegurar que el truncate funcione incluso con otros efectos
+ */
+.truncate.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.truncate:disabled {
+  opacity: 0.5;
+}
+
+/**
+ * Estilos para cuando el tooltip está activo
+ */
+.bs-tooltip-auto,
+.bs-tooltip-top,
+.bs-tooltip-bottom,
+.bs-tooltip-left,
+.bs-tooltip-right {
+  /* Aumentar z-index si es necesario */
+  z-index: 1070;
+}
+
+/* ========== UTILITARIOS AVANZADOS (OPCIONAL) ========== */
+
+/**
+ * Clase para forzar que el tooltip se muestre siempre en la parte superior
+ * Útil en modales o dropdowns
+ */
+.truncate.tooltip-top-only {
+  /* No tiene CSS específico, pero se usa con data-bs-placement="top" */
+}
+
+/**
+ * Clase para textos que pueden tener saltos de línea en el tooltip
+ */
+.truncate.multiline {
+  /* Usa whitespace: normal en el tooltip-inner */
+}
+
+/**
+ * Clase para truncar texto en dos líneas (opcional, requiere JS)
+ */
+.truncate.truncate-lines-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========== IMPRESIÓN ========== */
+
+/**
+ * Al imprimir, mostrar texto completo
+ */
+@media print {
+  .truncate {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  
+  .tooltip-inner {
+    display: none;
+  }
+}
+
+/* ========== ANIMACIONES ========== */
+
+/**
+ * Animación suave cuando aparece el tooltip
+ * Nota: Bootstrap maneja esto automáticamente
+ */
+
+
+/* ========== FIN DE ARCHIVO ========== */
