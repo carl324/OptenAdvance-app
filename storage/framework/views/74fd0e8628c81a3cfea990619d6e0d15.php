@@ -1,6 +1,6 @@
-@extends('layouts.app')
-@section('title', 'ventas')
-@section('content')
+
+<?php $__env->startSection('title', 'ventas'); ?>
+<?php $__env->startSection('content'); ?>
 <style>
 .highlight { 
   background: #fef08a; 
@@ -650,7 +650,7 @@ tbody tr:hover {
     </div>
     <!-- ========== filters end ========== -->
 
-    @if($ventas->isEmpty())
+    <?php if($ventas->isEmpty()): ?>
       <div class="sales-table">
         <div class="table-header">
           <h3>Historial de Ventas</h3>
@@ -659,7 +659,7 @@ tbody tr:hover {
           <p>No hay ventas registradas.</p>
         </div>
       </div>
-    @else
+    <?php else: ?>
       <!-- ========== sales table start ========== -->
       <div class="sales-table">
         <div class="table-header">
@@ -673,7 +673,7 @@ tbody tr:hover {
         <div id="ventasError" style="display:none; padding: 16px 24px; color: #ef4444; font-weight: 500;">
         </div>
         
-        <div class="table-responsive" data-registros-pagina="{{ $registrosPorPagina ?? 10 }}">
+        <div class="table-responsive" data-registros-pagina="<?php echo e($registrosPorPagina ?? 10); ?>">
           <table id="tablaVentas">
             <thead>
               <tr>
@@ -687,44 +687,48 @@ tbody tr:hover {
               </tr>
             </thead>
             <tbody>
-              @foreach($ventas as $venta)
-              <tr data-venta-id="{{ $venta->id }}">
+              <?php $__currentLoopData = $ventas; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $venta): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+              <tr data-venta-id="<?php echo e($venta->id); ?>">
                 <td>
                   <span class="invoice-number">
-                    {{ optional($venta->factura)->numero ?? '-' }}
+                    <?php echo e(optional($venta->factura)->numero ?? '-'); ?>
+
                   </span>
                 </td>
                 <td>
                   <span class="truncate truncate-medium"
       data-bs-toggle="tooltip"
-      data-bs-title="{{ formatoHoraInteligente($venta->fecha) ?? '--:--' }}">
-    {{ formatoHoraInteligente($venta->fecha) ?? '--:--' }}
+      data-bs-title="<?php echo e(formatoHoraInteligente($venta->fecha) ?? '--:--'); ?>">
+    <?php echo e(formatoHoraInteligente($venta->fecha) ?? '--:--'); ?>
+
 </span>
 
                 </td>
                 <td>
                   <span class="client-name truncate truncate-long"
                         data-bs-toggle="tooltip"
-                        data-bs-title="{{ optional($venta->factura)->cliente_nombre ?? 'Consumidor final' }}">
-                    {{ optional($venta->factura)->cliente_nombre ?? 'Consumidor final' }}
+                        data-bs-title="<?php echo e(optional($venta->factura)->cliente_nombre ?? 'Consumidor final'); ?>">
+                    <?php echo e(optional($venta->factura)->cliente_nombre ?? 'Consumidor final'); ?>
+
                   </span>
                 </td>
-                <td><span class="amount">${{ number_format($venta->total ?? 0, 0, ',', '.') }}</span></td>
+                <td><span class="amount">$<?php echo e(number_format($venta->total ?? 0, 0, ',', '.')); ?></span></td>
                 <td>
                   <span class="payment-method truncate truncate-short"
                         data-bs-toggle="tooltip"
-                        data-bs-title="{{ optional($venta->factura)->forma_pago ?? '-' }}">
-                    @php
+                        data-bs-title="<?php echo e(optional($venta->factura)->forma_pago ?? '-'); ?>">
+                    <?php
                       $formaPago = optional($venta->factura)->forma_pago ?? '-';
                       $icono = '';
                       if(stripos($formaPago, 'tarjeta') !== false) $icono = '';
                       elseif(stripos($formaPago, 'transferencia') !== false) $icono = '';
-                    @endphp
-                    {{ $icono }} {{ $formaPago }}
+                    ?>
+                    <?php echo e($icono); ?> <?php echo e($formaPago); ?>
+
                   </span>
                 </td>
                 <td>
-@php
+<?php
   $estado = strtolower($venta->estado ?? '---');
   $estadoClass = 'status-completed';
   $estadoTexto = ucfirst($estado);
@@ -740,62 +744,62 @@ tbody tr:hover {
   ];
 
   [$estadoClass, $estadoTexto] = $mapa[$estado] ?? ['status-completed', ucfirst($estado)];
-@endphp
-                  <span class="status-badge {{ $estadoClass }}">{{ $estadoTexto }}</span>
+?>
+                  <span class="status-badge <?php echo e($estadoClass); ?>"><?php echo e($estadoTexto); ?></span>
                 </td>
                 <td>
-                  @php
+                  <?php
                    $puedeAnular = (
     in_array($venta->estado, ['completada', 'credito']) &&
     ($venta->factura && optional($venta->factura)->fecha_emision && \Carbon\Carbon::parse($venta->factura->fecha_emision)->isSameDay(\Carbon\Carbon::now()))
 );
-                  @endphp
+                  ?>
 <div class="btn-action-menu">
-    <button class="btn-dots" onclick="toggleMenu('menu-blade-{{ $venta->id }}')"><i class="lni lni-more-alt"></i></button>
-    <div class="dropdown-menu-custom" id="menu-blade-{{ $venta->id }}">
-        <a href="{{ route('ventas.detalle', $venta) }}" class="dropdown-item-custom">
+    <button class="btn-dots" onclick="toggleMenu('menu-blade-<?php echo e($venta->id); ?>')"><i class="lni lni-more-alt"></i></button>
+    <div class="dropdown-menu-custom" id="menu-blade-<?php echo e($venta->id); ?>">
+        <a href="<?php echo e(route('ventas.detalle', $venta)); ?>" class="dropdown-item-custom">
             <i class="mdi mdi-file-document-outline"></i> Detalles
         </a>
-        @php
+        <?php
     $diasDevolucion = (int) \App\Models\Configuracion::get('dias_devolucion', 3);
     $puedeDevolver = optional($venta->factura)->fecha_emision &&
         \Carbon\Carbon::parse($venta->factura->fecha_emision)->diffInDays(\Carbon\Carbon::now()) <= $diasDevolucion &&
         !in_array($venta->estado, ['anulada', 'devuelta']);
-@endphp
-@if($puedeDevolver)
-    <a href="{{ route('ventas.devolucion', $venta) }}" class="dropdown-item-custom">
+?>
+<?php if($puedeDevolver): ?>
+    <a href="<?php echo e(route('ventas.devolucion', $venta)); ?>" class="dropdown-item-custom">
         <i class="lni lni-reload"></i> Devolución
     </a>
-@else
+<?php else: ?>
     <button class="dropdown-item-custom disabled" disabled
         data-bs-toggle="tooltip"
         data-bs-title="El plazo de devolución ha vencido">
         <i class="lni lni-reload"></i> Devolución
     </button>
-@endif
-        @if($puedeAnular)
+<?php endif; ?>
+        <?php if($puedeAnular): ?>
             <button class="dropdown-item-custom text-danger btn-anular"
-                data-url="{{ route('ventas.devolucion.confirmar-anulacion', $venta) }}"
-                data-invoice="{{ $venta->factura->numero ?? 'FA-'.$venta->id }}">
+                data-url="<?php echo e(route('ventas.devolucion.confirmar-anulacion', $venta)); ?>"
+                data-invoice="<?php echo e($venta->factura->numero ?? 'FA-'.$venta->id); ?>">
                 <i class="lni lni-close"></i> Anular
             </button>
-        @elseif(!in_array($venta->estado, ['anulada', 'dev_parcial', 'devuelta', 'parcial']))
-    @php
+        <?php elseif(!in_array($venta->estado, ['anulada', 'dev_parcial', 'devuelta', 'parcial'])): ?>
+    <?php
         $tooltipAnular = $venta->factura && \Carbon\Carbon::parse($venta->factura->fecha_emision)->isSameDay(\Carbon\Carbon::now())
             ? 'Estado no permite anulación'
             : 'Solo se puede anular el mismo día';
-    @endphp
+    ?>
     <button class="dropdown-item-custom disabled" disabled
        data-bs-toggle="tooltip"
-       data-bs-title="{{ $tooltipAnular }}">
+       data-bs-title="<?php echo e($tooltipAnular); ?>">
         <i class="lni lni-close"></i> Anular
     </button>
-@endif
+<?php endif; ?>
     </div>
 </div>
                 </td>
               </tr>
-              @endforeach
+              <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tbody>
           </table>
         </div>
@@ -811,7 +815,7 @@ tbody tr:hover {
         </div>
       </div>
       <!-- ========== sales table end ========== -->
-    @endif
+    <?php endif; ?>
   </div>
 </section>
 
@@ -834,7 +838,7 @@ tbody tr:hover {
       </div>
       
       <form id="formAnular">
-        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="_token" value="<?php echo e(csrf_token()); ?>">
         <div class="form-group">
           <label>
             Motivo 
@@ -890,7 +894,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentFetchController = null;
   let currentFetchId = 0;
   const registrosPorPagina = parseInt(document.querySelector('.table-responsive').getAttribute('data-registros-pagina')) || 10;
-  const empresaCobraIva = {{ $empresa && $empresa->cobra_iva ? 'true' : 'false' }};
+  const empresaCobraIva = <?php echo e($empresa && $empresa->cobra_iva ? 'true' : 'false'); ?>;
 
   const paginationPrevBtn = document.querySelector('.pagination button:first-child');
   const paginationNextBtn = document.querySelector('.pagination button:last-child');
@@ -1286,4 +1290,5 @@ document.addEventListener('click', function(e) {
 });  
 
 
-</script>@endsection
+</script><?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\optenadvance\app\www\resources\views/ventas/index.blade.php ENDPATH**/ ?>

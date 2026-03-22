@@ -1,9 +1,9 @@
-@extends('layouts.app')
 
-@section('title', 'Devolución — Venta ' . ($venta->factura->numero ?? '#' . $venta->id))
 
-@section('content')
-@php
+<?php $__env->startSection('title', 'Devolución — Venta ' . ($venta->factura->numero ?? '#' . $venta->id)); ?>
+
+<?php $__env->startSection('content'); ?>
+<?php
 $unidadAbrev = [
     'Unidad'=>'und','Par'=>'par','Docena'=>'doc','Caja'=>'caja','Paquete'=>'paq',
     'Sobre'=>'sob','Frasco'=>'fco','Botella'=>'bot','Lata'=>'lata','Tubo'=>'tubo',
@@ -13,7 +13,7 @@ $unidadAbrev = [
     'Kilómetro'=>'km','Pulgada'=>'in','Pie'=>'ft','Metro cuadrado'=>'m²',
     'Centímetro cuadrado'=>'cm²','Hectárea'=>'ha'
 ];
-@endphp
+?>
 <style>
     .form-check-input {
     width: 18px;
@@ -32,26 +32,26 @@ $unidadAbrev = [
         <div class="title-wrapper pt-30">
             <div class="row align-items-center">
                 <div class="col">
-                    <h4 class="mb-0">Devolución: {{ $venta->factura->numero ?? '#' . $venta->id }}</h4>
-                    <p class="text-sm text-gray mb-0">{{ Carbon\Carbon::parse($venta->fecha)->format('d/m/Y H:i') }} · {{ $venta->factura->cliente_nombre ?? 'Consumidor final' }}</p>
+                    <h4 class="mb-0">Devolución: <?php echo e($venta->factura->numero ?? '#' . $venta->id); ?></h4>
+                    <p class="text-sm text-gray mb-0"><?php echo e(Carbon\Carbon::parse($venta->fecha)->format('d/m/Y H:i')); ?> · <?php echo e($venta->factura->cliente_nombre ?? 'Consumidor final'); ?></p>
                 </div>
             </div>
         </div>
 
-        {{-- Alerta éxito --}}
+        
         <div id="alerta-exito" class="alert alert-success d-none mt-3" role="alert">
             <i class="lni lni-checkmark-circle me-2"></i>
             <span id="texto-exito"></span>
         </div>
 
-        {{-- Alerta error --}}
+        
         <div id="alerta-error" class="alert alert-danger d-none mt-3" role="alert">
             <i class="lni lni-warning me-2"></i>
             <span id="texto-error"></span>
         </div>
 
         <div class="row mt-20">
-            {{-- LEFT: Productos --}}
+            
             <div class="col-lg-7">
                 <div class="card-style mb-30">
                     <div class="title mb-20">
@@ -72,98 +72,99 @@ $unidadAbrev = [
                                 </tr>
                             </thead>
                             <tbody id="tabla-productos">
-                                @foreach($venta->detalles as $detalle)
-                                    @php
+                                <?php $__currentLoopData = $venta->detalles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $detalle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
                                         $yaDevuelto = $devuelto[$detalle->id] ?? 0;
                                         $disponible = $detalle->cantidad - $yaDevuelto;
                                         $agotado = $disponible <= 0;
-                                    @endphp
-                                    <tr id="fila-{{ $detalle->id }}" class="{{ $agotado ? 'opacity-50' : '' }}">
+                                    ?>
+                                    <tr id="fila-<?php echo e($detalle->id); ?>" class="<?php echo e($agotado ? 'opacity-50' : ''); ?>">
                                         <td>
-                                            @if(!$agotado)
+                                            <?php if(!$agotado): ?>
                                                 <input type="checkbox" class="form-check-input producto-check"
-                                                    data-id="{{ $detalle->id }}"
-                                                    data-precio="{{ $detalle->precio_unitario }}"
-                                                    data-disponible="{{ $disponible }}"
-                                                    data-nombre="{{ $detalle->producto->nombre }}"
+                                                    data-id="<?php echo e($detalle->id); ?>"
+                                                    data-precio="<?php echo e($detalle->precio_unitario); ?>"
+                                                    data-disponible="<?php echo e($disponible); ?>"
+                                                    data-nombre="<?php echo e($detalle->producto->nombre); ?>"
                                                     onchange="toggleProducto(this)">
-                                            @else
+                                            <?php else: ?>
                                                 <i class="lni lni-checkmark-circle text-success" title="Totalmente devuelto"></i>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
                                         <td>
-                                            <p class="text-sm">{{ $detalle->producto->nombre }}</p>
-                                            @if($agotado)
+                                            <p class="text-sm"><?php echo e($detalle->producto->nombre); ?></p>
+                                            <?php if($agotado): ?>
                                                 <span class="badge bg-success" style="font-size:10px;">Devuelto</span>
-                                            @elseif($yaDevuelto > 0)
+                                            <?php elseif($yaDevuelto > 0): ?>
                                                 <span class="badge bg-warning text-dark" style="font-size:10px;">Parcial</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
-                                        <td class="text-center text-sm">{{ $detalle->cantidad }}</td>
-                                        <td class="text-center text-sm">{{ $yaDevuelto > 0 ? $yaDevuelto : '0' }}</td>
+                                        <td class="text-center text-sm"><?php echo e($detalle->cantidad); ?></td>
+                                        <td class="text-center text-sm"><?php echo e($yaDevuelto > 0 ? $yaDevuelto : '0'); ?></td>
                                         <td class="text-center">
-                                            @if(!$agotado)
+                                            <?php if(!$agotado): ?>
                                             <div class="d-inline-flex align-items-center gap-1">
                                                 <input type="number"
-    id="cantidad-{{ $detalle->id }}"
+    id="cantidad-<?php echo e($detalle->id); ?>"
     class="form-control form-control-sm text-center cantidad-input"
-    style="width:{{ strlen((string)$disponible) * 12 + 20 }}px;min-width:50px;max-width:80px;margin:0 auto;"
-    min="{{ in_array($detalle->producto->unidad ?? 'Unidad', ['Unidad','Par','Docena','Caja','Paquete','Sobre','Frasco','Botella','Lata','Tubo']) ? '1' : '0.01' }}"
-    max="{{ $disponible }}"
-    step="{{ in_array($detalle->producto->unidad ?? 'Unidad', ['Unidad','Par','Docena','Caja','Paquete','Sobre','Frasco','Botella','Lata','Tubo']) ? '1' : '0.01' }}"
-    value="{{ $disponible }}"
-    data-id="{{ $detalle->id }}"
+    style="width:<?php echo e(strlen((string)$disponible) * 12 + 20); ?>px;min-width:50px;max-width:80px;margin:0 auto;"
+    min="<?php echo e(in_array($detalle->producto->unidad ?? 'Unidad', ['Unidad','Par','Docena','Caja','Paquete','Sobre','Frasco','Botella','Lata','Tubo']) ? '1' : '0.01'); ?>"
+    max="<?php echo e($disponible); ?>"
+    step="<?php echo e(in_array($detalle->producto->unidad ?? 'Unidad', ['Unidad','Par','Docena','Caja','Paquete','Sobre','Frasco','Botella','Lata','Tubo']) ? '1' : '0.01'); ?>"
+    value="<?php echo e($disponible); ?>"
+    data-id="<?php echo e($detalle->id); ?>"
     oninput="
-        if({{ in_array($detalle->producto->unidad ?? 'Unidad', ['Unidad','Par','Docena','Caja','Paquete','Sobre','Frasco','Botella','Lata','Tubo']) ? 'true' : 'false' }}) {
+        if(<?php echo e(in_array($detalle->producto->unidad ?? 'Unidad', ['Unidad','Par','Docena','Caja','Paquete','Sobre','Frasco','Botella','Lata','Tubo']) ? 'true' : 'false'); ?>) {
             this.value = Math.floor(this.value);
         }
-        if(parseFloat(this.value) > {{ $disponible }}) this.value = {{ $disponible }};
+        if(parseFloat(this.value) > <?php echo e($disponible); ?>) this.value = <?php echo e($disponible); ?>;
         if(parseFloat(this.value) < 0) this.value = 0;
         this.style.width = Math.max(50, this.value.length * 12 + 20) + 'px';
-        recalcularSubtotal({{ $detalle->id }}, {{ $detalle->precio_unitario }})"
-    onchange="recalcularSubtotal({{ $detalle->id }}, {{ $detalle->precio_unitario }})"
+        recalcularSubtotal(<?php echo e($detalle->id); ?>, <?php echo e($detalle->precio_unitario); ?>)"
+    onchange="recalcularSubtotal(<?php echo e($detalle->id); ?>, <?php echo e($detalle->precio_unitario); ?>)"
     disabled> <span style="color:#94a3b8;font-size:0.75rem;font-weight:600;">
-            {{ $unidadAbrev[$detalle->producto->unidad ?? 'Unidad'] ?? $detalle->producto->unidad ?? 'und' }}
+            <?php echo e($unidadAbrev[$detalle->producto->unidad ?? 'Unidad'] ?? $detalle->producto->unidad ?? 'und'); ?>
+
         </span>
         </div>
-                                            @else
+                                            <?php else: ?>
                                                 <span class="text-sm text-gray">—</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
-                                        <td class="text-center text-sm" id="subtotal-{{ $detalle->id }}">—</td>
+                                        <td class="text-center text-sm" id="subtotal-<?php echo e($detalle->id); ?>">—</td>
                                     </tr>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            {{-- RIGHT: Formulario --}}
+            
             <div class="col-lg-5">
     <div class="card-style mb-30">
         <h6 class="text-medium mb-25">Detalles de la devolución</h6>
 
-        {{-- Motivo --}}
+        
         <div class="mb-20">
             <label class="text-sm fw-semibold mb-8 d-block">Motivo <span class="text-danger">*</span></label>
             <select id="motivo_devolucion_id" class="form-select" style="border-radius:10px;padding:10px 14px;border:1.5px solid #e2e8f0;font-size:13px;">
                 <option value="">Selecciona un motivo...</option>
-                @foreach($motivos as $motivo)
-                    <option value="{{ $motivo->id }}">{{ $motivo->nombre }}</option>
-                @endforeach
+                <?php $__currentLoopData = $motivos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $motivo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <option value="<?php echo e($motivo->id); ?>"><?php echo e($motivo->nombre); ?></option>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </select>
             <div class="text-danger small mt-1 d-none" id="error-motivo">Selecciona un motivo</div>
         </div>
 
-        {{-- Observación --}}
+        
         <div class="mb-20">
             <label class="text-sm fw-semibold mb-8 d-block">Observación <span class="text-gray">(opcional)</span></label>
             <textarea id="observacion" rows="3" maxlength="500" placeholder="Detalle adicional..."
                 style="width:100%;border-radius:10px;padding:10px 14px;border:1.5px solid #e2e8f0;font-size:13px;resize:none;outline:none;font-family:inherit;"></textarea>
         </div>
 
-        {{-- Método reembolso --}}
+        
         <div class="mb-20">
             <label class="text-sm fw-semibold mb-8 d-block">Método de reembolso <span class="text-danger">*</span></label>
             <br><div class="d-flex gap-2">
@@ -208,7 +209,7 @@ $unidadAbrev = [
 
 <script>
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
-const VENTA_ID = {{ $venta->id }};
+const VENTA_ID = <?php echo e($venta->id); ?>;
 let metodoSeleccionado = '';
 let montoCalculado = 0;
 
@@ -400,4 +401,5 @@ function mostrarError(texto) {
 }
 
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\optenadvance\app\www\resources\views/ventas/devolucion.blade.php ENDPATH**/ ?>

@@ -52,7 +52,14 @@ class VentaController extends Controller
 public function buscarProductos(Request $request)
 {
     $query = $request->input('q', '');
-
+if ($request->has('ids')) {
+        $ids = explode(',', $request->input('ids'));
+        $productos = Producto::activos()
+            ->whereIn('id', $ids)
+            ->select('id', 'nombre', 'precio_venta as precio', 'stock', 'iva', 'unidad')
+            ->get();
+        return response()->json($this->normalizarIVA($productos));
+    }
     // Carga inicial — top 10 por stock
     if ($query === '__top__') {
         $productos = Producto::activos()
@@ -267,7 +274,7 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
 } 
             DB::commit();
             
-
+            $venta->recalcularEstado();
             Log::info('Venta registrada exitosamente', [
                 'venta_id' => $venta->id,
                 'cliente' => $data['cliente'] ?? 'Sin especificar',
@@ -389,9 +396,14 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
                     'forma_pago' => optional($venta->factura)->forma_pago ?? '-',
                     'estado' => $venta->estado ?? '---',
                     'puede_anular' => (
-                        ($venta->estado === 'completada') &&
-                        ($venta->factura && optional($venta->factura)->fecha_emision && Carbon::parse($venta->factura->fecha_emision)->isSameDay(Carbon::now()))
-                    ),
+                      in_array($venta->estado, ['completada', 'credito']) &&
+                      ($venta->factura && optional($venta->factura)->fecha_emision && Carbon::parse($venta->factura->fecha_emision)->isSameDay(Carbon::now()))
+                  ),
+                  'puede_devolver' => (
+                    optional($venta->factura)->fecha_emision &&
+                    Carbon::parse($venta->factura->fecha_emision)->diffInDays(Carbon::now()) <= (int) \App\Models\Configuracion::get('dias_devolucion', 3) &&
+                    !in_array($venta->estado, ['anulada', 'devuelta'])
+                 ),
                 ];
             });
 
@@ -415,7 +427,7 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
     // Mostrar detalle de venta (nueva vista)
     public function detalle(Venta $venta)
     {
-        $venta->load('detalles.producto', 'factura');
+        $venta->load('detalles.producto', 'factura', 'cliente');
         $factura = $venta->factura;
         $empresa = Empresa::first();
 

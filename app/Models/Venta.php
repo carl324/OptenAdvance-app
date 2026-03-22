@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\DevolucionDetalle;
 
 class Venta extends Model
 {
@@ -77,4 +78,40 @@ class Venta extends Model
     {
         return $query->where('estado', 'parcial');
     }
+
+public function recalcularSaldo(int $montoDevuelto): void
+{
+    if ($this->saldo_pendiente <= 0) return;
+
+    $reduccion = min($montoDevuelto, $this->saldo_pendiente);
+
+    $this->saldo_pendiente -= $reduccion;
+    $this->save();
+
+    if ($this->cliente_id) {
+        \App\Models\Cliente::where('id', $this->cliente_id)
+            ->decrement('saldo_pendiente', $reduccion);
+    }
+}
+
+public function recalcularEstado(): void
+{
+    if ($this->estado === 'anulada') return;
+
+    $this->loadMissing('detalles');
+
+    $devuelto = DevolucionDetalle::whereHas('devolucion', fn($q) => $q->where('venta_id', $this->id))
+        ->selectRaw('producto_id, SUM(cantidad_devuelta) as total_devuelto')
+        ->groupBy('producto_id')
+        ->pluck('total_devuelto', 'producto_id');
+
+    if ($devuelto->isEmpty()) return;
+
+    $lineasCubiertas = $this->detalles->filter(
+        fn($d) => ($devuelto[$d->producto_id] ?? 0) >= $d->cantidad
+    )->count();
+
+    $this->estado = $lineasCubiertas === $this->detalles->count() ? 'devuelta' : 'dev_parcial';
+    $this->save();
+}
 }

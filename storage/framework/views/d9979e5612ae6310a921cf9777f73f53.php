@@ -1,7 +1,7 @@
-@extends('layouts.app')
-@section('title', 'Detalles de venta')
-@section('content')
-@php
+
+<?php $__env->startSection('title', 'Detalles de venta'); ?>
+<?php $__env->startSection('content'); ?>
+<?php
 $unidadAbrev = [
     'Unidad'=>'und','Par'=>'par','Docena'=>'doc','Caja'=>'caja','Paquete'=>'paq',
     'Sobre'=>'sob','Frasco'=>'fco','Botella'=>'bot','Lata'=>'lata','Tubo'=>'tubo',
@@ -11,8 +11,8 @@ $unidadAbrev = [
     'Kilómetro'=>'km','Pulgada'=>'in','Pie'=>'ft','Metro cuadrado'=>'m²',
     'Centímetro cuadrado'=>'cm²','Hectárea'=>'ha'
 ];
-@endphp
-@php $clienteObj = $venta->cliente()->first(); @endphp
+?>
+<?php $clienteObj = $venta->cliente()->first(); ?>
 
 
 <section class="section">
@@ -27,11 +27,12 @@ $unidadAbrev = [
                                 <div class="d-flex align-items-center gap-4 flex-wrap">
                                         <div class="d-flex align-items-center gap-2" style="background: white; padding: 8px 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
                                         <i class="lni lni-calendar" style="color: #4A6CF7; font-size: 16px;"></i>
-                                        <span class="text-sm fw-500" style="color: #364a63;">{{ \Carbon\Carbon::parse($venta->fecha)->locale('es')->translatedFormat('l d F Y, h:i a') }}
+                                        <span class="text-sm fw-500" style="color: #364a63;"><?php echo e(\Carbon\Carbon::parse($venta->fecha)->locale('es')->translatedFormat('l d F Y, h:i a')); ?>
+
 </span>
                                     </div>
                                     <div class="d-flex align-items-center gap-2" style="background: white; padding: 8px 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-                                        @php
+                                        <?php
                                             $formaPagoRaw = strtolower(trim((string) ($factura->forma_pago ?? $venta->forma_pago ?? '')));
                                             $iconClass = 'lni lni-wallet';
                                             if (strpos($formaPagoRaw, 'efectivo') !== false || $formaPagoRaw === 'efectivo') {
@@ -41,12 +42,12 @@ $unidadAbrev = [
                                             } elseif (strpos($formaPagoRaw, 'tarjeta') !== false || $formaPagoRaw === 'tarjeta') {
                                                 $iconClass = 'lni lni-credit-cards';
                                             }
-                                        @endphp
-                                        <i class="{{ $iconClass }}" style="color: #0f9e5a; font-size: 16px;"></i>
-                                        <span class="text-sm fw-500" style="color: #364a63;">{{ $factura->forma_pago ?? $venta->forma_pago ?? '-' }}</span>
+                                        ?>
+                                        <i class="<?php echo e($iconClass); ?>" style="color: #0f9e5a; font-size: 16px;"></i>
+                                        <span class="text-sm fw-500" style="color: #364a63;"><?php echo e($factura->forma_pago ?? $venta->forma_pago ?? '-'); ?></span>
                                     </div>
                                     <div class="d-flex align-items-center gap-2" >
-                                       @php
+                                       <?php
 $estadoClase = match($venta->estado) {
     'completada'  => 'success-btn',
     'anulada'     => 'close-btn',
@@ -54,20 +55,20 @@ $estadoClase = match($venta->estado) {
     'devuelta', 'dev_parcial' => 'warning-btn-light',
     default => 'deactive-btn'
 };
-@endphp
-<span class="status-btn {{ $estadoClase }}">{{ ucwords($venta->estado ?? '-') }}</span>
+?>
+<span class="status-btn <?php echo e($estadoClase); ?>"><?php echo e(ucwords($venta->estado ?? '-')); ?></span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
     <div class="d-flex gap-2 justify-content-md-end flex-wrap">
-        @if($clienteObj && in_array($venta->estado, ['credito', 'parcial']))
-        <a href="{{ route('clientes.show', $clienteObj->id) }}" class="main-btn active-btn-outline square-btn btn-hover btn-sm">
+        <?php if($clienteObj && in_array($venta->estado, ['credito', 'parcial'])): ?>
+        <a href="<?php echo e(route('clientes.show', $clienteObj->id)); ?>" class="main-btn active-btn-outline square-btn btn-hover btn-sm">
             <i class="lni lni-plus"></i>Abonar
         </a>
-        @endif
-        <a href="{{ route('ventas.factura', $venta) }}" class="main-btn primary-btn btn-hover btn-sm">
+        <?php endif; ?>
+        <a href="<?php echo e(route('ventas.factura', $venta)); ?>" class="main-btn primary-btn btn-hover btn-sm">
             <i class="lni lni-printer"></i> Factura
         </a>
     </div>
@@ -80,14 +81,14 @@ $estadoClase = match($venta->estado) {
                     <div class="col-lg-8">
                         <div class="card-style mb-30">
                             <div class="d-flex justify-content-between align-items-center mb-20">
-                                <h6 class="mb-0">{{ $venta->detalles->count() }}ㅤProductos Vendidos</h6>
+                                <h6 class="mb-0"><?php echo e($venta->detalles->count()); ?>ㅤProductos Vendidos</h6>
                             </div>
-                            @php
+                            <?php
                                 $showIva = (
                                     ($empresa && $empresa->cobra_iva) ||
                                     $venta->detalles->contains(function ($d) { return (($d->iva ?? 0) > 0); })
                                 );
-                            @endphp
+                            ?>
                             <div class="table-wrapper table-responsive">
                                 <table class="table">
                                     <thead>
@@ -95,43 +96,44 @@ $estadoClase = match($venta->estado) {
                                             <th><span class="text-sm">Producto</span></th>
                                             <th class="text-center"><span class="text-sm">Cantidad</span></th>
                                             <th><span class="text-sm">Precio</span></th>
-                                            @if($showIva)
+                                            <?php if($showIva): ?>
                                             <th><span class="text-sm">IVA</span></th>
-                                            @endif
+                                            <?php endif; ?>
                                             <th><span class="text-sm">Subtotal</span></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($venta->detalles as $d)
+                                        <?php $__currentLoopData = $venta->detalles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $d): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <tr>
                                             <td>
                                                 <div>
                                                     <p class="text-sm fw-500 mb-0" style="max-width: 300px; word-break: break-word; white-space: normal;">
-    {{ optional($d->producto)->nombre ?? 'Producto #' . $d->producto_id }}
+    <?php echo e(optional($d->producto)->nombre ?? 'Producto #' . $d->producto_id); ?>
+
 </p>
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                @php
+                                                <?php
     $unidad = optional($d->producto)->unidad ?? 'Unidad';
     $abrev = $unidadAbrev[$unidad] ?? $unidad;
     $cant = (int) $d->cantidad == $d->cantidad ? (int) $d->cantidad : $d->cantidad;
-@endphp
-<span class="status-btn primary-btn-light">{{ $cant }} {{ $abrev }}</span>
+?>
+<span class="status-btn primary-btn-light"><?php echo e($cant); ?> <?php echo e($abrev); ?></span>
                                             </td>
                                             <td class="text-sm">
-                                                <span class="text-sm">${{ number_format($d->precio_unitario,0,',','.') }}</span>
+                                                <span class="text-sm">$<?php echo e(number_format($d->precio_unitario,0,',','.')); ?></span>
                                             </td>
-                                            @if($showIva)
+                                            <?php if($showIva): ?>
                                             <td class="text-sm">
-                                                <span class="text-sm text-gray">${{ number_format($d->iva ?? 0,0,',','.') }}</span>
+                                                <span class="text-sm text-gray">$<?php echo e(number_format($d->iva ?? 0,0,',','.')); ?></span>
                                             </td>
-                                            @endif
+                                            <?php endif; ?>
                                             <td class="text-sm">
-                                                <span class="text-sm fw-500">${{ number_format($d->subtotal,0,',','.') }}</span>
+                                                <span class="text-sm fw-500">$<?php echo e(number_format($d->subtotal,0,',','.')); ?></span>
                                             </td>
                                         </tr>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -146,15 +148,15 @@ $estadoClase = match($venta->estado) {
         <i class="lni lni-user" style="font-size: 24px; color: #4A6CF7;"></i>
     </div>
     <div>
-        @if($clienteObj)
-            <a href="{{ route('clientes.show', $clienteObj->id) }}" style="text-decoration:none;color:inherit;">
-                <h6 class="mb-1">{{ $clienteObj->nombre }}</h6>
+        <?php if($clienteObj): ?>
+            <a href="<?php echo e(route('clientes.show', $clienteObj->id)); ?>" style="text-decoration:none;color:inherit;">
+                <h6 class="mb-1"><?php echo e($clienteObj->nombre); ?></h6>
             </a>
-            <p class="text-sm text-gray mb-0">{{ $clienteObj->telefono ?? '-' }}</p>
-        @else
-            <h6 class="mb-1">{{ $factura->cliente_nombre ?? 'Consumidor final' }}</h6>
+            <p class="text-sm text-gray mb-0"><?php echo e($clienteObj->telefono ?? '-'); ?></p>
+        <?php else: ?>
+            <h6 class="mb-1"><?php echo e($factura->cliente_nombre ?? 'Consumidor final'); ?></h6>
             <p class="text-sm text-gray mb-0">-</p>
-        @endif
+        <?php endif; ?>
     </div>
 </div>
                             <div class="d-flex align-items-center mb-20">
@@ -162,7 +164,7 @@ $estadoClase = match($venta->estado) {
                                     <i class="lni lni-briefcase" style="font-size: 24px; color: #4A6CF7;"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-1">{{ $vendedorNombre ?? '-' }}</h6>
+                                    <h6 class="mb-1"><?php echo e($vendedorNombre ?? '-'); ?></h6>
                                     <p class="text-sm text-gray mb-0">Vendedor</p>
                                 </div>
                             </div>
@@ -174,36 +176,36 @@ $estadoClase = match($venta->estado) {
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="text-sm text-gray">Subtotal</span>
-                                    <span class="text-sm">${{ number_format($subtotal,0,',','.') }}</span>
+                                    <span class="text-sm">$<?php echo e(number_format($subtotal,0,',','.')); ?></span>
                                 </div>
-                                @if($showIva)
+                                <?php if($showIva): ?>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="text-sm text-gray">IVA</span>
-                                    <span class="text-sm">${{ number_format($totalIva ?? 0,0,',','.') }}</span>
+                                    <span class="text-sm">$<?php echo e(number_format($totalIva ?? 0,0,',','.')); ?></span>
                                 </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
                             <div class="pt-3 border-top mb-3">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="fw-500">Total</span>
-                                    <h5 class="mb-0 fw-bold">${{ number_format($total ?? $factura->total ?? $venta->total,0,',','.') }}</h5>
+                                    <h5 class="mb-0 fw-bold">$<?php echo e(number_format($total ?? $factura->total ?? $venta->total,0,',','.')); ?></h5>
                                 </div>
                             </div>
                             <div class="pt-3 border-top">
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="text-sm text-gray">Pagado</span>
-                                    <span class="text-sm fw-500">{{ is_null($totalPagado) ? '-' : ('$' . number_format($totalPagado,0,',','.')) }}</span>
+                                    <span class="text-sm fw-500"><?php echo e(is_null($totalPagado) ? '-' : ('$' . number_format($totalPagado,0,',','.'))); ?></span>
                                 </div>
                                 <div class="d-flex justify-content-between">
-                                    @php
+                                    <?php
                                         $isDeuda = (!is_null($cambio) && $cambio < 0);
-                                    @endphp
-                                    <span class="text-sm fw-500">{{ $isDeuda ? 'Por cobrar' : 'Cambio' }}</span>
-                                    @if(!is_null($cambio))
-                                    <span class="text-sm fw-bold" style="color: {{ $cambio >= 0 ? '#0f9e5a' : '#d9534f' }};">${{ number_format($isDeuda ? abs($cambio) : $cambio,0,',','.') }}</span>
-                                    @else
+                                    ?>
+                                    <span class="text-sm fw-500"><?php echo e($isDeuda ? 'Por cobrar' : 'Cambio'); ?></span>
+                                    <?php if(!is_null($cambio)): ?>
+                                    <span class="text-sm fw-bold" style="color: <?php echo e($cambio >= 0 ? '#0f9e5a' : '#d9534f'); ?>;">$<?php echo e(number_format($isDeuda ? abs($cambio) : $cambio,0,',','.')); ?></span>
+                                    <?php else: ?>
                                     <span class="text-sm fw-bold" style="color: #6c757d;">-</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -212,25 +214,25 @@ $estadoClase = match($venta->estado) {
                 </div>
 
             </div>
-                      {{-- Motivo anulación --}}
-@if(strtolower($venta->estado ?? '') === 'anulada')
-    @php
+                      
+<?php if(strtolower($venta->estado ?? '') === 'anulada'): ?>
+    <?php
         $motivo = $venta->motivo_anulacion ?? null;
         if (empty($motivo)) {
             $motivos = $venta->detalles->pluck('motivo_anulacion')->filter()->unique()->values();
             $motivo = $motivos->isNotEmpty() ? $motivos->implode('\n') : null;
         }
-    @endphp
+    ?>
     <div class="note-wrapper warning-alert py-4 px-sm-3 px-lg-5">
         <div class="alert">
             <h5 class="text-bold mb-15">Motivo de anulación</h5>
-            <p class="text-sm text-gray">{{ $motivo ?? 'No especificado' }}</p>
+            <p class="text-sm text-gray"><?php echo e($motivo ?? 'No especificado'); ?></p>
         </div>
     </div>
-@endif
+<?php endif; ?>
 
-{{-- Historial de devoluciones --}}
-@if(isset($devoluciones) && $devoluciones->count() > 0)
+
+<?php if(isset($devoluciones) && $devoluciones->count() > 0): ?>
 <div class="container-fluid mt-10 mb-30">
     <div class="card-style">
         <div class="d-flex align-items-center gap-2 mb-20">
@@ -238,20 +240,22 @@ $estadoClase = match($venta->estado) {
             <h6 class="mb-0">Devoluciones registradas</h6>
         </div>
 
-        @foreach($devoluciones as $dev)
+        <?php $__currentLoopData = $devoluciones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dev): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
         <div style="border:1px solid #f1f5f9;border-radius:12px;padding:16px;margin-bottom:16px;">
-            {{-- Header devolución --}}
+            
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-3">
                     <span style="background:#fff7ed;color:#c2410c;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;">
-                        Devolución #{{ $dev->id }}
+                        Devolución #<?php echo e($dev->id); ?>
+
                     </span>
                     <span class="text-sm text-gray">
-                        {{ \Carbon\Carbon::parse($dev->fecha)->locale('es')->translatedFormat('d F Y, h:i a') }}
+                        <?php echo e(\Carbon\Carbon::parse($dev->fecha)->locale('es')->translatedFormat('d F Y, h:i a')); ?>
+
                     </span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    @php
+                    <?php
                         $metodoIcono = match($dev->metodo_reembolso) {
                             'efectivo' => 'lni lni-money-location',
                             'transferencia' => 'lni lni-apartment',
@@ -264,13 +268,13 @@ $estadoClase = match($venta->estado) {
                             'nota_credito' => 'Nota crédito',
                             default => $dev->metodo_reembolso
                         };
-                    @endphp
-                    <i class="{{ $metodoIcono }}" style="color:#4A6CF7;"></i>
-                    <span class="text-sm">{{ $metodoTexto }}</span>
+                    ?>
+                    <i class="<?php echo e($metodoIcono); ?>" style="color:#4A6CF7;"></i>
+                    <span class="text-sm"><?php echo e($metodoTexto); ?></span>
                 </div>
             </div>
 
-            {{-- Productos devueltos --}}
+            
             <div class="table-responsive mb-3">
                 <table class="table" style="margin-bottom:0;">
                     <thead>
@@ -281,50 +285,55 @@ $estadoClase = match($venta->estado) {
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($dev->detalles as $dd)
+                        <?php $__currentLoopData = $dev->detalles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dd): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr>
-                            <td><span class="text-sm">{{ optional($dd->producto)->nombre ?? 'Producto #'.$dd->producto_id }}</span></td>
-                            <td class="text-center">@php
+                            <td><span class="text-sm"><?php echo e(optional($dd->producto)->nombre ?? 'Producto #'.$dd->producto_id); ?></span></td>
+                            <td class="text-center"><?php
     $unidad = optional($dd->producto)->unidad ?? 'Unidad';
     $abrev = $unidadAbrev[$unidad] ?? $unidad;
     $cant = (int) $dd->cantidad_devuelta == $dd->cantidad_devuelta 
         ? (int) $dd->cantidad_devuelta 
         : $dd->cantidad_devuelta;
-@endphp
-<span class="status-btn primary-btn-light">{{ $cant }} {{ $abrev }}</span></td>
-                            <td class="text-end"><span class="text-sm fw-500">${{ number_format($dd->subtotal,0,',','.') }}</span></td>
+?>
+<span class="status-btn primary-btn-light"><?php echo e($cant); ?> <?php echo e($abrev); ?></span></td>
+                            <td class="text-end"><span class="text-sm fw-500">$<?php echo e(number_format($dd->subtotal,0,',','.')); ?></span></td>
                         </tr>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tbody>
                 </table>
             </div>
 
-            {{-- Footer devolución --}}
+            
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 pt-3 border-top">
                 <div>
                     <p class="text-sm text-gray mb-1">
-                        <strong>Motivo:</strong> {{ optional($dev->motivo)->nombre ?? '-' }}
+                        <strong>Motivo:</strong> <?php echo e(optional($dev->motivo)->nombre ?? '-'); ?>
+
                     </p>
-                    @if($dev->observacion)
+                    <?php if($dev->observacion): ?>
                     <p class="text-sm text-gray mb-1">
-                        <strong>Observación:</strong> {{ $dev->observacion }}
+                        <strong>Observación:</strong> <?php echo e($dev->observacion); ?>
+
                     </p>
-                    @endif
+                    <?php endif; ?>
                     <p class="text-sm text-gray mb-0">
-                        <strong>Registrado por:</strong> {{ optional($dev->user)->name ?? '-' }}
+                        <strong>Registrado por:</strong> <?php echo e(optional($dev->user)->name ?? '-'); ?>
+
                     </p>
                 </div>
                 <div class="text-end">
                     <p class="text-xs text-gray mb-1">Monto calculado</p>
-                    <p class="text-sm mb-1">${{ number_format($dev->monto_calculado,0,',','.') }}</p>
+                    <p class="text-sm mb-1">$<?php echo e(number_format($dev->monto_calculado,0,',','.')); ?></p>
                     <p class="text-xs text-gray mb-1">Monto real entregado</p>
-                    <h6 class="mb-0 fw-bold" style="color:#d9534f;">${{ number_format($dev->monto_real,0,',','.') }}</h6>
+                    <h6 class="mb-0 fw-bold" style="color:#d9534f;">$<?php echo e(number_format($dev->monto_real,0,',','.')); ?></h6>
                 </div>
             </div>
         </div>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 </div>
-@endif
+<?php endif; ?>
 </section>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\optenadvance\app\www\resources\views/ventas/detalle.blade.php ENDPATH**/ ?>

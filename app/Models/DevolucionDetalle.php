@@ -11,7 +11,11 @@ class DevolucionDetalle extends Model
         'devolucion_id', 'venta_detalle_id', 'producto_id',
         'cantidad_devuelta', 'precio_unitario', 'subtotal'
     ];
-
+protected $casts = [
+    'cantidad_devuelta' => 'float',
+    'precio_unitario'   => 'float',
+    'subtotal'          => 'float',
+];
     public function devolucion()
     {
         return $this->belongsTo(Devolucion::class);

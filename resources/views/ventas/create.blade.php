@@ -762,10 +762,12 @@ inputMonto.form?.addEventListener('submit', () => {
 </div>
 
 <script>
-    
-    let clienteSeleccionadoId = null;
+  
+let clienteSeleccionadoId = null;
+let clienteCupoCredito = null;
+let clienteSaldoPendiente = 0;
 let buscarClienteTimer = null;
-
+let rrDuplicadoConfirmado = false;
 function buscarClientePOS(q) {
     clearTimeout(buscarClienteTimer);
     const lista = document.getElementById('lista-clientes-sugeridos');
@@ -797,15 +799,20 @@ function buscarClientePOS(q) {
 }
 
 function seleccionarCliente(c) {
-    clienteSeleccionadoId = c.id;
+    clienteSeleccionadoId = c.id;          
+    clienteCupoCredito = c.cupo_credito ?? null;
+    clienteSaldoPendiente = c.saldo_pendiente ?? 0;
     document.getElementById('cliente_id').value = c.id;
     document.getElementById('cliente').value = c.nombre;
     document.getElementById('cliente_nit').value = c.nit || '';
     document.getElementById('buscar-cliente-input').value = c.nombre;
     document.getElementById('cliente-seleccionado-nombre').textContent = '✓ ' + c.nombre;
     document.getElementById('cliente-seleccionado').style.display = 'flex';
-    document.getElementById('error-cliente-credito').textContent = '';
     document.getElementById('lista-clientes-sugeridos').style.display = 'none';
+    const aviso = document.getElementById('bloque-credito-aviso');
+    if (aviso) aviso.style.display = 'none';
+    validarCupoCredito();
+    localStorage.setItem('pos_cliente', JSON.stringify(c));
 }
 
 function limpiarClienteSeleccionado() {
@@ -815,8 +822,36 @@ function limpiarClienteSeleccionado() {
     document.getElementById('cliente_nit').value = '';
     document.getElementById('buscar-cliente-input').value = '';
     document.getElementById('cliente-seleccionado').style.display = 'none';
+    clienteCupoCredito = null;
+    clienteSaldoPendiente = 0;
 }
+function validarCupoCredito() {
+    const err = document.getElementById('error-cliente-credito');
+    if (!err) return;
 
+    // Siempre limpiar primero; sólo se re-establecerá si hay un problema de cupo
+    err.textContent = '';
+
+    const formaPago = document.getElementById('forma_pago').value;
+    if (formaPago !== 'credito' || !clienteSeleccionadoId) {
+        return;
+    }
+
+    if (clienteCupoCredito === null) { // sin límite
+        err.textContent = '';
+        return;
+    }
+
+    const total = window.totalVentaNumeric || 0;
+    const cupoDisponible = clienteCupoCredito - clienteSaldoPendiente;
+
+    if (total > cupoDisponible) {
+        err.innerHTML = `Esta venta con el valor de $${total.toLocaleString('es-CO')} supera el cupo disponible de $${cupoDisponible.toLocaleString('es-CO')} para este cliente.  
+            <a href="/clientes/${clienteSeleccionadoId}" > Aumentar cupo</a>`;
+    } else {
+        err.textContent = '';
+    }
+}
 function toggleRegistroRapido() {
     const panel = document.getElementById('panel-registro-rapido');
     const btn = document.getElementById('btn-registro-rapido');
@@ -826,6 +861,7 @@ function toggleRegistroRapido() {
         panel.style.display = 'none';
         btn.style.borderColor = '#e0e0e0';
         btn.querySelector('i').style.transform = 'rotate(0deg)';
+        document.getElementById('rr-btn-text').textContent = 'Guardar';
     } else {
         panel.style.display = 'block';
         btn.style.borderColor = '#3b82f6';
@@ -833,6 +869,27 @@ function toggleRegistroRapido() {
         document.getElementById('rr-nombre').value = document.getElementById('buscar-cliente-input').value.trim();
         document.getElementById('rr-telefono').value = '';
         document.getElementById('error-rr').textContent = '';
+
+        document.getElementById('rr-telefono').onblur = async function() {
+            const tel = this.value.trim();
+            if (!tel) return;
+            const res = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(tel)}`, { headers: { 'Accept': 'application/json' } });
+            const clientes = await res.json();
+            const duplicado = clientes.find(c => c.telefono === tel);
+            const err = document.getElementById('error-rr');
+            if (duplicado) {
+                rrDuplicadoConfirmado = false;
+                document.getElementById('rr-btn-text').textContent = 'Continuar de todas formas';
+                err.innerHTML = `⚠️ Este número ya está registrado como <strong>${duplicado.nombre}</strong>. 
+                    <a href="#" onclick="seleccionarCliente(${JSON.stringify(duplicado).replace(/"/g, '&quot;')});toggleRegistroRapido();return false;">Usar este cliente</a>`;
+                err.style.color = '#b45309';
+            } else {
+                rrDuplicadoConfirmado = false;
+                document.getElementById('rr-btn-text').textContent = 'Guardar';
+                err.textContent = '';
+            }
+        };
+
         setTimeout(() => document.getElementById('rr-nombre').focus(), 50);
     }
 }
@@ -840,13 +897,29 @@ function toggleRegistroRapido() {
 async function guardarRegistroRapido() {
     const nombre = document.getElementById('rr-nombre').value.trim();
     const telefono = document.getElementById('rr-telefono').value.trim();
-    document.getElementById('error-rr').textContent = '';
+    const errEl = document.getElementById('error-rr');
 
     if (!nombre) {
-        document.getElementById('error-rr').textContent = 'El nombre es obligatorio.';
+        errEl.textContent = 'El nombre es obligatorio.';
         return;
     }
 
+    // Verificar duplicado en tiempo real antes de guardar
+    if (telefono && !rrDuplicadoConfirmado) {
+        const res = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(telefono)}`, { headers: { 'Accept': 'application/json' } });
+        const clientes = await res.json();
+        const duplicado = clientes.find(c => c.telefono === telefono);
+        if (duplicado) {
+            rrDuplicadoConfirmado = true;
+            document.getElementById('rr-btn-text').textContent = 'Guardar';
+            errEl.innerHTML = `⚠️ Este número ya está registrado como <strong>${duplicado.nombre}</strong>. 
+                <a href="#" onclick="seleccionarCliente(${JSON.stringify(duplicado).replace(/"/g, '&quot;')});toggleRegistroRapido();return false;">Usar este cliente</a>`;
+            errEl.style.color = '#b45309';
+            return;
+        }
+    }
+
+    errEl.textContent = '';
     const btn = document.getElementById('rr-btn-text');
     btn.textContent = 'Guardando...';
 
@@ -858,13 +931,14 @@ async function guardarRegistroRapido() {
         });
         const data = await res.json();
         if (data.success) {
-            toggleRegistroRapido(); 
+            rrDuplicadoConfirmado = false;
+            toggleRegistroRapido();
             seleccionarCliente(data.cliente);
         } else {
-            document.getElementById('error-rr').textContent = data.errors?.nombre?.[0] || 'Error al guardar.';
+            errEl.textContent = data.errors?.nombre?.[0] || 'Error al guardar.';
         }
     } catch(e) {
-        document.getElementById('error-rr').textContent = 'Error de conexión.';
+        errEl.textContent = 'Error de conexión.';
     } finally {
         btn.textContent = 'Guardar';
     }
@@ -1051,6 +1125,42 @@ async function cargarProductos() {
     } catch (error) {
         tablaProductos.innerHTML = `<tr><td colspan="${COBRA_IVA ? 4 : 3}" style="text-align: center; color: #d9534f; padding: 20px;">Error al cargar productos</td></tr>`;
     }
+const carritoGuardado = localStorage.getItem('pos_carrito');
+if (carritoGuardado) {
+    const parsed = JSON.parse(carritoGuardado);
+    const horas = (Date.now() - parsed.ts) / (1000 * 60 * 60);
+    if (horas < 1) {
+        const ids = parsed.data.map(i => i.id).join(',');
+        fetch(`/api/productos/buscar?ids=${ids}`)
+            .then(r => r.json())
+            .then(frescos => {
+                carrito = parsed.data.map(item => {
+                    const fresco = frescos.find(p => p.id === item.id);
+                    if (!fresco) return null; // producto eliminado
+                    const precioBase = parseFloat(fresco.precio);
+                    const ivaValor = fresco.iva > 0 ? precioBase * fresco.iva / 100 : 0;
+                    return {
+                        ...item,
+                        nombre: fresco.nombre,
+                        precio: precioBase,
+                        stock: fresco.stock,
+                        iva: fresco.iva || 0,
+                        subtotalConIva: precioBase + ivaValor,
+                    };
+                }).filter(Boolean); // elimina productos borrados
+                actualizarCarrito();
+            });
+    } else {
+        localStorage.removeItem('pos_carrito');
+        localStorage.removeItem('pos_cliente');
+    }
+}
+
+// Restaurar cliente
+const clienteGuardado = localStorage.getItem('pos_cliente');
+if (clienteGuardado) {
+    seleccionarCliente(JSON.parse(clienteGuardado));
+}
 }
 
 // Actualizar tabla de productos
@@ -1063,22 +1173,20 @@ function actualizarTablaProductos(filtrados = null) {
     }
 
     const html = productos.map(p => {
-        let statusClass = 'success-btn';
-        if (p.stock < 5) statusClass = 'danger-btn-light';
-        else if (p.stock < 10) statusClass = 'primary-btn-light';
+        let statusClass = '';
 
         return `
             <tr>
                 <td>
                     <div class="product">
-                        <p class="text-sm truncate truncate-medium" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="${p.nombre}" style="cursor: pointer;" onclick="agregarAlCarrito({id: ${p.id}, nombre: '${escapeHtml(p.nombre)}', precio: ${p.precio}, stock: ${p.stock}, iva: ${COBRA_IVA ? (p.iva || 0) : 0}, unidad: '${escapeHtml(p.unidad || 'Unidad')}'})">
+                        <p class="text-sm truncate truncate-medium" style="cursor:pointer; max-width: 300px;" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="${p.nombre}" style="cursor: pointer;" onclick="agregarAlCarrito({id: ${p.id}, nombre: '${escapeHtml(p.nombre)}', precio: ${p.precio}, stock: ${p.stock}, iva: ${COBRA_IVA ? (p.iva || 0) : 0}, unidad: '${escapeHtml(p.unidad || 'Unidad')}'})">
                             ${p.nombre}
                         </p>
                     </div>
                 </td>
                 <td><p class="text-sm">${formatoPrecio(p.precio)}</p></td>
                 ${COBRA_IVA ? `<td><p class="text-sm">${p.iva || 0}%</p></td>` : ''}
-                <td><span class="status-btn ${statusClass}">${p.stock}</span> <span style="color:#94a3b8;font-size:0.75rem;">${p.unidad || 'Unidad'}</span></td>
+                <td><span class="" style="color: #2563EB;">${p.stock}</span> <span style="color:#94a3b8;font-size:0.75rem;">${UNIDAD_ABREV[p.unidad] || p.unidad || 'und'}</span></td>
             </tr>
         `;
     }).join('');
@@ -1208,6 +1316,10 @@ function actualizarCarrito() {
     if (window.initTooltips) window.initTooltips(carritoDiv);
     btnFinalizar.disabled = false;
     actualizarTotal();
+    localStorage.setItem('pos_carrito', JSON.stringify({
+    data: carrito,
+    ts: Date.now()
+    }));
 }
 
 // Cambiar cantidad
@@ -1271,6 +1383,7 @@ function actualizarTotal() {
     // Guardar valor numérico para cálculos posteriores
     window.totalVentaNumeric = total;
     calcularPorCobrar();
+    validarCupoCredito();
 }
 
 // Calcula y muestra el por cobrar / cambio en el modal
@@ -1321,16 +1434,19 @@ function seleccionarPago(metodo) {
     });
 
     const aviso = document.getElementById('bloque-credito-aviso');
+    const clienteId = document.getElementById('cliente_id').value;
+
     if (metodo === 'credito') {
-        if (aviso) aviso.style.display = 'block';
+        // Solo mostrar aviso si no hay cliente seleccionado
+        if (aviso) aviso.style.display = clienteId ? 'none' : 'block';
         document.getElementById('total_pagado').value = '0';
         document.getElementById('total_pagado').disabled = true;
     } else {
         if (aviso) aviso.style.display = 'none';
         document.getElementById('total_pagado').disabled = false;
-        document.getElementById('total_pagado').value = '';
-        limpiarClienteSeleccionado();
+        // No limpiar cliente ni total al cambiar de método
     }
+    validarCupoCredito();
 }
 
 // Confirmar venta
@@ -1368,11 +1484,21 @@ async function finalizarVenta() {
     const cliente_nit = document.getElementById('cliente_nit').value.trim() || null;
     const forma_pago = document.getElementById('forma_pago').value;
     const totalPagadoInput = document.getElementById('total_pagado');
+
     if (forma_pago === 'credito' && !clienteSeleccionadoId) {
-    const err = document.getElementById('error-cliente-credito');
-    if (err) err.textContent = 'Debes seleccionar un cliente para ventas a crédito.';
-    return;
-}
+        const err = document.getElementById('error-cliente-credito');
+        if (err) err.textContent = 'Debes seleccionar un cliente para ventas a crédito.';
+        return;
+    }
+
+    if (forma_pago === 'credito' && clienteCupoCredito !== null) {
+        const cupoDisponible = clienteCupoCredito - clienteSaldoPendiente;
+        if ((window.totalVentaNumeric || 0) > cupoDisponible) {
+            return;
+        }
+    }
+
+
     // Validación visual: si está vacío al presionar Finalizar, mostrar sólo el mensaje inline del campo
     if (!totalPagadoInput || totalPagadoInput.value.trim() === '') {
         if (totalPagadoInput) {
@@ -1466,7 +1592,8 @@ async function finalizarVenta() {
         
         // Guardar ID de venta para ver factura
         window.ultimaVentaId = result.venta_id;
-        
+        localStorage.removeItem('pos_carrito');
+        localStorage.removeItem('pos_cliente');
         modalEstado('exito');
         
     } catch (error) {
@@ -1529,7 +1656,9 @@ function nuevaVenta() {
     if (modalInstance) {
         modalInstance.hide();
     }
-    
+
+    localStorage.removeItem('pos_carrito');
+    localStorage.removeItem('pos_cliente');
     // 4. Recargar la página después de que el modal se cierre
     setTimeout(() => {
         location.reload();
@@ -1543,8 +1672,10 @@ function limpiarVenta() {
     document.getElementById('forma_pago').value = 'efectivo';
     inputBuscar.value = '';
     actualizarCarrito();
-    actualizarTablaProductos();
+    cargarProductos();
     seleccionarPago('efectivo');
+    localStorage.removeItem('pos_carrito');
+localStorage.removeItem('pos_cliente');
 }
 
 // Mostrar mensaje
@@ -1589,7 +1720,7 @@ function mostrarAlertaCarrito(texto) {
 
 // Limpiar carrito cuando se cierra el modal
 document.getElementById('modalPago').addEventListener('hidden.bs.modal', function() {
-    // ⚠️ IMPORTANTE: NO limpiamos el carrito aquí
+    // IMPORTANTE: NO limpiamos el carrito aquí
     // Si el estado de éxito está visible, recargar la página y no ejecutar
     // ninguna otra lógica (permite limpiar todo y evitar estados inconsistentes).
     var estadoExito = document.getElementById('estado-exito');

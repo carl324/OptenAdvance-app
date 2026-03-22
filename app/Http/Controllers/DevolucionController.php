@@ -137,6 +137,9 @@ class DevolucionController extends Controller
             );
 
             DB::commit();
+            $venta->recalcularSaldo((int) $montoCalculado);
+            $venta->recalcularEstado();
+
 
             return response()->json([
                 'success'         => true,
