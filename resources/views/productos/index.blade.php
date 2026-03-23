@@ -836,6 +836,10 @@
 .dropdown-menu-custom button.danger:hover {
     background: #fef2f2;
 }
+.dropdown-menu-custom {
+    min-width: 140px;
+    max-width: 140px;
+}
 </style>
 
 <section class="main-content">
@@ -1048,7 +1052,7 @@
                 <input type="text" id="stockValue" value="0" style="width: 50px; text-align: center; border: none; font-size: 1.25rem; font-weight: 700; color: #1e293b; outline: none;">
                 <button type="button" onclick="increaseStock(event)" style="width: 32px; height: 32px; border-radius: 8px; border: none; background: #2478ff; color: #ffffff; cursor: pointer;"><i class="lni lni-plus"></i></button>
               </div>
-              <p style="text-align: center; margin: 12px 0 0; font-size: 0.8rem; color: #94a3b8;">Unidades en bodega</p>
+              <p style="text-align: center; margin: 12px 0 0; font-size: 0.8rem; color: #94a3b8;">Cantidad en Inventario</p>
             </div>
           </div>
         </div>
@@ -1080,8 +1084,12 @@
   </div>
 </div>
 <!-- Modal Editar Producto -->
-<!-- Modal Editar Producto -->
 <div id="editarProductoModal" class="modal-overlay">
+  <div style="background: #ffffff; width: 100%; max-width: 920px; border-radius: 24px; padding: 0; box-shadow: 0 8px 32px rgba(0,0,0,0.10); border: 1px solid #f1f5f9; overflow: hidden; position: relative;">
+    
+    <button type="button" onclick="cerrarModalEditar()" style="position: absolute; top: 16px; right: 16px; background: #f8fafc; border: 1px solid #e2e8f0; cursor: pointer; width: 36px; height: 36px; border-radius: 10px; color: #94a3b8; display: flex; align-items: center; justify-content: center; z-index: 10;">
+        <i class="lni lni-close" style="font-size: 12px;"></i>
+    </button>
   
   <div style="background: #ffffff; width: 100%; max-width: 920px; border-radius: 24px; padding: 0; box-shadow: 0 8px 32px rgba(0,0,0,0.10); border: 1px solid #f1f5f9; overflow: hidden;">
     
@@ -1108,13 +1116,14 @@
             </div>
 
             <div>
-              <label style="font-size: 0.7rem; font-weight: 700; color: #0f172a; text-transform: uppercase; display: block; margin-bottom: 8px;">SKU / Código de Barras</label>
+              <label style="font-size: 0.7rem; font-weight: 700; color: #0f172a; text-transform: uppercase; display: block; margin-bottom: 8px;">Código de Barras</label>
               <input type="text" id="editCodigoBarras" placeholder="000000000000"
                      style="width: 100%; padding: 10px 0; border: none; border-bottom: 2px solid #f1f5f9; font-size: 1rem; color: #64748b; font-family: monospace; outline: none;"
                      onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#f1f5f9'">
             </div>
           </div>
           <div>
+            <br>
   <label style="font-size: 0.7rem; font-weight: 700; color: #0f172a; text-transform: uppercase; display: block; margin-bottom: 8px;">Unidad de Medida</label>
   <select id="editUnidad"
     style="width: 100%; padding: 10px 12px; border: none; border-bottom: 2px solid #f1f5f9; font-size: 1rem; color: #0f172a; outline: none; background: transparent;">
@@ -1173,7 +1182,8 @@
                 <div style="font-size: 1.4rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 4px;">
                   <span style="color: #cbd5e1;">$</span>
                   <input type="text" id="editPrecioCompra" value="0"
-                         style="border: none; background: transparent; font-weight: inherit; font-size: inherit; color: inherit; width: 100%; outline: none;">
+       style="border: none; border-bottom: 2px solid #cdcdce; background: transparent; font-weight: inherit; font-size: inherit; color: inherit; width: 100%; outline: none; transition: 0.3s;"
+       onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cdcdce'">
                 </div>
               </div>
               <div>
@@ -1181,7 +1191,8 @@
                 <div style="font-size: 1.4rem; font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 4px;">
                   <span style="color: #cbd5e1;">$</span>
                   <input type="text" id="editPrecioVenta" value="0"
-                         style="border: none; background: transparent; font-weight: inherit; font-size: inherit; color: inherit; width: 100%; outline: none;">
+       style="border: none; border-bottom: 2px solid #cdcdce; background: transparent; font-weight: inherit; font-size: inherit; color: inherit; width: 100%; outline: none; transition: 0.3s;"
+       onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cdcdce'">
                 </div>
               </div>
             </div>
@@ -1191,7 +1202,7 @@
               <div>
                 <span style="display: block; font-size: 0.6rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">Stock</span>
                 <input type="text" id="editStock" value="0"
-                       style="width: 55px; border: none; font-size: 1.4rem; font-weight: 800; color: #0f172a; outline: none; background: transparent;">
+                       style="width: 98%; border: none; font-size: 1.4rem; font-weight: 800; color: #0f172a; outline: none; background: transparent;">
               </div>
               <div style="display: flex; gap: 8px;">
                 <button type="button" onclick="decreaseEditStock(event)" style="width: 38px; height: 38px; border-radius: 10px; border: 1px solid #f1f5f9; background: #fff; cursor: pointer; font-size: 16px; font-weight: bold; color: #64748b;">-</button>
@@ -1237,7 +1248,7 @@
       </div>
     </form>
   </div>
-</div>
+</div></div>
 <!-- Modal Eliminar Producto -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-conten">
@@ -1286,14 +1297,17 @@ document.getElementById('unidadMedida')?.addEventListener('change', function() {
     if (label) label.textContent = `Ganancia por ${abrev}`;
 });
 function abrirModalAgregar() {
+  document.body.style.overflow = 'hidden';
     document.getElementById('agregarProductoModal').classList.add('active');
     setTimeout(() => {
         const input = document.getElementById('productName');
         if (input) input.focus();
     }, 150);
+
 }
 
 function cerrarModalAgregar() {
+  document.body.style.overflow = '';
     document.getElementById('agregarProductoModal').classList.remove('active');
 }
 
@@ -1632,9 +1646,11 @@ async function addProduct(e) {
         }
 
     } catch (error) {
-        const mensaje = error.message === 'El producto ya existe' ? 'El producto ya existe' : 'No se pudo agregar el producto';
-        showAlert(mensaje, 'error');
-    } finally {
+    const mensaje = error.errors?.nombre?.[0] 
+        || error.errors?.precio_venta?.[0]
+        || (error.message === 'El producto ya existe' ? 'El producto ya existe' : error.message || 'No se pudo agregar el producto');
+    showAlert(mensaje, 'error');
+} finally {
         btn.disabled = false;
     }
 }
@@ -2020,6 +2036,7 @@ if (typeof data.precio_venta !== 'undefined') {
 }
 
 async function eliminarProducto(id) {
+  document.body.style.overflow = 'hidden';
     const tr = document.getElementById(`producto-${id}`);
     const nombreSpan = tr.querySelector('span.view[data-field="nombre"]');
     const nombreProducto = nombreSpan ? nombreSpan.innerText : 'Producto #' + id;
@@ -2041,6 +2058,7 @@ if (cancelBtn) {
   cancelBtn.addEventListener('click', function() {
     const modalEl = document.getElementById('deleteModal');
     if (modalEl) modalEl.classList.remove('active');
+    document.body.style.overflow = '';
   });
 }
 
@@ -2097,6 +2115,7 @@ if (confirmBtn) {
       msg.innerText = 'Error al eliminar. Intenta de nuevo.';
     } finally {
       confirmBtn.disabled = false;
+      document.body.style.overflow = '';
     }
   });
 }
@@ -2109,11 +2128,22 @@ function toggleDropdown(id, event) {
     const menu = document.getElementById(`dropdown-menu-${id}`);
     const isOpen = menu.classList.contains('open');
     cerrarTodosDropdowns();
-    if (!isOpen) menu.classList.add('open');
+    if (!isOpen) {
+        const btn = event.currentTarget;
+        const rect = btn.getBoundingClientRect();
+        menu.style.position = 'fixed';
+        menu.style.top = (rect.bottom + 4) + 'px';
+        menu.style.left = (rect.right - 160) + 'px';
+        menu.style.zIndex = '9999';
+        menu.classList.add('open');
+    }
 }
 
 function cerrarTodosDropdowns() {
-    document.querySelectorAll('.dropdown-menu-custom').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.dropdown-menu-custom').forEach(m => {
+        m.classList.remove('open');
+        m.removeAttribute('style');
+    });
 }
 
 document.addEventListener('click', function() {
@@ -2125,6 +2155,7 @@ document.addEventListener('click', function() {
 let currentEditStock = 0;
 
 function abrirModalEditar(id) {
+  document.body.style.overflow = 'hidden';
     const tr = document.getElementById(`producto-${id}`);
     if (!tr) return;
 
@@ -2170,6 +2201,7 @@ function abrirModalEditar(id) {
 }
 
 function cerrarModalEditar() {
+  document.body.style.overflow = '';
     document.getElementById('editarProductoModal').classList.remove('active');
     document.getElementById('alertContainerEditar').innerHTML = '';
 }
@@ -2324,8 +2356,9 @@ async function guardarEdicion(e) {
         setTimeout(() => cerrarModalEditar(), 1200);
 
     } catch (error) {
-        showAlertEditar(error.message || 'Error al actualizar', 'error');
-    } finally {
+    const mensaje = error.errors?.nombre?.[0] || error.message || 'Error al actualizar';
+    showAlertEditar(mensaje, 'error');
+} finally {
         btn.disabled = false;
     }
 }

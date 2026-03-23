@@ -294,8 +294,12 @@ class ProductoController extends Controller
             return response()->json(['success' => true, 'producto' => $producto->fresh()]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => 'Datos inválidos'], 422);
-        } catch (\Throwable $e) {
+    return response()->json([
+        'success' => false, 
+        'message' => $e->errors()['nombre'][0] ?? $e->errors()['precio_venta'][0] ?? 'Datos inválidos',
+        'errors' => $e->errors()
+    ], 422);
+} catch (\Throwable $e) {
             DB::rollBack();
             Log::error('ERROR EN UPDATE: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'No se pudo actualizar el producto'], 500);
