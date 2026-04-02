@@ -13,6 +13,7 @@ class Abono extends Model
         'monto',
         'forma_pago',
         'observacion',
+        'logo',
     ];
 
     protected $casts = [

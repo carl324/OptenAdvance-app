@@ -205,6 +205,22 @@ if ($esCredito && empty($data['cliente_id'])) {
     throw new \Exception('Debe seleccionar un cliente para ventas a crédito.');
 }
 
+if ($esCredito) {
+    $clienteCredito = \App\Models\Cliente::find($data['cliente_id']);
+    
+    if (is_null($clienteCredito->cupo_credito)) {
+        throw new \Exception("El cliente '{$clienteCredito->nombre}' no tiene crédito habilitado.");
+    }
+
+    if ($clienteCredito->cupo_credito > 0) {
+        $nuevoSaldo = $clienteCredito->saldo_pendiente + $totalFinal;
+        if ($nuevoSaldo > $clienteCredito->cupo_credito) {
+            throw new \Exception("El cliente '{$clienteCredito->nombre}' no tiene cupo suficiente. Disponible: $" . number_format($clienteCredito->cupo_credito - $clienteCredito->saldo_pendiente));
+        }
+    }
+
+}
+
 $estadoVenta    = $esCredito ? 'credito' : 'completada';
 $saldoPendiente = $esCredito ? $totalFinal : 0;
 

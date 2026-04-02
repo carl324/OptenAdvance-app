@@ -4,7 +4,12 @@
 
 <?php $__env->startSection('content'); ?>
 
-
+<style>
+  @keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+</style>
 <section class="section">
   <div class="container-fluid">
 
@@ -225,40 +230,74 @@
       <div class="col-lg-7">
         <div class="card-style mb-30">
           <div class="title d-flex flex-wrap justify-content-between align-items-center">
-            <div class="left"><h6 class="text-medium mb-30">Productos Más Vendidos</h6></div>
-            <div class="right">
-              <div class="select-style-1">
-                <div class="select-position select-sm">
-                  <select class="light-bg" id="selectProductos">
+    <div class="left"><h6 class="text-medium mb-30">Productos Más Vendidos</h6></div>
+    <div class="right">
+        <div class="select-style-1">
+            <div class="select-position select-sm">
+                <select class="light-bg" id="selectProductos">
                     <option value="mensual">Este mes</option>
                     <option value="semanal">Esta semana</option>
                     <option value="diario">Hoy</option>
-                  </select>
-                </div>
-              </div>
+                </select>
             </div>
-          </div>
-          <div class="table-responsive">
-            <table class="table top-selling-table">
-              <thead>
-                <tr>
-                  <th><h6 class="text-sm text-medium">Producto</h6></th>
-                  <th class="min-width"><h6 class="text-sm text-medium">Precio venta</h6></th>
-                  <th class="min-width"><h6 class="text-sm text-medium">Unidades</h6></th>
-                  <th class="min-width"><h6 class="text-sm text-medium">Total vendido</h6></th>
-                  <th class="min-width"><h6 class="text-sm text-medium">Ganancia</h6></th>
-                </tr>
-              </thead>
-              <tbody id="tablaProductos">
-                <tr>
-                  <td colspan="5" style="text-align:center;padding:40px;color:#999;">
-                    <i class="lni lni-reload" style="font-size:28px;"></i>
-                    <p class="mt-2">Cargando...</p>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        </div>
+    </div>
+</div>
+<div class="d-flex gap-3 mb-20">
+
+  <div id="cardProductosActivos"
+       style="flex:1;background:#f8fafc;border-radius:14px;padding:18px 20px;border:1px solid #e2e8f0;display:flex;flex-direction:column;justify-content:space-between;gap:0;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;">Productos</span>
+      <div style="width:32px;height:32px;background:#fff;border-radius:9px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;">
+        <i class="lni lni-package" style="color:#64748b;font-size:15px;"></i>
+      </div>
+    </div>
+<div style="margin-bottom:14px;">
+    <h2 id="kpiProductosVendidosPeriodo" style="margin:0 0 2px;color:#3b82f6;font-size:2.2rem;font-weight:800;line-height:1;">...</h2>
+    <span style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">vendidos este período</span>
+</div>
+<div style="border-top:1px solid #e2e8f0;padding-top:12px;">
+    <h3 id="kpiProductosActivos" style="margin:0 0 2px;color:#0f172a;font-size:1.5rem;font-weight:800;line-height:1;">...</h3>
+    <span style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">En inventario</span>
+</div>
+  </div>
+
+<div id="cardMasVendido"
+     style="flex:2;background:#ffffff;border-radius:14px;padding:20px 24px;border:1px solid #e2e8f0;display:flex;flex-direction:column;justify-content:space-between;gap:16px;">
+  
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <span style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;">Producto estrella</span>
+    <i class="mdi mdi-trophy-outline" style="color:#f59e0b;font-size:20px;"></i>
+  </div>
+
+  <div>
+    <h4 id="kpiMasVendidoNombre" class="truncate truncate-long" data-bs-toggle="tooltip" data-bs-title="..."
+        style="margin:0 0 4px;color:#0f172a;font-size:1.3rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; max-width:320px;">...</h4>
+   
+  </div>
+
+  <div style="display:flex;gap:0;padding-top:14px;border-top:1px solid #e2e8f0;">
+    <div style="flex:1;">
+      <span id="kpiMasVendidoTotal" style="display:block;color:#0f172a;font-size:1.1rem;font-weight:800;">...</span>
+      <span style="font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Total vendido</span>
+    </div>
+    <div style="width:1px;background:#e2e8f0;margin:0 16px;"></div>
+    <div style="flex:1;">
+      <span id="kpiMasVendidoUnidades" style="display:block;color:#0f172a;font-size:1.1rem;font-weight:800;">...</span>
+      <span style="font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Unidades</span>
+    </div>
+    <div style="width:1px;background:#e2e8f0;margin:0 16px;"></div>
+    <div style="flex:1;">
+      <span id="kpiMasVendidoGanancia" style="display:block;color:#10b981;font-size:1.1rem;font-weight:800;">...</span>
+      <span style="font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Ganancia</span>
+    </div>
+  </div>
+
+</div>
+
+</div>
+  
         </div>
       </div>
     </div>
@@ -518,30 +557,21 @@ function renderChartCajeros(cajeros) {
     data: {
       labels: cajeros.map(c => c.cajero),
       datasets: [
-        {
-          label: 'Ventas',
-          backgroundColor: '#365CF5',
-          borderRadius: 6,
-          barThickness: 14,
-          data: cajeros.map(c => c.total_ventas),
-        },
-        {
-          label: 'Anuladas',
-          backgroundColor: '#f87171',
-          borderRadius: 6,
-          barThickness: 14,
-          data: cajeros.map(c => c.anuladas),
-        },
-      ],
+    {
+        label: 'Ventas',
+        backgroundColor: '#365CF5',
+        borderRadius: 6,
+        barThickness: 14,
+        data: cajeros.map(c => c.total_ventas),
+    }
+],
     },
     options: {
       indexAxis: 'y',
       plugins: {
         legend: {
-          display: true,
-          position: 'bottom',
-          labels: { usePointStyle: true, padding: 16, font: { size: 12 } }
-        },
+  display: false,
+},
         tooltip: {
           backgroundColor: '#f9f9f9',
           titleColor: '#8F92A1',
@@ -550,10 +580,7 @@ function renderChartCajeros(cajeros) {
           padding: { x: 16, y: 10 },
           bodyFont: { size: 13, weight: 'bold' },
           callbacks: {
-            label: ctx => {
-              if (ctx.datasetIndex === 0) return ' ' + formatCOP(ctx.parsed.x);
-              return ' ' + ctx.parsed.x + ' anuladas';
-            }
+           label: ctx => ' ' + formatCOP(ctx.parsed.x)
           }
         },
       },
@@ -592,13 +619,6 @@ function verTodosCajeros() {
 
 // ─── PRODUCTOS ───────────────────────────────────────────
 async function cargarProductos(agrupacion) {
-  const tbody = document.getElementById('tablaProductos');
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="5" style="text-align:center;padding:30px;color:#999;">
-        <i class="lni lni-reload"></i> Cargando...
-      </td>
-    </tr>`;
 
   try {
     const res  = await fetch(`/api/reportes/productos?agrupacion=${agrupacion}`, {
@@ -607,38 +627,37 @@ async function cargarProductos(agrupacion) {
     const data = await res.json();
     if (!data.success) return;
 
-    if (data.productos.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align:center;padding:30px;color:#999;">
-            <i class="lni lni-inbox"></i>
-            <p class="mt-2">Sin ventas en este período</p>
-          </td>
-        </tr>`;
-      return;
-    }
+    // Actualizar productos activos
+    document.getElementById('kpiProductosActivos').textContent = (data.productos_activos || 0).toLocaleString('es-CO');
 
-    tbody.innerHTML = data.productos.map((p, i) => `
-      <tr>
-        <td>
-          <div class="d-flex align-items-center" style="gap:10px;">
-            <span style="width:22px;height:22px;border-radius:50%;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#64748b;flex-shrink:0;">${i+1}</span>
-            <p class="text-sm mb-0">${p.nombre}</p>
-          </div>
-        </td>
-        <td><p class="text-sm">${formatCOP(p.precio_venta)}</p></td>
-        <td><p class="text-sm">${p.unidades.toLocaleString('es-CO')}</p></td>
-        <td><p class="text-sm">${formatCOP(p.total_vendido)}</p></td>
-        <td><p class="text-sm" style="color:#16a34a;font-weight:600;">${formatCOP(p.ganancia)}</p></td>
-      </tr>
-    `).join('');
+if (data.productos.length === 0) {
+    document.getElementById('kpiMasVendidoNombre').textContent = 'Sin ventas';
+    document.getElementById('kpiMasVendidoTotal').textContent = '-';
+    document.getElementById('kpiMasVendidoUnidades').textContent = '-';
+    document.getElementById('kpiMasVendidoGanancia').textContent = '-';
+    document.getElementById('kpiProductosVendidosPeriodo').textContent = '0';
+    return;
+}
+
+    // Tarjeta más vendido con el primero
+const top = data.productos[0];
+const nombreEl = document.getElementById('kpiMasVendidoNombre');
+nombreEl.textContent = top.nombre;
+nombreEl.setAttribute('data-bs-title', top.nombre);
+const tooltipExistente = bootstrap.Tooltip.getInstance(nombreEl);
+if (tooltipExistente) tooltipExistente.dispose();
+new bootstrap.Tooltip(nombreEl, { placement: 'top', trigger: 'hover focus', boundary: 'viewport' });
+document.getElementById('kpiMasVendidoTotal').textContent    = formatCOP(top.total_vendido);
+document.getElementById('kpiMasVendidoUnidades').textContent = top.unidades.toLocaleString('es-CO') + ' und';
+document.getElementById('kpiMasVendidoGanancia').textContent = formatCOP(top.ganancia);
+    document.getElementById('kpiProductosVendidosPeriodo').textContent = data.productos.length.toLocaleString('es-CO');
+    // Tabla desde el 2 en adelante
+   
 
   } catch (e) {
     console.error('Error productos:', e);
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#c62828;">Error al cargar productos</td></tr>`;
   }
 }
-
 // ─── EXPORTAR ────────────────────────────────────────────
 function exportar(tipo, desdeId, hastaId) {
   const desde = document.getElementById(desdeId).value;
@@ -653,11 +672,13 @@ function exportar(tipo, desdeId, hastaId) {
     return;
   }
 
-  const params = new URLSearchParams({ tipo, fecha_inicio: desde, fecha_fin: hasta });
+  // Encontrar el botón que disparó la exportación
+  const btn = event.currentTarget;
+  const textoOriginal = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="lni lni-spinner" style="font-size:11px;animation:spin 1s linear infinite;"></i> Descargando...';
 
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
+  const params = new URLSearchParams({ tipo, fecha_inicio: desde, fecha_fin: hasta });
 
   fetch(`/api/reportes/export?${params}`, {
     headers: {
@@ -686,16 +707,15 @@ function exportar(tipo, desdeId, hastaId) {
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('Exportación completada', { body: 'Archivo: ' + fileName });
-        }
       });
     }
   })
-  .catch(() => console.log('Export error'));
+  .catch(() => console.log('Export error'))
+  .finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = textoOriginal;
+  });
 }
-
 // ─── MODAL ───────────────────────────────────────────────
 function showExportLimitModal() {
   document.getElementById('exportLimitModal')?.classList.add('active');

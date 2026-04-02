@@ -106,7 +106,9 @@
 
                                 </p>
                             </div>
-
+ <div class="invoice-logo">
+                      <img src="/assets/images/invoice/uideck-logo.svg" alt="" />
+                    </div>
                             <div class="invoice-date">
                                 <?php
                                     $fechaRaw = $venta->factura->created_at ?? $venta->created_at ?? $venta->fecha ?? $venta->factura->fecha_emision ?? now();

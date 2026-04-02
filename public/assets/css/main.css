@@ -769,15 +769,15 @@ h6,
 
 .warning-btn-light {
   background: rgba(247, 200, 0, 0.12);
-  color: #f7c800;
+  color: #b38f00; /* más oscuro */
 }
 .warning-btn-light:hover {
   background: rgba(247, 200, 0, 0.2);
-  color: #f7c800;
+  color: #b38f00;
 }
 .warning-btn-light:active, .warning-btn-light.active {
   background: rgba(247, 200, 0, 0.3);
-  color: #f7c800;
+  color: #b38f00;
 }
 
 .warning-btn-group {

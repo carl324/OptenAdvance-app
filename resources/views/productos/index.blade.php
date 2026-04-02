@@ -293,7 +293,7 @@
     }
 
     .table-wrapper {
-      overflow-x: auto;
+      overflow: visible;
     }
 
     .striped-table {
@@ -2129,12 +2129,6 @@ function toggleDropdown(id, event) {
     const isOpen = menu.classList.contains('open');
     cerrarTodosDropdowns();
     if (!isOpen) {
-        const btn = event.currentTarget;
-        const rect = btn.getBoundingClientRect();
-        menu.style.position = 'fixed';
-        menu.style.top = (rect.bottom + 4) + 'px';
-        menu.style.left = (rect.right - 160) + 'px';
-        menu.style.zIndex = '9999';
         menu.classList.add('open');
     }
 }

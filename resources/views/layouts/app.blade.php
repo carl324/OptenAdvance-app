@@ -105,7 +105,7 @@
   background: rgba(16, 185, 129, 0.1);
   color: #059669;
   border: 1px solid rgba(16, 185, 129, 0.2);
-}
+} 
 
 .estado-abierta svg {
   color: #10b981;

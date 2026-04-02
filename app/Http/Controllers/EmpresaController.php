@@ -18,7 +18,43 @@ class EmpresaController extends Controller
         // la vista debe mostrar el formulario vacío para registrar los datos.
         return view('empresa.index', compact('empresa'));
     }
+public function updateLogo(Request $request)
+{
+    $request->validate([
+        'logo' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+    ], [
+        'logo.required' => 'Selecciona una imagen.',
+        'logo.image'    => 'El archivo debe ser una imagen.',
+        'logo.mimes'    => 'Solo se permiten formatos: jpeg, png, jpg, webp.',
+        'logo.max'      => 'La imagen no debe superar 2MB.',
+    ]);
 
+    $empresa = Empresa::firstOrCreate([]);
+
+    $archivo = $request->file('logo');
+    $nombreArchivo = 'logo_' . time() . '.' . $archivo->getClientOriginalExtension();
+    $destino = public_path('assets/img/empresas');
+
+    // Crear carpeta si no existe
+    if (!file_exists($destino)) {
+        mkdir($destino, 0755, true);
+    }
+
+    // Eliminar logo anterior si existe
+    if ($empresa->logo && file_exists(public_path($empresa->logo))) {
+        unlink(public_path($empresa->logo));
+    }
+
+    $archivo->move($destino, $nombreArchivo);
+    $path = 'assets/img/empresas/' . $nombreArchivo;
+    $empresa->logo = $path;
+    $empresa->save();
+
+    return response()->json([
+        'success' => true,
+        'url'     => asset($path),
+    ]);
+}
     /** Actualizar datos de la empresa existente */
     public function update(Request $request)
     {

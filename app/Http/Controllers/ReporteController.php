@@ -632,18 +632,17 @@ public function apiCajeros(Request $request)
                 break;
         }
 
-        $cajeros = \DB::table('ventas as v')
-            ->join('users as u', 'u.id', '=', 'v.user_id')
-            ->whereBetween('v.created_at', [$inicio, $fin])
-            ->selectRaw('
-                u.name as cajero,
-                SUM(CASE WHEN v.estado != ? THEN v.total ELSE 0 END) as total_ventas,
-                SUM(CASE WHEN v.estado = ? THEN 1 ELSE 0 END) as anuladas,
-                COUNT(CASE WHEN v.estado != ? THEN 1 END) as num_ventas
-            ', ['anulada', 'anulada', 'anulada'])
-            ->groupBy('u.id', 'u.name')
-            ->orderByDesc('total_ventas')
-            ->get();
+       $cajeros = \DB::table('ventas as v')
+    ->join('users as u', 'u.id', '=', 'v.user_id')
+    ->whereBetween('v.created_at', [$inicio, $fin])
+    ->selectRaw("
+        u.name as cajero,
+        SUM(CASE WHEN v.estado != 'anulada' THEN v.total ELSE 0 END) as total_ventas,
+        COUNT(CASE WHEN v.estado != 'anulada' THEN 1 END) as num_ventas
+    ")
+    ->groupBy('u.id', 'u.name')
+    ->orderByDesc('total_ventas')
+    ->get();
 
         $total = count($cajeros);
 
@@ -653,7 +652,6 @@ public function apiCajeros(Request $request)
             'cajeros'  => $cajeros->take(5)->map(fn($c) => [
                 'cajero'       => $c->cajero,
                 'total_ventas' => (float) $c->total_ventas,
-                'anuladas'     => (int)   $c->anuladas,
                 'num_ventas'   => (int)   $c->num_ventas,
             ]),
             'hay_mas'  => $total > 5,
@@ -708,16 +706,17 @@ public function apiProductos(Request $request)
             ->limit(7)
             ->get();
 
-        return response()->json([
-            'success'   => true,
-            'productos' => $productos->map(fn($p) => [
-                'nombre'        => $p->nombre,
-                'precio_venta'  => (float) $p->precio_venta,
-                'unidades'      => (int)   $p->unidades,
-                'total_vendido' => (float) $p->total_vendido,
-                'ganancia'      => (float) $p->ganancia,
-            ]),
-        ]);
+return response()->json([
+    'success'   => true,
+    'productos' => $productos->map(fn($p) => [
+        'nombre'        => $p->nombre,
+        'precio_venta'  => (float) $p->precio_venta,
+        'unidades'      => (int)   $p->unidades,
+        'total_vendido' => (float) $p->total_vendido,
+        'ganancia'      => (float) $p->ganancia,
+    ]),
+    'productos_activos' => \App\Models\Producto::activos()->count(), // 👈
+]);
     } catch (\Exception $e) {
         Log::error('apiProductos: ' . $e->getMessage());
         return response()->json(['success' => false], 500);

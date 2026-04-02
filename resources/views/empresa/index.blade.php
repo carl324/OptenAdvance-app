@@ -48,6 +48,38 @@
                         <!-- COLUMNA IZQUIERDA -->
                         <div class="col-lg-6">
                             <div class="card-style mb-30">
+                            <div class="mb-30">
+    <label class="text-dark mb-2 d-block">Logo de la empresa</label>
+    
+    <div style="display:flex;align-items:center;gap:20px;">
+        
+        <div id="logo-preview-wrapper" onclick="document.getElementById('logo-input').click()"
+             style="width:100px;height:100px;border-radius:12px;border:1.5px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;background:#fff;flex-shrink:0;">
+            @if($empresa && $empresa->logo)
+                <img id="logo-preview" src="{{ asset($empresa->logo) }}" style="width:100%;height:100%;object-fit:contain;">
+            @else
+                <div id="logo-placeholder" style="text-align:center;color:#94a3b8;">
+                    <i class="lni lni-image" style="font-size:26px;display:block;margin-bottom:4px;"></i>
+                    <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Logo</span>
+                </div>
+            @endif
+        </div>
+
+        <div>
+            <p class="text-xs text-gray mb-2">Recomendado: 200×200px · Fondo blanco · JPG, PNG o WEBP · Máx 2MB</p>
+            <button type="button" onclick="document.getElementById('logo-input').click()"
+                    style="font-size:12px;font-weight:600;color:#3b82f6;background:none;border:1px solid #bfdbfe;border-radius:6px;padding:5px 14px;cursor:pointer;">
+                <i class="lni lni-upload" style="font-size:11px;"></i> Subir imagen
+            </button>
+            <div id="logo-error" class="text-danger small mt-1" style="display:none;"></div>
+            <div id="logo-success" class="text-success small mt-1" style="display:none;"></div>
+        </div>
+
+    </div>
+
+    <input type="file" id="logo-input" accept="image/jpeg,image/png,image/webp" style="display:none;">
+</div>
+<br>
                                 <div class="input-style-2">
                                     <label for="nombre" class="text-dark mb-2 d-block">Nombre de la empresa</label>
                                     <input id="nombre" name="nombre" type="text" placeholder="Nombre de la empresa" value="{{ old('nombre', $empresa->nombre ?? '') }}" />
@@ -60,16 +92,8 @@
                                     <span class="icon"><i class="mdi mdi-card-account-details-outline"></i></span>
                                 </div>
 
-                                <div class="input-style-2">
-                                    <label for="telefono" class="text-dark mb-2 d-block">Teléfono</label>
-                                    <input id="telefono" name="telefono" type="text" placeholder="Número de teléfono" value="{{ old('telefono', $empresa->telefono ?? '') }}" />
-                                    <span class="icon"><i class="lni lni-phone"></i></span>
-                                </div>
-                                <div class="input-style-2">
-                                    <label for="email" class="text-dark mb-2 d-block">Email de contacto</label>
-                                    <input id="email" name="email" type="text" placeholder="Email de contacto" value="{{ old('email', $empresa->email ?? '') }}" />
-                                    <span class="icon"><i class="lni lni-envelope"></i></span>
-                                </div>
+
+
 
                                 
                             </div>
@@ -78,7 +102,16 @@
                         <!-- COLUMNA DERECHA -->
                         <div class="col-lg-6">
                             <div class="card-style mb-30">
-                                
+                                <div class="input-style-2">
+                                    <label for="telefono" class="text-dark mb-2 d-block">Teléfono</label>
+                                    <input id="telefono" name="telefono" type="text" placeholder="Número de teléfono" value="{{ old('telefono', $empresa->telefono ?? '') }}" />
+                                    <span class="icon"><i class="lni lni-phone"></i></span>
+                                </div>                            
+                                <div class="input-style-2">
+                                    <label for="email" class="text-dark mb-2 d-block">Email de contacto</label>
+                                    <input id="email" name="email" type="text" placeholder="Email de contacto" value="{{ old('email', $empresa->email ?? '') }}" />
+                                    <span class="icon"><i class="lni lni-envelope"></i></span>
+                                </div>                                
                                 <div class="input-style-2">
                                     <label for="direccion" class="text-dark mb-2 d-block">Dirección</label>
                                     <input id="direccion" name="direccion" type="text" placeholder="Dirección" value="{{ old('direccion', $empresa->direccion ?? '') }}" />
@@ -105,617 +138,9 @@
                         </div>
                     </div>
     <!-- NUEVA SECCIÓN DE RESPALDOS - ANCHO COMPLETO -->
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card-style mb-30">
-                <div class="d-flex align-items-center justify-content-between mb-25">
-                    <div>
-                        <h6 class="mb-2" style="font-size: 18px; font-weight: 600;">
-                            <i class="lni lni-cloud-upload" style="color: #3b82f6; margin-right: 8px;"></i>
-                            Gestión de respaldos y licencia
-                        </h6>
-                        <p class="text-xs text-gray mb-0">Configura y administra los respaldos de tu base de datos y la licencia de tu software</p>
-                    </div>
-                    
-                </div>
 
-                <!-- Tabs de navegación -->
-                <ul class="nav nav-tabs mb-25" role="tablist" style="border-bottom: 2px solid #e2e8f0;">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab" style="font-weight: 600; padding: 12px 24px; border: none; background: none; color: #64748b;">
-                            <i class="lni lni-save" style="margin-right: 6px;"></i>
-                            Respaldo manual
-                        </button>
-                    </li>
-                   <!-- <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="cloud-tab" data-bs-toggle="tab" data-bs-target="#cloud" type="button" role="tab" style="font-weight: 600; padding: 12px 24px; border: none; background: none; color: #64748b;">
-                            <i class="lni lni-cloud-sync" style="margin-right: 6px;"></i>
-                            Respaldo en la nube
-                        </button>
-                    </li> -->
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="auto-tab" data-bs-toggle="tab" data-bs-target="#auto" type="button" role="tab" style="font-weight: 600; padding: 12px 24px; border: none; background: none; color: #64748b;">
-                            <i class="lni lni-cloud-download" style="margin-right: 6px;"></i>
-                            Restaurar datos
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="cloud-tab" data-bs-toggle="tab" data-bs-target="#cloud" type="button" role="tab" style="font-weight: 600; padding: 12px 24px; border: none; background: none; color: #64748b;">
-                            <i class="mdi mdi-key" style="margin-right: 6px;"></i>
-                            Licencia
-                        </button>
-                    </li>
-                </ul>
+    <!-- poner aquie l tema de los respaldos y licencia -->
 
-                <div class="tab-content">
-                    <!-- TAB 1: RESPALDO MANUAL -->
-                    <div class="tab-pane fade show active" id="manual" role="tabpanel">
-                        <div class="row">
-                            <div class="col-lg-6">
-                                <div style="background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
-                                        <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
-                                            <i class="lni lni-download" style="font-size: 28px; color: white;"></i>
-                                        </div>
-                                        <div>
-                                            <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #1e293b;">Descarga local</h6>
-                                            <p style="margin: 0; font-size: 13px; color: #64748b;">Guardar en tu computadora</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <p class="text-sm text-gray mb-20">
-                                        Crea un respaldo completo de tu base de datos. El archivo se guardará en tu carpeta de <strong>Descargas</strong> y podrás restaurarlo cuando lo necesites.
-                                    </p>
-
-                                    <form method="POST" action="{{ route('backup.store') }}" id="backup-form">
-                                        @csrf
-                                        <label style="font-size:13px; color:#475569; display:flex; align-items:flex-start; gap:10px; margin-bottom:20px; cursor: pointer; user-select: none;">
-                                            <input type="checkbox" name="confirm_backup" id="confirm_backup_checkbox" style="margin-top: 3px; width: 18px; height: 18px; cursor: pointer;">
-                                            <span>He leído y acepto que se generará un archivo de respaldo en mi carpeta de Descargas</span>
-                                        </label>
-                                        
-                                        <button type="button" id="btn-backup" class="main-btn primary-btn btn-hover w-100" onclick="handleBackupClick(event)" style="padding: 14px; font-weight: 600; font-size: 14px;">
-                                            <i class="lni lni-download" style="margin-right: 8px;"></i>
-                                            <span id="btn-backup-text">Crear copia de seguridad</span>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                            
-                            <div class="col-lg-6">
-                                <div style="background: #f8fafc; padding: 24px; border-radius: 12px; height: 100%;">
-                                    <h6 style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 16px;">
-                                        <i class="lni lni-information" style="color: #3b82f6; margin-right: 6px;"></i>
-                                        Información importante
-                                    </h6>
-                                    <ul style="list-style: none; padding: 0; margin: 0;">
-                                        <li style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; display: flex; align-items: start; gap: 10px;">
-                                            <i class="lni lni-checkmark-circle" style="color: #10b981; font-size: 18px; margin-top: 2px;"></i>
-                                            <span style="font-size: 13px; color: #475569;">El respaldo incluye todos los productos, ventas y configuraciones</span>
-                                        </li>
-                                        <li style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; display: flex; align-items: start; gap: 10px;">
-                                            <i class="lni lni-checkmark-circle" style="color: #10b981; font-size: 18px; margin-top: 2px;"></i>
-                                            <span style="font-size: 13px; color: #475569;">El archivo se descarga en formato SQL compatible</span>
-                                        </li>
-                                        <li style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; display: flex; align-items: start; gap: 10px;">
-                                            <i class="lni lni-checkmark-circle" style="color: #10b981; font-size: 18px; margin-top: 2px;"></i>
-                                            <span style="font-size: 13px; color: #475569;">Recomendamos hacer respaldos semanales</span>
-                                        </li>
-                                        <li style="padding: 12px 0; display: flex; align-items: start; gap: 10px;">
-                                            <i class="lni lni-checkmark-circle" style="color: #10b981; font-size: 18px; margin-top: 2px;"></i>
-                                            <span style="font-size: 13px; color: #475569;">Guarda los respaldos en un lugar seguro</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TAB 2: RESPALDO EN LA NUBE 
-<div class="tab-pane fade" id="cloud" role="tabpanel">
-    <div class="row">
-        <div class="col-lg-12">
-            <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 32px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #bae6fd;">
-                <div class="row align-items-center">
-                    <div class="col-lg-8">
-                        <h6 style="font-size: 18px; font-weight: 700; color: #0c4a6e; margin-bottom: 8px;">
-                            Respaldo automático
-                        </h6>
-                        <p style="font-size: 14px; color: #075985; margin-bottom: 0;">
-                            Configura respaldos automáticos de tu base de datos en una carpeta del servidor
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-lg-6">
-                    <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; height: 100%;">
-                        <h6 style="font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">
-                            <i class="lni lni-cog" style="color: #3b82f6; margin-right: 8px;"></i>
-                            Configuración de carpeta
-                        </h6>
-
-<div style="margin-bottom: 20px;">
-    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">
-        Carpeta de destino
-    </label>
-    <div style="position: relative;">
-        <input 
-            type="text" 
-            name="carpeta_destino" 
-            id="carpeta_destino_display" 
-            placeholder="Ejemplo: C:/respaldos o D:/backups o /home/usuario/backups" 
-            style="width: 100%; padding: 12px 40px 12px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;"
-        >
-        <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%);">
-            <i class="lni lni-folder" style="color: #3b82f6;"></i>
-        </span>
-    </div>
-    <small style="font-size: 12px; color: #64748b; display: block; margin-top: 6px;">
-        <i class="lni lni-information" style="color: #3b82f6;"></i>
-        Ingresa la ruta completa donde se guardarán los respaldos automáticos
-    </small>
-</div>                       
-
-
-                        <div style="margin-bottom: 20px;">
-                            <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">
-                                Nombre del archivo
-                            </label>
-                            <input type="text" name="prefijo_nombre" value="backup_opten" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                            <small style="font-size: 12px; color: #64748b; display: block; margin-top: 6px;">
-                                Se agregará automáticamente la fecha y hora
-                            </small>
-                        </div>
-
-                        <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border-left: 3px solid #3b82f6;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                                <i class="lni lni-information" style="font-size: 20px; color: #3b82f6; margin-top: 2px;"></i>
-                                <div>
-                                    <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">Información</div>
-                                    <div style="font-size: 12px; color: #64748b;">Los respaldos se guardarán automáticamente según la configuración establecida</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; height: 100%;">
-                        <h6 style="font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">
-                            <i class="lni lni-alarm-clock" style="color: #8b5cf6; margin-right: 8px;"></i>
-                            Programación automática
-                        </h6>
-
-                        <div style="margin-bottom: 20px;">
-                            <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 12px;">
-                                Frecuencia de respaldo
-                            </label>
-                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                                <label style="cursor: pointer;">
-                                    <input type="radio" name="backup_frequency_cloud" value="diario" style="display: none;">
-                                    <div class="frecuencia-card" style="padding: 16px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; transition: all 0.2s;">
-                                        <i class="lni lni-calendar" style="font-size: 24px; color: #3b82f6; display: block; margin-bottom: 6px;"></i>
-                                        <div style="font-size: 13px; font-weight: 600; color: #1e293b;">Diario</div>
-                                    </div>
-                                </label>
-                                <label style="cursor: pointer;">
-                                    <input type="radio" name="backup_frequency_cloud" value="semanal" style="display: none;" checked>
-                                    <div class="frecuencia-card" style="padding: 16px; border: 2px solid #3b82f6; border-radius: 8px; text-align: center; background: #eff6ff; transition: all 0.2s;">
-                                        <i class="lni lni-calendar" style="font-size: 24px; color: #3b82f6; display: block; margin-bottom: 6px;"></i>
-                                        <div style="font-size: 13px; font-weight: 600; color: #1e293b;">Semanal</div>
-                                    </div>
-                                </label>
-                                <label style="cursor: pointer;">
-                                    <input type="radio" name="backup_frequency_cloud" value="mensual" style="display: none;">
-                                    <div class="frecuencia-card" style="padding: 16px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; transition: all 0.2s;">
-                                        <i class="lni lni-calendar" style="font-size: 24px; color: #3b82f6; display: block; margin-bottom: 6px;"></i>
-                                        <div style="font-size: 13px; font-weight: 600; color: #1e293b;">Mensual</div>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div style="margin-bottom: 20px;">
-                            <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">
-                                Hora del respaldo
-                            </label>
-                            <div style="margin-bottom: 20px;">
-    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">
-        Hora del respaldo
-    </label>
-  
-    <input 
-        type="time" 
-        name="hora_backup" 
-        value="02:00" 
-        step="60"
-        style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; color: #475569;"
-    >
-    <small style="font-size: 12px; color: #64748b; display: block; margin-top: 6px;">
-        <i class="lni lni-moon" style="color: #8b5cf6; margin-right: 4px;"></i>
-        Recomendamos horarios nocturnos
-    </small>
-</div>
-
-                            <small style="font-size: 12px; color: #64748b; display: block; margin-top: 6px;">
-                                <i class="lni lni-moon" style="color: #8b5cf6; margin-right: 4px;"></i>
-                                Recomendamos horarios nocturnos
-                            </small>
-                        </div>
-
-                        <div style="margin-bottom: 20px;">
-                            <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">
-                                Retención de respaldos
-                            </label>
-                            <select name="retencion" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; color: #475569;">
-                                <option value="3">Mantener últimos 3 respaldos</option>
-                                <option value="15" selected>Mantener últimos 15 respaldos</option>
-                                <option value="30">Mantener últimos 30 respaldos</option>
-                                <option value="365">Mantener todos los respaldos (1 año)</option>
-                            </select>
-                            <small style="font-size: 12px; color: #64748b; display: block; margin-top: 6px;">
-                                Los respaldos antiguos se eliminarán automáticamente
-                            </small>
-                        </div>
-
-                        <button type="button" data-guardar-config class="main-btn primary-btn btn-hover w-100" style="padding: 12px; font-weight: 600;">
-                            <i class="lni lni-save" style="margin-right: 6px;"></i>
-                            <span>Guardar configuración</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>-->
-
-
-
-                    <!-- TAB 3: RESTAURAR DATOS -->
-<div class="tab-pane fade" id="auto" role="tabpanel">
-    <div class="row">
-        <div class="col-lg-8">
-            <div style="background: white; padding: 28px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
-                <h6 style="font-size: 16px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">
-                    <i class="lni lni-reload" style="color: #10b981; margin-right: 8px;"></i>
-                    Restaurar base de datos
-                </h6>
-
-                <form id="form-restore" enctype="multipart/form-data" method="POST">
-                    @csrf
-                    
-                    <div style="margin-bottom: 24px;">
-                        <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 12px;">
-                            Seleccionar archivo de respaldo
-                        </label>
-                        <div style="position: relative;">
-                            <input type="file" id="file-restore" name="backup_file" accept=".sql" style="display: none;" required>
-                            
-                            <!-- Botón de selección de archivo -->
-                            <button type="button" id="upload-btn" onclick="document.getElementById('file-restore').click()" style="width: 100%; padding: 20px; border: 2px dashed #cbd5e1; border-radius: 12px; background: #f8fafc; cursor: pointer; transition: all 0.3s;">
-                                <!-- Placeholder inicial (se oculta cuando se selecciona archivo) -->
-                                <div id="upload-placeholder" style="text-align: center;">
-                                    <i class="lni lni-cloud-upload" style="font-size: 48px; color: #94a3b8; display: block; margin-bottom: 12px;"></i>
-                                    <div style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">Haz clic para seleccionar archivo</div>
-                                    <div style="font-size: 13px; color: #64748b;">Formato soportado: .sql (MySQL)</div>
-                                </div>
-                                
-                                <!-- Información del archivo seleccionado (oculto inicialmente) -->
-                                <div id="file-selected" style="display: none;">
-                                    <div style="display: flex; align-items: center; gap: 16px; justify-content: center;">
-                                        <i class="lni lni-database" style="font-size: 48px; color: #10b981;"></i>
-                                        <div style="text-align: left;">
-                                            <div style="font-size: 14px; font-weight: 600; color: #047857;" id="file-name-display"></div>
-                                            <div style="font-size: 12px; color: #059669;" id="file-size-display"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </button>
-                            
-                            <!-- Spinner de carga (oculto inicialmente) -->
-                            <div id="upload-spinner" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 250, 252, 0.95); border-radius: 12px; align-items: center; justify-content: center;">
-                                <div style="text-align: center;">
-                                    <div class="spinner" style="width: 50px; height: 50px; border: 4px solid #e2e8f0; border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
-                                    <div style="font-size: 14px; font-weight: 600; color: #1e293b;">Restaurando...</div>
-                                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Espera un momento</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="background: #f0fdfa; border-left: 3px solid #10b981; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-                        <h6 style="font-size: 14px; font-weight: 600; color: #047857; margin-bottom: 12px;">
-                            <i class="lni lni-list" style="margin-right: 6px;"></i>
-                            Proceso de restauración
-                        </h6>
-                        <ol style="margin: 0; padding-left: 20px; color: #059669; font-size: 13px; line-height: 1.8;">
-                            <li>Se verificará la integridad del archivo</li>
-                            <li>Se creará un respaldo automático de tus datos actuales</li>
-                            <li>Se restaurarán los datos del archivo seleccionado</li>
-                            <li>Se reiniciarán las conexiones de la base de datos</li>
-                        </ol>
-                    </div>
-
-                    <div style="margin-bottom: 24px;">
-                        <label style="font-size: 13px; color: #475569; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none;">
-                            <input type="checkbox" id="confirm-restore" name="confirm_restore" value="1" style="margin-top: 3px; width: 18px; height: 18px; cursor: pointer;">
-                            <span style="flex: 1;">
-                                <strong>Confirmo que entiendo que esta acción sobrescribirá todos mis datos actuales</strong> y que se creará un respaldo automático antes de restaurar.
-                            </span>
-                        </label>
-                    </div>
-
-                    <div style="display: flex; gap: 12px;">
-                        <button type="button" class="main-btn light-btn btn-hover" onclick="resetForm()" style="flex: 1; padding: 12px; font-weight: 600;">
-                            <i class="lni lni-close" style="margin-right: 6px;"></i>
-                            Cancelar
-                        </button>
-                        <button type="submit" class="main-btn btn-hover" style="flex: 1; padding: 12px; font-weight: 600; background: #10b981; color: white; border: none;" disabled id="btn-restore">
-                            <i class="lni lni-reload" style="margin-right: 6px;"></i>
-                            Iniciar restauración
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div style="background: #fef3c7; border-left: 3px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-                <div style="display: flex; align-items: start; gap: 12px;">
-                    <i class="lni lni-warning" style="font-size: 20px; color: #d97706; margin-top: 2px;"></i>
-                    <div>
-                        <div style="font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 4px;">¡Importante! Esta acción sobrescribirá tus datos actuales</div>
-                        <div style="font-size: 12px; color: #78350f;">Asegúrate de tener un respaldo reciente antes de restaurar. Todos los datos actuales serán reemplazados por los del archivo de respaldo.</div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                <h6 style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 16px;">
-                    <i class="lni lni-question-circle" style="color: #3b82f6; margin-right: 6px;"></i>
-                    ¿Necesitas ayuda?
-                </h6>
-                <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.6;">
-                    Si tienes dudas sobre el proceso de restauración, consulta nuestra documentación o contacta a soporte.
-                </p>
-                <a href="{{ route('soporte.index') }}" class="main-btn light-btn btn-hover w-100" style="padding: 10px; font-size: 13px;">
-                    Contactar a soporte
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<div class="tab-pane fade" id="cloud" role="tabpanel">
-    <div class="row">
-        <div class="col-lg-12">
-            
-            <!-- 🆕 NUEVA SECCIÓN: Código de Equipo -->
-            
-
-            <div class="row">
-                <!-- Panel izquierdo: Estado actual -->
-                <div class="col-lg-6">
-                    <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; height: 100%;">
-                        <h6 style="font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">
-                            <i class="lni lni-certificate" style="color: #0b8cf5; margin-right: 8px;"></i>
-                            Estado de la Licencia
-                        </h6>
-
-                        <!-- Estado actual con badge dinámico -->
-                        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-                            <div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">Estado actual</div>
-                            <div id="license-status-badge" style="display: inline-block; padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; background: #dbeafe; color: #1e40af;">
-                                <i class="lni lni-checkmark-circle" style="margin-right: 6px;"></i>
-                                <span>Activa</span>
-                            </div>
-                        </div>
-
-                        <!-- Información de fechas -->
-                        <div style="margin-bottom: 16px;">
-                            <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px;">
-                                <span style="font-size: 13px; color: #64748b;">Fecha de inicio:</span>
-                                <span id="license-start-date" style="font-size: 13px; font-weight: 600; color: #1e293b;">--</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px;">
-                                <span style="font-size: 13px; color: #64748b;">Fecha de vencimiento:</span>
-                                <span id="license-end-date" style="font-size: 13px; font-weight: 600; color: #1e293b;">--</span>
-                            </div>
-                        </div>
-
-                        <!-- Botón limpiar caché -->
-                        <button type="button" id="btn-refresh-license" class="main-btn primary-btn btn-hover w-100" style="padding: 12px; font-weight: 600; margin-bottom: 12px;">
-                            <i class="lni lni-reload" style="margin-right: 6px;"></i>
-                            <span>Actualizar Estado</span>
-                        </button>
-
-                        <!-- Info box -->
-                        <div style="background: #eff6ff; padding: 16px; border-radius: 8px; border-left: 3px solid #3b82f6;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                                <i class="lni lni-information" style="font-size: 20px; color: #3b82f6; margin-top: 2px;"></i>
-                                <div>
-                                    <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">Actualización de estado</div>
-                                    <div style="font-size: 12px; color: #64748b;">Usa "Actualizar Estado" después de cargar un nuevo archivo de licencia para ver los cambios inmediatamente</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Panel derecho: Cargar licencia -->
-                <div class="col-lg-6">
-                    <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; height: 100%;">
-                        <h6 style="font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">
-                            <i class="lni lni-upload" style="color: #8b5cf6; margin-right: 8px;"></i>
-                            Cargar Nueva Licencia
-                        </h6>
-
-                        <div style="margin-bottom: 20px;">
-                            <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">
-                                Archivo de licencia (.lic)
-                            </label>
-                            
-                            <input type="file" id="license-file-input" accept=".lic" style="display: none;">
-                            
-                            <button type="button" onclick="document.getElementById('license-file-input').click()" style="width: 100%; padding: 20px; border: 2px dashed #cbd5e1; border-radius: 12px; background: #f8fafc; cursor: pointer; transition: all 0.3s;">
-                                <!-- Placeholder inicial -->
-                                <div id="license-upload-placeholder" style="text-align: center;">
-                                    <i class="lni lni-cloud-upload" style="font-size: 48px; color: #94a3b8; display: block; margin-bottom: 12px;"></i>
-                                    <div style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">Haz clic para seleccionar archivo</div>
-                                    <div style="font-size: 13px; color: #64748b;">Formato soportado: .lic</div>
-                                </div>
-                                
-                                <!-- Información del archivo seleccionado -->
-                                <div id="license-file-selected" style="display: none;">
-                                    <div style="display: flex; align-items: center; gap: 16px; justify-content: center;">
-                                        <i class="lni lni-certificate" style="font-size: 48px; color: #f59e0b;"></i>
-                                        <div style="text-align: left;">
-                                            <div style="font-size: 14px; font-weight: 600; color: #92400e;" id="license-file-name-display"></div>
-                                            <div style="font-size: 12px; color: #d97706;" id="license-file-size-display"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </button>
-                            
-                            <small style="font-size: 12px; color: #64748b; display: block; margin-top: 6px;">
-                                <i class="lni lni-files" style="color: #8b5cf6;"></i>
-                                Selecciona el archivo .lic proporcionado por soporte
-                            </small>
-                        </div>
-
-                        <button type="button" id="btn-upload-license" class="main-btn success-btn btn-hover w-100" style="padding: 12px; font-weight: 600; margin-bottom: 16px;">
-                            <i class="lni lni-checkmark-circle" style="margin-right: 6px;"></i>
-                            <span>Cargar Licencia</span>
-                        </button>
-
-                        <!-- Warning box -->
-                        <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border-left: 3px solid #f59e0b;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                                <i class="lni lni-warning" style="font-size: 20px; color: #d97706; margin-top: 2px;"></i>
-                                <div>
-                                    <div style="font-size: 13px; font-weight: 600; color: #78350f; margin-bottom: 4px;">Importante</div>
-                                    <div style="font-size: 12px; color: #92400e;">Solo carga archivos .lic válidos proporcionados por soporte. Archivos incorrectos pueden causar problemas de acceso.</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <br><br>
-<div class="row mb-4">
-    <div class="col-lg-12">
-        <div style="
-            background:#ffffff;
-            padding:22px;
-            border-radius:12px;
-            border:1px solid #e5e7eb;
-        ">
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:flex-start;
-                gap:20px;
-                flex-wrap:wrap;
-            ">
-                
-                <div style="flex:1; min-width:260px;">
-                    <div style="
-                        display:flex;
-                        align-items:center;
-                        gap:8px;
-                        margin-bottom:6px;
-                    ">
-                        <i class="lni lni-code" style="font-size:15px; color:#6b7280;"></i>
-                        <span style="
-                            font-size:13px;
-                            font-weight:600;
-                            color:#111827;
-                        ">
-                            Identificador del equipo
-                        </span>
-                    </div>
-
-                    <div style="
-                        font-size:12px;
-                        color:#6b7280;
-                        margin-bottom:12px;
-                    ">
-                        Necesario para emitir la licencia de uso
-                    </div>
-
-                    <div style="
-                        background:#f9fafb;
-                        border:1px solid #e5e7eb;
-                        border-radius:8px;
-                        padding:12px;
-                        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-                        font-size:13px;
-                        color:#111827;
-                        word-break:break-all;
-                    ">
-                        <span id="machine-hash-display">Cargando…</span>
-                    </div>
-                </div>
-
-                <div style="
-                    display:flex;
-                    flex-direction:column;
-                    gap:10px;
-                ">
-                    <button
-                        type="button"
-                        id="btn-copy-machine-hash"
-                        class="btn btn-sm"
-                        style="
-                            background:rgb(37, 97, 233);
-                            color:#ffffff;
-                            border-radius:8px;
-                            padding:8px 14px;
-                            font-size:13px;
-                            font-weight:500;
-                            display:flex;
-                            align-items:center;
-                            gap:6px;
-                        ">
-                        <i class="lni lni-clipboard"></i>
-                        Copiar
-                    </button>
-
-                    <button
-                        type="button"
-                        id="btn-refresh-machine-hash"
-                        class="btn btn-sm"
-                        style="
-                            background:transparent;
-                            color:#374151;
-                            border:1px solid #d1d5db;
-                            border-radius:8px;
-                            padding:8px 14px;
-                            font-size:13px;
-                            font-weight:500;
-                            display:flex;
-                            align-items:center;
-                            gap:6px;
-                        ">
-                        <i class="lni lni-reload"></i>
-                        Regenerar
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-</div>
-
-        </div>
-    </div>
-</div>
-<!-- Modal de mensajes -->
 
 
 
@@ -1507,6 +932,44 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
             cerrarModal();
         });
     });
+    document.getElementById('logo-input').addEventListener('change', async function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    const errEl = document.getElementById('logo-error');
+    const sucEl = document.getElementById('logo-success');
+    errEl.style.display = 'none';
+    sucEl.style.display = 'none';
+
+    // Preview instantáneo
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('logo-preview-wrapper').innerHTML = 
+            `<img id="logo-preview" src="${e.target.result}" style="width:100%;height:100%;object-fit:contain;">`;
+    };
+    reader.readAsDataURL(file);
+
+    // Subir
+    const fd = new FormData();
+    fd.append('logo', file);
+    fd.append('_token', '{{ csrf_token() }}');
+
+    try {
+        const res = await fetch('{{ route("empresa.logo") }}', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.success) {
+            sucEl.textContent = 'Logo actualizado correctamente';
+            sucEl.style.display = 'block';
+            setTimeout(() => sucEl.style.display = 'none', 3000);
+        } else {
+            errEl.textContent = data.message || 'Error al subir el logo';
+            errEl.style.display = 'block';
+        }
+    } catch(e) {
+        errEl.textContent = 'Error de conexión';
+        errEl.style.display = 'block';
+    }
+});
     </script>
 <!-- <script>
 document.addEventListener('DOMContentLoaded', function() {

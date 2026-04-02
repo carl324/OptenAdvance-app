@@ -95,10 +95,14 @@ Route::middleware(['ensure.admin.exists'])->group(function () {
             Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
             Route::get('/api/clientes/buscar', [ClienteController::class, 'buscar'])->name('clientes.buscar');
             Route::post('/clientes/{cliente}/abonar', [ClienteController::class, 'abonar'])->name('clientes.abonar');
+            Route::get('/clientes/{cliente}/abonos/{abono}/comprobante', [ClienteController::class, 'comprobante'])->name('clientes.comprobante');
             Route::get('/clientes/{cliente}', [ClienteController::class, 'show'])->name('clientes.show');
+            Route::get('/clientes/{cliente}/abonos', [ClienteController::class, 'listarAbonos'])->name('clientes.listarAbonos');
+            Route::get('/clientes/{cliente}/abonos/print', [ClienteController::class, 'printAbonos'])->name('clientes.printAbonos');
             Route::get('/licencia', fn() => view('licencia.index'))->name('licencia.index');
             Route::get('/empresa', [EmpresaController::class, 'edit'])->name('empresa.index');
             Route::post('/empresa', [EmpresaController::class, 'update'])->name('empresa.update');
+            Route::post('/empresa/logo', [EmpresaController::class, 'updateLogo'])->name('empresa.logo');
             Route::get('/personal', [PersonalController::class, 'index'])->name('personal.index');
             Route::post('/personal', [PersonalController::class, 'store'])->name('personal.store');
             Route::post('/empleados/{id}/update', [PersonalController::class, 'update']);

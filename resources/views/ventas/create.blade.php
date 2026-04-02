@@ -373,6 +373,10 @@ textarea {
 #carrito-contenido td {
     vertical-align: middle;
 }
+#btn-confirmar-pago:disabled {
+    cursor: not-allowed !important;
+    pointer-events: all !important;
+}
 </style>
 
 
@@ -781,7 +785,7 @@ function buscarClientePOS(q) {
         const clientes = await res.json();
         lista.innerHTML = '';
         if (!clientes.length) {
-            lista.innerHTML = '<div style="padding:10px;font-size:13px;color:#64748b;">Sin resultados — usa el botón + para registrar</div>';
+            lista.innerHTML = '<div style="padding:10px;font-size:13px;color:#64748b;">Sin resultados — usa el botón + para registrar un cliente</div>';
             lista.style.display = 'block';
             return;
         }
@@ -827,29 +831,37 @@ function limpiarClienteSeleccionado() {
 }
 function validarCupoCredito() {
     const err = document.getElementById('error-cliente-credito');
+    const btnFinalizar = document.getElementById('btn-confirmar-pago');
     if (!err) return;
 
-    // Siempre limpiar primero; sólo se re-establecerá si hay un problema de cupo
     err.textContent = '';
+    err.innerHTML = '';
 
     const formaPago = document.getElementById('forma_pago').value;
+
     if (formaPago !== 'credito' || !clienteSeleccionadoId) {
+        if (btnFinalizar) { btnFinalizar.disabled = false; btnFinalizar.style.cursor = ''; }
         return;
     }
 
-    if (clienteCupoCredito === null) { // sin límite
-        err.textContent = '';
-        return;
-    }
-
+    if (clienteCupoCredito === null) {
+        err.textContent = 'Este cliente no tiene crédito habilitado.';
+    } else if (clienteCupoCredito !== -1) {
     const total = window.totalVentaNumeric || 0;
     const cupoDisponible = clienteCupoCredito - clienteSaldoPendiente;
 
-    if (total > cupoDisponible) {
-        err.innerHTML = `Esta venta con el valor de $${total.toLocaleString('es-CO')} supera el cupo disponible de $${cupoDisponible.toLocaleString('es-CO')} para este cliente.  
-            <a href="/clientes/${clienteSeleccionadoId}" > Aumentar cupo</a>`;
-    } else {
-        err.textContent = '';
+    if (cupoDisponible <= 0) {
+        err.innerHTML = `Este cliente ya superó su cupo de $${clienteCupoCredito.toLocaleString('es-CO')}. Saldo pendiente: $${clienteSaldoPendiente.toLocaleString('es-CO')}. No puede comprar a crédito hasta abonar. <a href="/clientes/${clienteSeleccionadoId}">Ver cliente</a>`;
+    } else if (total > cupoDisponible) {
+        const cupoMostrar = cupoDisponible < 0 ? 0 : cupoDisponible;
+        err.innerHTML = `Esta venta con el valor de $${total.toLocaleString('es-CO')} supera el cupo disponible de $${cupoMostrar.toLocaleString('es-CO')} para este cliente. <a href="/clientes/${clienteSeleccionadoId}">Aumentar cupo</a>`;
+    }
+}
+
+    const hayError = err.textContent !== '' || err.innerHTML !== '';
+    if (btnFinalizar) {
+        btnFinalizar.disabled = hayError;
+        btnFinalizar.style.cursor = hayError ? 'not-allowed' : '';
     }
 }
 function toggleRegistroRapido() {
@@ -1450,21 +1462,33 @@ function seleccionarPago(metodo) {
 }
 
 // Confirmar venta
-function confirmarVenta() {
+async function confirmarVenta() {
     if (carrito.length === 0) {
         mostrarMensaje('El carrito está vacío', 'error');
         return;
     }
+ if (clienteSeleccionadoId) {
+        try {
+            const res = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(document.getElementById('buscar-cliente-input').value)}`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            const clientes = await res.json();
+            const fresco = clientes.find(c => c.id === clienteSeleccionadoId);
+            if (fresco) {
+                clienteCupoCredito = fresco.cupo_credito ?? null;
+                clienteSaldoPendiente = fresco.saldo_pendiente ?? 0;
+            }
+        } catch(e) {}
+    }
 
-    const total = carrito.reduce((sum, item) => {
-        return sum + (item.cantidad * item.subtotalConIva);
-    }, 0);
-
+    const total = carrito.reduce((sum, item) => sum + (item.cantidad * item.subtotalConIva), 0);
     document.getElementById('modal-total').textContent = formatoPrecio(total);
-    
+    validarCupoCredito();
+
     const modal = new bootstrap.Modal(document.getElementById('modalPago'));
     modal.show();
 }
+   
 
 // Finalizar venta
 async function finalizarVenta() {
@@ -1491,12 +1515,15 @@ async function finalizarVenta() {
         return;
     }
 
-    if (forma_pago === 'credito' && clienteCupoCredito !== null) {
+if (forma_pago === 'credito' && clienteCupoCredito !== null) {
+    if (clienteCupoCredito === -1) {
+    } else {
         const cupoDisponible = clienteCupoCredito - clienteSaldoPendiente;
         if ((window.totalVentaNumeric || 0) > cupoDisponible) {
             return;
         }
     }
+}
 
 
     // Validación visual: si está vacío al presionar Finalizar, mostrar sólo el mensaje inline del campo

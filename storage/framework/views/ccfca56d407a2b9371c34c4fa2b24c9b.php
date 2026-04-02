@@ -61,19 +61,23 @@
 
         <!-- Base de datos -->
         <a href="<?php echo e(route('db.index')); ?>" class="text-decoration-none">
-          <div class="d-flex align-items-center gap-3 p-3" style="border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; transition: all 0.2s; cursor: pointer;"
-               onmouseover="this.style.borderColor='#10b981'; this.style.boxShadow='0 4px 20px rgba(16,185,129,0.10)'"
-               onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
-            <div style="width:40px; height:40px; background:#ecfdf5; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-              <i class="lni lni-database" style="font-size:19px; color:#10b981;"></i>
-            </div>
-            <div>
-              <div style="font-size:14px; font-weight:700; color:#1e293b; margin-bottom:1px;">Base de datos</div>
-              <div style="font-size:12px; color:#64748b;">Respaldos, restauración y exportación</div>
-            </div>
-            <i class="lni lni-chevron-right ms-auto" style="color:#94a3b8;"></i>
-          </div>
-        </a>
+  <div class="d-flex align-items-center gap-3 p-3" 
+       style="border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; transition: all 0.2s; cursor: pointer;"
+       onmouseover="this.style.borderColor='#ec4899'; this.style.boxShadow='0 4px 20px rgba(236,72,153,0.15)'"
+       onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+    
+    <div style="width:40px; height:40px; background:#fdf2f8; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+      <i class="lni lni-database" style="font-size:19px; color:#ec4899;"></i>
+    </div>
+
+    <div>
+      <div style="font-size:14px; font-weight:700; color:#1e293b; margin-bottom:1px;">Base de datos</div>
+      <div style="font-size:12px; color:#64748b;">Respaldos, restauración y exportación</div>
+    </div>
+
+    <i class="lni lni-chevron-right ms-auto" style="color:#94a3b8;"></i>
+  </div>
+</a>
 
         <!-- Licencia -->
         <a href="<?php echo e(route('licencia.index')); ?>" class="text-decoration-none">
@@ -109,15 +113,18 @@
         <!-- Devoluciones -->
 <a href="<?php echo e(route('configuracion.devoluciones')); ?>" class="text-decoration-none">
   <div class="d-flex align-items-center gap-3 p-3" style="border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; transition: all 0.2s; cursor: pointer;"
-       onmouseover="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 4px 20px rgba(245,158,11,0.10)'"
+       onmouseover="this.style.borderColor='#10b981'; this.style.boxShadow='0 4px 20px rgba(16,185,129,0.10)'"
        onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
-    <div style="width:40px; height:40px; background:#fffbeb; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-      <i class="lni lni-reload" style="font-size:19px; color:#f59e0b;"></i>
+    
+    <div style="width:40px; height:40px; background:#ecfdf5; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+      <i class="lni lni-reload" style="font-size:19px; color:#10b981;"></i>
     </div>
+
     <div>
       <div style="font-size:14px; font-weight:700; color:#1e293b; margin-bottom:1px;">Devoluciones</div>
       <div style="font-size:12px; color:#64748b;">Días permitidos y motivos de devolución</div>
     </div>
+
     <i class="lni lni-chevron-right ms-auto" style="color:#94a3b8;"></i>
   </div>
 </a>
