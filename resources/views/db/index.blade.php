@@ -6,7 +6,13 @@
 
 
 
-
+<style>
+.nav-tabs .nav-link.active {
+    color: #3b82f6 !important;
+    border-bottom: 3px solid #3b82f6 !important;
+    background: transparent !important;
+}
+</style>
     <div class="wrap">
         <section class="tab-components">
             <div class="container-fluid">
@@ -33,8 +39,7 @@
                     <div>
                         <h6 class="mb-2" style="font-size: 18px; font-weight: 600;">
                             <i class="lni lni-cloud-upload" style="color: #3b82f6; margin-right: 8px;"></i>
-                            Gestión de respaldos y licencia
-                        </h6>
+                            Gestión de respaldos
                         <p class="text-xs text-gray mb-0">Configura y administra los respaldos de tu base de datos y la licencia de tu software</p>
                     </div>
                     

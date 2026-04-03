@@ -90,7 +90,7 @@
                                 
                                 <h2>{{ $empresa->nombre ?? 'Empresa' }}</h2>
                                 <p class="text-sm">
-                                    {{ $empresa->direccion ?? '-' }}
+                                  <span class="text-medium">Direccion:</span>  {{ $empresa->direccion ?? '-' }}
                                 </p>
                                 <p class="text-sm">
                                     <span class="text-medium">Email:</span> {{ $empresa->email ?? '-' }}
@@ -102,9 +102,13 @@
                                     <span class="text-medium">NIT:</span> {{ $empresa->nit ?? '-' }}
                                 </p>
                             </div>
- <div class="invoice-logo">
-                      <img src="/assets/images/invoice/uideck-logo.svg" alt="" />
-                    </div>
+<div class="invoice-logo">
+    @if($empresa && $empresa->logo)
+        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path($empresa->logo))) }}"  alt="Logo" />
+    @else
+        <img src="/assets/images/invoice/uideck-logo.svg" alt="" />
+    @endif
+</div>
                             <div class="invoice-date">
                                 @php
                                     $fechaRaw = $venta->factura->created_at ?? $venta->created_at ?? $venta->fecha ?? $venta->factura->fecha_emision ?? now();

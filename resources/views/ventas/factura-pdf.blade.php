@@ -223,6 +223,9 @@
     <table class="header-table">
         <tr>
             <td class="company-info" style="width: 65%;">
+             @if($empresa && $empresa->logo)
+        <img src="{{ public_path($empresa->logo) }}" alt="Logo" style="max-height:60px;max-width:140px;object-fit:contain;display:block;margin-bottom:6px;" />
+    @endif
                 <h1>{{ $empresa->nombre ?? 'Mi Empresa' }}</h1>
                 <p>NIT: {{ $empresa->nit ?? '---' }}</p>
                 <p>{{ $empresa->direccion ?? '' }}</p>

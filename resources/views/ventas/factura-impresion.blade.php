@@ -212,6 +212,9 @@
 
     <!-- Header -->
     <div class="header">
+      @if($empresa && $empresa->logo)
+        <img src="{{ asset($empresa->logo) }}" alt="Logo" style="max-height:50px;max-width:120px;object-fit:contain;display:block;margin:0 auto 6px;" />
+    @endif
         <h1>{{ $empresa->nombre ?? 'Factura' }}</h1>
         <p>NIT: {{ $empresa->nit ?? '---' }}</p>
         <p>Direccion:{{ $empresa->direccion ?? '' }}</p>

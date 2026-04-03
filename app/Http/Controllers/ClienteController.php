@@ -101,10 +101,11 @@ $data = $request->validate([
             'cliente' => $cliente,
         ]);
     }
-    public function printAbonos(Cliente $cliente)
+public function printAbonos(Cliente $cliente)
 {
-    $abonos = $cliente->abonos()->orderByDesc('created_at')->get();
-    return view('clientes.historial-abonos-print', compact('cliente', 'abonos'));
+    $abonos  = $cliente->abonos()->orderByDesc('created_at')->get();
+    $empresa = \App\Models\Empresa::first();
+    return view('clientes.historial-abonos-print', compact('cliente', 'abonos', 'empresa'));
 }
     public function listarAbonos(Request $request, Cliente $cliente)
 {
@@ -258,8 +259,9 @@ public function comprobante(Cliente $cliente, Abono $abono)
         abort(403);
     }
 
-    $venta = \App\Models\Venta::findOrFail($abono->venta_id);
+    $venta   = \App\Models\Venta::findOrFail($abono->venta_id);
+    $empresa = \App\Models\Empresa::first();
 
-    return view('clientes.comprobante-abono', compact('cliente', 'abono', 'venta'));
+    return view('clientes.comprobante-abono', compact('cliente', 'abono', 'venta', 'empresa'));
 }
 }

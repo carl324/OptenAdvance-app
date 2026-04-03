@@ -118,9 +118,9 @@
 
     <!-- Header -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #dad9d9;">
-        <div style="width:80px;height:80px;background:#f8fafc;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#94a3b8;text-align:center;border:1px solid #e2e8f0;">
-            LOGO<br>EMPRESA
-        </div>
+@if($empresa && $empresa->logo)
+    <img src="{{ asset($empresa->logo) }}" alt="Logo" style="width:60px;height:60px;border-radius:12px;object-fit:contain;" />
+@endif
         <div style="text-align:right;">
             <h1 style="font-size:24px;font-weight:800;color:#0f172a;letter-spacing:-0.5px;margin-bottom:4px;">Comprobante de Abono</h1>
             <p style="font-size:12px;color:#64748b;">

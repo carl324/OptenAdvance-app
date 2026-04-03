@@ -3592,7 +3592,6 @@ h6,
 .invoice-card .invoice-header .invoice-logo {
   width: 110px;
   height: 110px;
-  border-radius: 50%;
   overflow: hidden;
 }
 @media (max-width: 767px) {

@@ -200,9 +200,9 @@
 
     <!-- Header -->
     <div class="header-info">
-        <div class="logo-placeholder">
-            LOGO<br>EMPRESA
-        </div>
+      @if($empresa && $empresa->logo)
+    <img src="{{ asset($empresa->logo) }}" alt="Logo" style="width:60px;height:60px;border-radius:12px;object-fit:contain;" />
+@endif
         <div class="header-text">
             <h1>Historial de Abonos</h1>
             <p>Impreso el {{ now()->format('d/m/Y H:i') }}</p>
