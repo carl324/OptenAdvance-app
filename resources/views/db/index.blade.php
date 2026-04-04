@@ -40,7 +40,7 @@
                         <h6 class="mb-2" style="font-size: 18px; font-weight: 600;">
                             <i class="lni lni-cloud-upload" style="color: #3b82f6; margin-right: 8px;"></i>
                             Gestión de respaldos
-                        <p class="text-xs text-gray mb-0">Configura y administra los respaldos de tu base de datos y la licencia de tu software</p>
+                        <p class="text-xs text-gray mb-0">Configura y administra los respaldos de tu base de datos.</p>
                     </div>
                     
                 </div>
@@ -56,7 +56,7 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="cloud-tab" data-bs-toggle="tab" data-bs-target="#cloud" type="button" role="tab" style="font-weight: 600; padding: 12px 24px; border: none; background: none; color: #64748b;">
                             <i class="lni lni-cloud-sync" style="margin-right: 6px;"></i>
-                            Respaldo en la nube
+                            Respaldo automático
                         </button>
                     </li> 
                     <li class="nav-item" role="presentation">

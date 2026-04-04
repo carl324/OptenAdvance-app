@@ -23,7 +23,8 @@ class AuditoriaController extends Controller
                 'auditoria.descripcion',
                 'auditoria.ip',
                 'auditoria.created_at',
-                'users.name as usuario_nombre'
+                'users.name as usuario_nombre',
+                'users.email as usuario_email',
             )
             ->orderByDesc('auditoria.created_at');
 

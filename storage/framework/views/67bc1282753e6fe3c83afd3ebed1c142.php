@@ -9,18 +9,9 @@
 
     <div class="title-wrapper pt-30">
       <div class="row align-items-center">
+        
         <div class="col-md-6">
-          <div class="title"><h2>Auditoría del Sistema</h2></div>
-        </div>
-        <div class="col-md-6">
-          <div class="breadcrumb-wrapper">
-            <nav aria-label="breadcrumb">
-              <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                <li class="breadcrumb-item active">Auditoría</li>
-              </ol>
-            </nav>
-          </div>
+          
         </div>
       </div>
     </div>
@@ -28,50 +19,52 @@
     
     <div class="row">
       <div class="col-12">
-        <div class="card-style mb-30">
-          <form method="GET" action="<?php echo e(route('auditoria.index')); ?>">
-            <div class="row g-3 align-items-end">
-              <div class="col-lg-3 col-md-6">
-                <label class="text-sm text-gray mb-1 d-block">Desde</label>
-                <input type="date" name="desde" value="<?php echo e(request('desde')); ?>"
-                  class="form-control"
-                  style="height:40px;border-radius:6px;border:1px solid #e5e5e5;padding:0 12px;font-size:13px;width:100%;" />
-              </div>
-              <div class="col-lg-3 col-md-6">
-                <label class="text-sm text-gray mb-1 d-block">Hasta</label>
-                <input type="date" name="hasta" value="<?php echo e(request('hasta')); ?>"
-                  class="form-control"
-                  style="height:40px;border-radius:6px;border:1px solid #e5e5e5;padding:0 12px;font-size:13px;width:100%;" />
-              </div>
-              <div class="col-lg-3 col-md-6">
-                <label class="text-sm text-gray mb-1 d-block">Tipo de acción</label>
-                <div class="select-style-1">
-                  <div class="select-position">
-                    <select name="tipo_accion" class="light-bg">
-                      <option value="">Todos</option>
-                      <?php $__currentLoopData = $tiposAccion; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <option value="<?php echo e($key); ?>" <?php echo e(request('tipo_accion') == $key ? 'selected' : ''); ?>>
-                          <?php echo e($label); ?>
 
-                        </option>
-                      <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </select>
-                  </div>
+<div class="row mb-30">
+    <div class="col-12">
+        <div class="card-style" style="padding: 20px 24px;">
+            <div class="row g-2 align-items-end">
+
+                <div class="col-lg-3 col-md-6">
+                    <label class="text-xs text-gray mb-1 d-block">Desde</label>
+                    <input type="date" id="filtro-desde" value="<?php echo e(request('desde')); ?>"
+                        class="form-control filtro-auditoria"
+                        style="height:38px; border-radius:6px; border:1px solid #e5e5e5; padding:0 12px; font-size:13px; width:100%; background:#fafafa;" />
                 </div>
-              </div>
-              <div class="col-lg-3 col-md-6 d-flex gap-2">
-                <button type="submit" class="main-btn primary-btn btn-hover" style="height:40px;flex:1;">
-                  <i class="lni lni-search-alt me-1"></i> Filtrar
-                </button>
-                <?php if(request()->hasAny(['desde','hasta','tipo_accion','search'])): ?>
-                  <a href="<?php echo e(route('auditoria.index')); ?>" class="main-btn danger-btn btn-hover" style="height:40px;padding:0 16px;display:flex;align-items:center;">
-                    <i class="lni lni-close"></i>
-                  </a>
-                <?php endif; ?>
-              </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <label class="text-xs text-gray mb-1 d-block">Hasta</label>
+                    <input type="date" id="filtro-hasta" value="<?php echo e(request('hasta')); ?>"
+                        class="form-control filtro-auditoria"
+                        style="height:38px; border-radius:6px; border:1px solid #e5e5e5; padding:0 12px; font-size:13px; width:100%; background:#fafafa;" />
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <label class="text-xs text-gray mb-1 d-block">Tipo de acción</label>
+                    <select id="filtro-tipo" class="filtro-auditoria"
+                        style="height:38px; border-radius:6px; border:1px solid #e5e5e5; padding:0 12px; font-size:13px; width:100%; background:#fafafa; color:#555;">
+                        <option value="">Todos</option>
+                        <?php $__currentLoopData = $tiposAccion; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($key); ?>" <?php echo e(request('tipo_accion') == $key ? 'selected' : ''); ?>>
+                                <?php echo e($label); ?>
+
+                            </option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-6 d-flex align-items-end">
+                    <button id="btn-limpiar-filtros" type="button"
+                        class="main-btn danger-btn btn-hover"
+                        style="height:38px; padding:0 20px; font-size:13px; display:none;">
+                        <i class="lni lni-close me-1"></i> Limpiar
+                    </button>
+                </div>
+
             </div>
-          </form>
         </div>
+    </div>
+</div>
       </div>
     </div>
 
@@ -123,72 +116,58 @@
               <p class="text-sm text-gray mt-1"><?php echo e($registros->total()); ?> registros en total</p>
             </div>
             <div class="right">
-              
-              <form method="GET" action="<?php echo e(route('auditoria.index')); ?>" class="d-flex align-items-center gap-2">
-                
-                <?php $__currentLoopData = request()->only(['desde','hasta','tipo_accion']); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $val): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                  <input type="hidden" name="<?php echo e($key); ?>" value="<?php echo e($val); ?>">
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                <div class="header-search" style="display:flex!important;">
-                  <input type="text" name="search" value="<?php echo e(request('search')); ?>" placeholder="Buscar usuario o detalle..." style="min-width:200px;" />
-                  <button type="submit"><i class="lni lni-search-alt"></i></button>
-                </div>
-              </form>
+             
             </div>
           </div>
 
           <div class="table-responsive">
             <table class="table top-selling-table">
               <thead>
-                <tr>
-                  <th><h6 class="text-sm text-medium">Fecha / Hora</h6></th>
-                  <th><h6 class="text-sm text-medium">Usuario</h6></th>
-                  <th><h6 class="text-sm text-medium">Acción</h6></th>
-                  <th><h6 class="text-sm text-medium">Detalle</h6></th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php $__empty_1 = true; $__currentLoopData = $registros; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                  <?php
-                    $badge = match($r->tipo_accion) {
-                      'apertura_caja', 'cierre_caja' => 'success-btn',
-                      'anulacion_venta'              => 'warning-btn',
-                      'eliminacion_producto',
-                      'cambio_precio_producto'       => 'close-btn',
-                      default                        => 'primary-btn',
-                    };
-                  ?>
-                  <tr>
-                    <td>
-                      <p class="text-sm"><?php echo e(\Carbon\Carbon::parse($r->created_at)->format('d/m/Y')); ?></p>
-                      <p class="text-xs text-gray"><?php echo e(\Carbon\Carbon::parse($r->created_at)->format('H:i')); ?></p>
-                    </td>
-                    <td><p class="text-sm"><?php echo e($r->usuario_nombre ?? '—'); ?></p></td>
-                    <td><span class="status-btn <?php echo e($badge); ?>"><?php echo e($tiposAccion[$r->tipo_accion] ?? $r->tipo_accion); ?></span></td>
-                    <td><p class="text-sm"><?php echo e($r->descripcion); ?></p></td>
-                  </tr>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                  <tr>
-                    <td colspan="4" class="text-center">
-                      <p class="text-sm text-gray py-3">No hay registros con los filtros aplicados.</p>
-                    </td>
-                  </tr>
-                <?php endif; ?>
+    <tr>
+        <th><h6 class="text-sm text-medium">Fecha / Hora</h6></th>
+        <th><h6 class="text-sm text-medium">Usuario</h6></th>
+        <th><h6 class="text-sm text-medium">Detalle</h6></th>
+    </tr>
+</thead>
+<tbody>
+<?php $__empty_1 = true; $__currentLoopData = $registros; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+<tr>
+    <td>
+        <p class="text-sm"><?php echo e(\Carbon\Carbon::parse($r->created_at)->format('d/m/Y')); ?></p>
+        <p class="text-xs text-gray"><?php echo e(\Carbon\Carbon::parse($r->created_at)->format('H:i')); ?></p>
+    </td>
+    <td>
+        <p class="text-sm"><?php echo e($r->usuario_nombre ?? '—'); ?></p>
+        <p class="text-xs text-gray"><?php echo e($r->usuario_email ?? ''); ?></p>
+    </td>
+    <td><p class="text-sm"><?php echo e($r->descripcion); ?></p></td>
+</tr>
+<?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+<tr>
+    <td colspan="3" class="text-center">
+        <p class="text-sm text-gray py-3">No hay registros con los filtros aplicados.</p>
+    </td>
+</tr>
+<?php endif; ?>
               </tbody>
             </table>
           </div>
 
           
-          <?php if($registros->hasPages()): ?>
-            <div class="d-flex justify-content-between align-items-center mt-20">
-              <p class="text-sm text-gray">
-                Mostrando <?php echo e($registros->firstItem()); ?>–<?php echo e($registros->lastItem()); ?> de <?php echo e($registros->total()); ?>
-
-              </p>
-              <?php echo e($registros->appends(request()->query())->links()); ?>
-
-            </div>
-          <?php endif; ?>
+          <div class="d-flex justify-content-between align-items-center mt-20" id="paginacion-auditoria">
+    <p class="text-sm text-gray" id="paginacion-info"></p>
+    <div class="d-flex align-items-center gap-2">
+        <button id="btn-prev" onclick="cambiarPagina(-1)"
+            style="width:32px;height:32px;border-radius:6px;border:1px solid #e5e5e5;background:#fafafa;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <i class="lni lni-chevron-left" style="font-size:14px;"></i>
+        </button>
+        <span id="paginacion-paginas" class="text-sm text-gray" style="min-width:70px;text-align:center;"></span>
+        <button id="btn-next" onclick="cambiarPagina(1)"
+            style="width:32px;height:32px;border-radius:6px;border:1px solid #e5e5e5;background:#fafafa;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <i class="lni lni-chevron-right" style="font-size:14px;"></i>
+        </button>
+    </div>
+</div>
 
         </div>
       </div>
@@ -211,6 +190,147 @@
   .text-xs { font-size:11px; }
   .text-bold { font-weight:600; }
 </style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
 
+    const desde  = document.getElementById('filtro-desde');
+    const hasta  = document.getElementById('filtro-hasta');
+    const tipo   = document.getElementById('filtro-tipo');
+    const btnLimpiar = document.getElementById('btn-limpiar-filtros');
+
+    let timer = null;
+    let paginaActual = 1;
+
+    function hayFiltros() {
+        return desde.value || hasta.value || tipo.value;
+    }
+
+    function toggleLimpiar() {
+        btnLimpiar.style.display = hayFiltros() ? 'inline-flex' : 'none';
+    }
+
+function cargarResultados(pagina = 1) {
+    paginaActual = pagina;
+    const params = new URLSearchParams();
+    if (desde.value) params.append('desde', desde.value);
+    if (hasta.value) params.append('hasta', hasta.value);
+    if (tipo.value)  params.append('tipo_accion', tipo.value);
+    params.append('page', pagina);
+
+    fetch(`<?php echo e(route('auditoria.index')); ?>?${params.toString()}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        toggleLimpiar();
+        renderTabla(data.data);
+        renderTimeline(data.data);
+        renderPaginacion(data.current_page, data.last_page, data.from, data.to, data.total);
+    })
+    .catch(err => console.error('Error AJAX:', err));
+}
+function renderPaginacion(current, last, from, to, total) {
+    document.getElementById('paginacion-info').textContent = 
+        `Mostrando ${from}–${to} de ${total}`;
+    document.getElementById('paginacion-paginas').textContent = 
+        `Página ${current} de ${last}`;
+    document.getElementById('btn-prev').disabled = current <= 1;
+    document.getElementById('btn-next').disabled = current >= last;
+}
+
+window.cambiarPagina = function(direccion) {
+    const ultima = parseInt(document.getElementById('btn-next').disabled ? paginaActual : paginaActual + 1);
+    const nueva = paginaActual + direccion;
+    if (nueva < 1) return;
+    cargarResultados(nueva);
+};
+    function debounce(fn, ms) {
+        clearTimeout(timer);
+        timer = setTimeout(fn, ms);
+    }
+
+    [desde, hasta, tipo].forEach(el => {
+        el.addEventListener('change', () => debounce(cargarResultados, 300));
+    });
+
+    btnLimpiar.addEventListener('click', function () {
+        desde.value = '';
+        hasta.value = '';
+        tipo.value  = '';
+        cargarResultados();
+    });
+
+function renderTabla(registros) {
+    const tbody = document.querySelector('.top-selling-table tbody');
+
+    if (!registros.length) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center">
+            <p class="text-sm text-gray py-3">No hay registros con los filtros aplicados.</p>
+        </td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = registros.map(r => {
+        const fecha = new Date(r.created_at);
+        const dia   = fecha.toLocaleDateString('es-CO', {day:'2-digit', month:'2-digit', year:'numeric'});
+        const hora  = fecha.toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'});
+
+        return `<tr>
+            <td>
+                <p class="text-sm">${dia}</p>
+                <p class="text-xs text-gray">${hora}</p>
+            </td>
+            <td>
+                <p class="text-sm">${r.usuario_nombre ?? '—'}</p>
+                <p class="text-xs text-gray">${r.usuario_email ?? ''}</p>
+            </td>
+            <td><p class="text-sm">${r.descripcion ?? ''}</p></td>
+        </tr>`;
+    }).join('');
+}
+
+    function renderTimeline(registros) {
+        const timeline = document.querySelector('.audit-timeline');
+        const dotMap = {
+            'apertura_caja': 'success', 'cierre_caja': 'success',
+            'anulacion_venta': 'warning',
+            'eliminacion_producto': 'danger', 'cambio_precio_producto': 'danger',
+        };
+        const tiposAccion = <?php echo json_encode($tiposAccion, 15, 512) ?>;
+        const slice = registros.slice(0, 8);
+
+        if (!slice.length) {
+            timeline.innerHTML = `<p class="text-sm text-gray">Sin actividad registrada.</p>`;
+            return;
+        }
+
+        timeline.innerHTML = slice.map(r => {
+            const dot    = dotMap[r.tipo_accion] ?? 'primary';
+            const accion = tiposAccion[r.tipo_accion] ?? r.tipo_accion;
+            const fecha  = new Date(r.created_at);
+            const label  = fecha.toLocaleDateString('es-CO', {day:'2-digit', month:'2-digit'})
+                         + ' ' + fecha.toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'});
+
+            return `<div class="audit-timeline-item">
+                <div class="audit-timeline-dot ${dot}"></div>
+                <div class="audit-timeline-content">
+                    <p class="text-sm text-bold">${accion}</p>
+                    <p class="text-sm text-gray">${r.usuario_nombre ?? 'Sistema'}</p>
+                    <span class="text-xs text-gray">${label}</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+renderPaginacion(
+    <?php echo e($registros->currentPage()); ?>,
+    <?php echo e($registros->lastPage()); ?>,
+    <?php echo e($registros->firstItem() ?? 0); ?>,
+    <?php echo e($registros->lastItem() ?? 0); ?>,
+    <?php echo e($registros->total()); ?>
+
+);
+
+});
+</script>
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\optenadvance\app\www\resources\views/auditoria/index.blade.php ENDPATH**/ ?>
