@@ -232,6 +232,18 @@
                             </table>
                         </div>
                         <br>
+                        @if(in_array($venta->estado, ['devuelta', 'dev_parcial']))
+<div style="margin: 0 0 20px 0; padding: 14px 20px; border-radius: 8px; border-left: 4px solid {{ $venta->estado === 'devuelta' ? '#22c55e' : '#f2994a' }}; background: {{ $venta->estado === 'devuelta' ? '#f0fdf4' : '#fff7ed' }}; display: flex; align-items: center; gap: 12px;">
+    <i class="lni {{ $venta->estado === 'devuelta' ? 'lni-checkmark-circle' : 'lni-warning' }}" style="font-size: 20px; color: {{ $venta->estado === 'devuelta' ? '#22c55e' : '#f2994a' }};"></i>
+    <p class="text-sm" style="margin: 0; color: #444;">
+        @if($venta->estado === 'devuelta')
+            Esta venta ha sido reembolsada en su totalidad.
+        @else
+            Esta venta tiene un reembolso parcial registrado.
+        @endif
+    </p>
+</div>
+@endif
                         <div class="invoice-action">
                             <ul class="d-flex flex-wrap align-items-center justify-content-center gap-3">
                                 <li>

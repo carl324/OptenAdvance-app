@@ -11,12 +11,11 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Courier New', monospace;
-            background: #fff;
-            color: #000;
-        }
-
+body {
+    font-family: 'Arial', sans-serif;
+    background: #fff;
+    color: #000;
+}
         .receipt {
             width: 80mm;
             margin: 0 auto;
@@ -250,26 +249,41 @@
        
     <!-- Ítems -->
     <div class="items">
-        @foreach($venta->detalles as $detalle)
-            @php
-                $tarifaIva = optional($detalle->producto)->iva ?? null;
-                $ivaValor = $detalle->iva ?? 0;
-                $lineTotal = ($detalle->precio_unitario ?? 0) * ($detalle->cantidad ?? 1) + $ivaValor;
-            @endphp
-            <div class="item">
-                <div class="item-name">{{ optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id }}</div>
-                <div class="item-details">
-                    <span class="item-qty">{{ $detalle->cantidad }}x ${{ number_format($detalle->precio_unitario ?? 0, 0, ',', '.') }}</span>
-                    <span class="item-price">${{ number_format($lineTotal, 0, ',', '.') }}</span>
-                </div>
-                @if($ivaValor > 0)
-                <div style="font-size: 8px; text-align: right; color: #666;">
-                    IVA: ${{ number_format($ivaValor, 0, ',', '.') }} <!--({{ $tarifaIva ? $tarifaIva.'%' : '—' }})-->
-                </div>
-                @endif
-            </div>
-        @endforeach
+    @foreach($venta->detalles as $detalle)
+        @php
+            $devuelto = $productosDevueltos[$detalle->producto_id] ?? 0;
+            $totalDevuelto = $devuelto >= $detalle->cantidad;
+            $parcial = $devuelto > 0 && !$totalDevuelto;
+            $ivaValor = $detalle->iva ?? 0;
+            $lineTotal = ($detalle->precio_unitario ?? 0) * ($detalle->cantidad ?? 1) + $ivaValor;
+        @endphp
+        <div class="item">
+<div class="item-name" style="display:flex; justify-content:space-between; align-items:center;">
+    <span style="{{ $totalDevuelto ? 'text-decoration:line-through;color:#999;' : '' }}">
+        {{ optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id }}
+    </span>
+    @if($totalDevuelto)
+        <span style="font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#999;">Reembolsado</span>
+    @elseif($parcial)
+        <span style="font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#f2994a;">Parcial ({{ $devuelto }} dev.)</span>
+    @endif
+</div>
+<div class="item-details">
+    <span class="item-qty">
+        {{ $detalle->cantidad }}x ${{ number_format($detalle->precio_unitario ?? 0, 0, ',', '.') }}
+    </span>
+    <span class="item-price">
+        ${{ number_format($lineTotal, 0, ',', '.') }}
+    </span>
+</div>
+    @if($ivaValor > 0)
+    <div style="font-size:8px;text-align:right;color:#666;">
+        IVA: ${{ number_format($ivaValor, 0, ',', '.') }}
     </div>
+    @endif
+</div>
+    @endforeach
+</div>
 
     <!-- Totales -->
     <div class="totals">

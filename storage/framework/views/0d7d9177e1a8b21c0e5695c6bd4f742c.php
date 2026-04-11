@@ -238,6 +238,18 @@
                             </table>
                         </div>
                         <br>
+                        <?php if(in_array($venta->estado, ['devuelta', 'dev_parcial'])): ?>
+<div style="margin: 0 0 20px 0; padding: 14px 20px; border-radius: 8px; border-left: 4px solid <?php echo e($venta->estado === 'devuelta' ? '#22c55e' : '#f2994a'); ?>; background: <?php echo e($venta->estado === 'devuelta' ? '#f0fdf4' : '#fff7ed'); ?>; display: flex; align-items: center; gap: 12px;">
+    <i class="lni <?php echo e($venta->estado === 'devuelta' ? 'lni-checkmark-circle' : 'lni-warning'); ?>" style="font-size: 20px; color: <?php echo e($venta->estado === 'devuelta' ? '#22c55e' : '#f2994a'); ?>;"></i>
+    <p class="text-sm" style="margin: 0; color: #444;">
+        <?php if($venta->estado === 'devuelta'): ?>
+            Esta venta ha sido reembolsada en su totalidad.
+        <?php else: ?>
+            Esta venta tiene un reembolso parcial registrado.
+        <?php endif; ?>
+    </p>
+</div>
+<?php endif; ?>
                         <div class="invoice-action">
                             <ul class="d-flex flex-wrap align-items-center justify-content-center gap-3">
                                 <li>

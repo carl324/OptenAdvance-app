@@ -11,12 +11,11 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Courier New', monospace;
-            background: #fff;
-            color: #000;
-        }
-
+body {
+    font-family: 'Arial', sans-serif;
+    background: #fff;
+    color: #000;
+}
         .receipt {
             width: 80mm;
             margin: 0 auto;
@@ -250,26 +249,45 @@
        
     <!-- Ítems -->
     <div class="items">
-        <?php $__currentLoopData = $venta->detalles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $detalle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-            <?php
-                $tarifaIva = optional($detalle->producto)->iva ?? null;
-                $ivaValor = $detalle->iva ?? 0;
-                $lineTotal = ($detalle->precio_unitario ?? 0) * ($detalle->cantidad ?? 1) + $ivaValor;
-            ?>
-            <div class="item">
-                <div class="item-name"><?php echo e(optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id); ?></div>
-                <div class="item-details">
-                    <span class="item-qty"><?php echo e($detalle->cantidad); ?>x $<?php echo e(number_format($detalle->precio_unitario ?? 0, 0, ',', '.')); ?></span>
-                    <span class="item-price">$<?php echo e(number_format($lineTotal, 0, ',', '.')); ?></span>
-                </div>
-                <?php if($ivaValor > 0): ?>
-                <div style="font-size: 8px; text-align: right; color: #666;">
-                    IVA: $<?php echo e(number_format($ivaValor, 0, ',', '.')); ?> <!--(<?php echo e($tarifaIva ? $tarifaIva.'%' : '—'); ?>)-->
-                </div>
-                <?php endif; ?>
-            </div>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+    <?php $__currentLoopData = $venta->detalles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $detalle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php
+            $devuelto = $productosDevueltos[$detalle->producto_id] ?? 0;
+            $totalDevuelto = $devuelto >= $detalle->cantidad;
+            $parcial = $devuelto > 0 && !$totalDevuelto;
+            $ivaValor = $detalle->iva ?? 0;
+            $lineTotal = ($detalle->precio_unitario ?? 0) * ($detalle->cantidad ?? 1) + $ivaValor;
+        ?>
+        <div class="item">
+<div class="item-name" style="display:flex; justify-content:space-between; align-items:center;">
+    <span style="<?php echo e($totalDevuelto ? 'text-decoration:line-through;color:#999;' : ''); ?>">
+        <?php echo e(optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id); ?>
+
+    </span>
+    <?php if($totalDevuelto): ?>
+        <span style="font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#999;">Reembolsado</span>
+    <?php elseif($parcial): ?>
+        <span style="font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#f2994a;">Parcial (<?php echo e($devuelto); ?> dev.)</span>
+    <?php endif; ?>
+</div>
+<div class="item-details">
+    <span class="item-qty">
+        <?php echo e($detalle->cantidad); ?>x $<?php echo e(number_format($detalle->precio_unitario ?? 0, 0, ',', '.')); ?>
+
+    </span>
+    <span class="item-price">
+        $<?php echo e(number_format($lineTotal, 0, ',', '.')); ?>
+
+    </span>
+</div>
+    <?php if($ivaValor > 0): ?>
+    <div style="font-size:8px;text-align:right;color:#666;">
+        IVA: $<?php echo e(number_format($ivaValor, 0, ',', '.')); ?>
+
     </div>
+    <?php endif; ?>
+</div>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+</div>
 
     <!-- Totales -->
     <div class="totals">

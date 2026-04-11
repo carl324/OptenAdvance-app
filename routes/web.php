@@ -88,6 +88,13 @@ Route::middleware(['ensure.admin.exists'])->group(function () {
             Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
             Route::get('/base-de-datos', fn() => view('db.index'))->name('db.index');
             Route::get('/ajustes', fn() => view('ajustes.index'))->name('ajustes.index');
+            Route::get('/ajustes/devoluciones', [ConfiguracionDevolucionController::class, 'devoluciones'])->name('configuracion.devoluciones');
+Route::post('/ajustes/devoluciones/dias', [ConfiguracionDevolucionController::class, 'guardarDias'])->name('configuracion.dias');
+Route::post('/ajustes/motivos-devolucion', [ConfiguracionDevolucionController::class, 'storeMotivoDevolucion'])->name('motivos-devolucion.store');
+Route::put('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionController::class, 'updateMotivoDevolucion'])->name('motivos-devolucion.update');
+Route::patch('/ajustes/motivos-devolucion/{motivo}/toggle', [ConfiguracionDevolucionController::class, 'toggleMotivoDevolucion'])->name('motivos-devolucion.toggle');
+Route::delete('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionController::class, 'destroyMotivoDevolucion'])->name('motivos-devolucion.destroy');
+
             Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
             Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
             Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
@@ -148,12 +155,6 @@ Route::middleware(['ensure.admin.exists'])->group(function () {
 
 Route::get('/ventas/{venta}/devolucion', [DevolucionController::class, 'create'])->name('ventas.devolucion');
 Route::post('/ventas/{venta}/devolucion', [DevolucionController::class, 'store'])->name('ventas.devolucion.store');
-Route::get('/ajustes/devoluciones', [ConfiguracionDevolucionController::class, 'devoluciones'])->name('configuracion.devoluciones');
-Route::post('/ajustes/devoluciones/dias', [ConfiguracionDevolucionController::class, 'guardarDias'])->name('configuracion.dias');
-Route::post('/ajustes/motivos-devolucion', [ConfiguracionDevolucionController::class, 'storeMotivoDevolucion'])->name('motivos-devolucion.store');
-Route::put('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionController::class, 'updateMotivoDevolucion'])->name('motivos-devolucion.update');
-Route::patch('/ajustes/motivos-devolucion/{motivo}/toggle', [ConfiguracionDevolucionController::class, 'toggleMotivoDevolucion'])->name('motivos-devolucion.toggle');
-Route::delete('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionController::class, 'destroyMotivoDevolucion'])->name('motivos-devolucion.destroy');
 // Ventas
             Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
             Route::get('/ventas/nueva', [VentaController::class, 'create'])->name('ventas.create');

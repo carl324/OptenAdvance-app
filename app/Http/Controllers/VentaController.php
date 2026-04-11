@@ -646,15 +646,21 @@ public function obtenerTodosProductos()
     }
 
     // Vista para impresión (recibo thermal)
-    public function impresion(Venta $venta)
-    {
-        $venta->load('detalles.producto', 'factura');
-        $empresa = Empresa::first();
+public function impresion(Venta $venta)
+{
+    $venta->load('detalles.producto', 'factura');
+    $empresa = Empresa::first();
 
-        return view('ventas.factura-impresion', [
-            'venta' => $venta,
-            'empresa' => $empresa
-        ]);
-    }
+    $productosDevueltos = \App\Models\DevolucionDetalle::whereHas('devolucion', fn($q) => $q->where('venta_id', $venta->id))
+        ->selectRaw('producto_id, SUM(cantidad_devuelta) as total_devuelto')
+        ->groupBy('producto_id')
+        ->pluck('total_devuelto', 'producto_id');
+
+    return view('ventas.factura-impresion', [
+        'venta'               => $venta,
+        'empresa'             => $empresa,
+        'productosDevueltos'  => $productosDevueltos,
+    ]);
+}
 
 }

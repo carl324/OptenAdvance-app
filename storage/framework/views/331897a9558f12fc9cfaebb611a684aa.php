@@ -112,7 +112,7 @@ input[type="password"] {
             <div class="col-lg-6">
               <div class="signin-wrapper">
                 <div class="form-wrapper">
-                  <h6 class="mb-15">Formulario de inicio de sesiónnn</h6>
+                  <h6 class="mb-15">Formulario de inicio de sesión</h6>
                   <p class="text-sm mb-25">
                     Ingresa tus credenciales para acceder al sistema.
                   </p>

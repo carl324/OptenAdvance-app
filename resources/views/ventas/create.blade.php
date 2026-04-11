@@ -1230,6 +1230,71 @@ inputBuscar.addEventListener('input', function() {
     }, 300);
 });
 
+inputBuscar.addEventListener('input', function() {
+    clearTimeout(busquedaTimeout);
+    const query = this.value.trim();
+
+    if (query.length === 0) {
+        cargarProductos();
+        return;
+    }
+
+    if (query.length < 2) return;
+
+    busquedaTimeout = setTimeout(async () => {
+        try {
+            const res = await fetch(`/api/productos/buscar?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            actualizarTablaProductos(data.length ? data : null);
+        } catch (e) {
+            mostrarAlertaCarrito('Error al buscar productos');
+        }
+    }, 300);
+});
+
+document.addEventListener('keydown', async function(e) {
+    if (e.key !== 'Enter') return;
+
+    // Solo actuar si el foco NO está en un input de cantidad del carrito
+    const activo = document.activeElement;
+    const esCantidad = activo && activo.classList.contains('cantidad-display');
+    const esModalAbierto = document.getElementById('modalPago')?.classList.contains('show');
+    if (esCantidad || esModalAbierto) return;
+
+    e.preventDefault();
+
+    const query = inputBuscar.value.trim();
+    if (!query) return;
+
+    try {
+        const res = await fetch(`/api/productos/buscar?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        if (data.length === 1) {
+            const p = data[0];
+            agregarAlCarrito({
+                id: p.id,
+                nombre: p.nombre,
+                precio: p.precio,
+                stock: p.stock,
+                iva: COBRA_IVA ? (p.iva || 0) : 0,
+                unidad: p.unidad || 'Unidad'
+            });
+            inputBuscar.value = '';
+            cargarProductos();
+        } else if (data.length > 1) {
+            actualizarTablaProductos(data);
+        } else {
+            mostrarAlertaCarrito('Producto no encontrado');
+            inputBuscar.value = '';
+        }
+    } catch (e) {
+        mostrarAlertaCarrito('Error al buscar producto');
+    } finally {
+        setTimeout(() => inputBuscar.focus(), 50);
+    }
+});
+
 // Agregar al carrito
 function agregarAlCarrito(producto) {
     if (producto.stock === 0) {
@@ -1383,6 +1448,7 @@ function cambiarCantidadDirecta(index, valor) {
 function confirmarEliminar(index) {
     carrito.splice(index, 1);
     actualizarCarrito();
+    setTimeout(() => inputBuscar.focus(), 50);
 }
 
 // Actualizar total

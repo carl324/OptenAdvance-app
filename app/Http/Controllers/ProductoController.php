@@ -22,8 +22,11 @@ class ProductoController extends Controller
         // Búsqueda server-side con when()
         $productos = Producto::activos()
             ->when($search, function ($query, $search) {
-                return $query->where('nombre', 'LIKE', '%' . $search . '%');
-            })
+    return $query->where(function($q) use ($search) {
+        $q->where('nombre', 'LIKE', '%' . $search . '%')
+          ->orWhere('codigo_barras', $search);
+    });
+})
             ->orderBy('id', 'desc')
             ->paginate(10)
             ->appends($request->query());
@@ -87,10 +90,13 @@ class ProductoController extends Controller
             'stock'  => 'required|numeric|min:0',
             'unidad' => 'required|string|in:Unidad,Par,Docena,Caja,Paquete,Sobre,Frasco,Botella,Lata,Tubo,Gramo,Kilogramo,Libra,Tonelada,Onza,Mililitro,Litro,Galón,Metro cúbico,Milímetro,Centímetro,Metro,Metro lineal,Kilómetro,Pulgada,Pie,Metro cuadrado,Centímetro cuadrado,Hectárea',
             'iva'          => 'required|numeric|min:0|max:100',
-            'codigo_barras' => 'nullable|string|max:50|unique:productos,codigo_barras',
+         
+    'codigo_barras' => 'nullable|string|max:50|unique:productos,codigo_barras',
+], [
+    'codigo_barras.unique' => 'Este código de barras ya está registrado en otro producto.',
+]);
 
-        ]);
-
+        
         // Normalizar nombre
         $data['nombre'] = trim(mb_strtolower($data['nombre']));
 
