@@ -304,6 +304,9 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
         var existenProductosConIVA = {{ $existenProductosConIVA ? 'true' : 'false' }};
 
         // Switch cobrador IVA
+        // NOTA: Element 'switch-cobra-iva' está comentado en HTML (línea 127-135)
+        // Si se descomenta, descomentar también aquí
+        /*
 var switchInput     = document.getElementById('switch-cobra-iva');
 var modalAbierto    = false;
 var cierreModalPendiente = null;
@@ -312,6 +315,7 @@ var modal           = document.getElementById('modal-iva');
 var modalInstance   = modal ? new bootstrap.Modal(modal) : null;
 var btnConfirmar    = document.getElementById('btn-iva-confirmar');
 var btnCancelar     = document.getElementById('btn-iva-cancelar');
+        */
 
         // Estado único de cobra_iva
        
@@ -486,6 +490,8 @@ var btnCancelar     = document.getElementById('btn-iva-cancelar');
         }
 
         // Switch cobra_iva
+        // NOTA: Comentado junto con switch-cobra-iva (línea 307)
+        /*
         function toggleSwitch() {
             if (modalAbierto) return; // bloquear interacciones mientras el modal está activo
 
@@ -508,8 +514,11 @@ var btnCancelar     = document.getElementById('btn-iva-cancelar');
             guardarEmpresaAJAX('cobra_iva', estadoCobraIVA ? 1 : 0);
         }
         if (switchInput) switchInput.addEventListener('change', toggleSwitch);
+        */
 
         // Acciones modal
+        // NOTA: Comentado junto con switch-cobra-iva (línea 307)
+        /*
         if (btnConfirmar) btnConfirmar.addEventListener('click', function(){
             if (typeof cierreModalPendiente === 'function') {
                 cierreModalPendiente();
@@ -523,6 +532,7 @@ var btnCancelar     = document.getElementById('btn-iva-cancelar');
             if (switchInput) switchInput.checked = true;
             cerrarModal();
         });
+        */
     });
     document.getElementById('logo-input').addEventListener('change', async function() {
     const file = this.files[0];
@@ -536,7 +546,7 @@ var btnCancelar     = document.getElementById('btn-iva-cancelar');
     // Preview instantáneo
     const reader = new FileReader();
     reader.onload = e => {
-        document.getElementById('logo-preview-wrapper').innerHTML = 
+        document.getElementById('logo-preview-wrapper').innerHTML =
             `<img id="logo-preview" src="${e.target.result}" style="width:100%;height:100%;object-fit:contain;">`;
     };
     reader.readAsDataURL(file);
