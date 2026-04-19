@@ -45,7 +45,14 @@ class DatabaseRestoreController extends Controller
         
         // FIX: Eliminar lock expirado antes de crear uno nuevo
         if (file_exists($lockFile)) {
-            $lockTime = (int)@file_get_contents($lockFile);
+            $lockContent = @file_get_contents($lockFile);
+            // Validar que el contenido del lock sea numérico
+            if (!is_numeric($lockContent)) {
+                Log::warning('DatabaseRestoreController: Lock file corrupted, removing: ' . $lockContent);
+                @unlink($lockFile);
+                $lockContent = 0;
+            }
+            $lockTime = (int)$lockContent;
             if (time() - $lockTime < $lockTimeout) {
                 Log::warning('DatabaseRestoreController: Intento de restauración mientras otra está en proceso');
                 return response()->json(['error' => 'Una restauración ya está en proceso. Intenta de nuevo más tarde.'], 429);

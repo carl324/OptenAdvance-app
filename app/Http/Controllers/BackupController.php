@@ -29,7 +29,14 @@ class BackupController extends Controller
             $lockTimeout = 5 * 60; // 5 minutos
             
             if (file_exists($lockFile)) {
-                $lockTime = (int)@file_get_contents($lockFile);
+                $lockContent = @file_get_contents($lockFile);
+                // Validar que el contenido del lock sea numérico
+                if (!is_numeric($lockContent)) {
+                    Log::warning('BackupController::store - Lock file corrupted, removing: ' . $lockContent);
+                    @unlink($lockFile);
+                    $lockContent = 0;
+                }
+                $lockTime = (int)$lockContent;
                 $currentTime = time();
                 if ($currentTime - $lockTime < $lockTimeout) {
                     Log::warning('BackupController::store - Intento de backup mientras otro está en proceso');
