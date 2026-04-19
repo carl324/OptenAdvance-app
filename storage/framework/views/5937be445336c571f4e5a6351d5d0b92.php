@@ -123,6 +123,24 @@
     </div>
 </section>
 
+<div class="modal fade" id="modal-eliminar-motivo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+    <div class="modal-content">
+      <div class="modal-body px-4 py-4 text-center">
+        <div style="width:64px;height:64px;background:#fee2e2;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+          <i class="lni lni-trash-can" style="font-size:28px;color:#dc2626;"></i>
+        </div>
+        <h5 class="fw-semibold mb-2">¿Eliminar motivo?</h5>
+        <p class="text-sm text-gray mb-0">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer px-4 py-3 justify-content-center gap-3">
+        <button type="button" class="main-btn light-btn btn-hover" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" id="btn-confirmar-eliminar" class="main-btn danger-btn btn-hover">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
@@ -287,8 +305,21 @@ async function toggleMotivo(id, activo) {
 }
 
 // ===== ELIMINAR =====
-async function eliminarMotivo(id) {
-    if (!confirm('¿Eliminar este motivo?')) return;
+let _eliminarId = null;
+
+function eliminarMotivo(id) {
+    _eliminarId = id;
+    const modal = new bootstrap.Modal(document.getElementById('modal-eliminar-motivo'));
+    modal.show();
+}
+
+document.getElementById('btn-confirmar-eliminar').addEventListener('click', async function () {
+    const id = _eliminarId;
+    if (!id) return;
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modal-eliminar-motivo'));
+    modal.hide();
+
     try {
         const res = await fetch(`/ajustes/motivos-devolucion/${id}`, {
             method: 'DELETE',
@@ -302,7 +333,9 @@ async function eliminarMotivo(id) {
             }
         }
     } catch(e) {}
-}
+
+    _eliminarId = null;
+});
 </script>
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\optenadvance\app\www\resources\views/ajustes/devoluciones.blade.php ENDPATH**/ ?>

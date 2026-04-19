@@ -719,7 +719,7 @@
             </a>
           </li>
 
-          <li class="nav-item {{ activeRoute(['ventas.index', 'ventas.show', 'ventas.devolucion', 'ventas.factura*']) }}">
+          <li class="nav-item {{ activeRoute(['ventas.index', 'ventas.show', 'ventas.detalle', 'ventas.devolucion', 'ventas.factura*']) }}">
             <a href="{{ route('ventas.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
               <span class="icon fs-5 me-3">
                 <i class="lni lni-revenue"></i>
@@ -745,7 +745,7 @@
               <span class="text fw-semibold">Reportes</span>
             </a>
           </li>
-          <li class="nav-item {{ activeRoute('clientes.index') }}">
+          <li class="nav-item {{ activeRoute(['clientes.index', 'clientes.show']) }}">
             <a href="{{ route('clientes.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
               <span class="icon fs-5 me-3">
                 <i class="lni lni-users"></i>
@@ -765,7 +765,7 @@
           <span class="divider"><hr /></span>
 
           
-          <li class="nav-item {{ activeRoute(['ajustes.index', 'empresa.index', 'db.index', 'licencia.index']) }}">
+          <li class="nav-item {{ activeRoute(['ajustes.index', 'empresa.index', 'db.index', 'licencia.index', 'configuracion.devoluciones', 'auditoria.index']) }}">
             <a href="{{ route('ajustes.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
               <span class="icon fs-5 me-3">
                 <i class="lni lni-cog"></i>
@@ -792,7 +792,7 @@
             </a>
           </li>
 
-          <li class="nav-item {{ activeRoute(['ventas.index', 'ventas.show', 'ventas.devolucion', 'ventas.factura*']) }}">
+          <li class="nav-item {{ activeRoute(['ventas.index', 'ventas.show', 'ventas.detalle', 'ventas.devolucion', 'ventas.factura*']) }}">
             <a href="{{ route('ventas.index') }}" class="d-flex align-items-center px-3 py-2 rounded">
               <span class="icon fs-5 me-3">
                 <i class="lni lni-revenue"></i>

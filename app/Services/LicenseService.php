@@ -10,7 +10,7 @@ class LicenseService
 {
     private const MASTER_KEY = '145537332a7bf08db92cb37b3b752588c127fbb85959b5f577ab70b08d154956';
     private string $path;
-    private const CACHE_TTL = 86400; // 24 horas en segundos
+    private const CACHE_TTL = 3600; // 1 hora en segundos
 
     public function __construct()
     {
@@ -156,7 +156,7 @@ if (!file_exists($this->path)) {
     }
 
     $trialStart = Carbon::parse($row->created_at);
-    if ($now->diffInDays($trialStart, false) >= 3) {
+    if ($now->diffInDays($trialStart, false) >= 0) {
         return $this->persistState('expired', null, $now);
     }
 

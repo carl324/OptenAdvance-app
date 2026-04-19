@@ -57,13 +57,6 @@ class DatabaseRestoreController extends Controller
             return response()->json(['error' => 'No se pudo crear el lock de restauración.'], 500);
         }
 
-        $tieneActivas = Venta::whereNotIn('estado', ['completada', 'anulada'])->exists();
-        if ($tieneActivas) {
-            Log::warning('DatabaseRestoreController: Intento de restauración con ventas activas');
-            @unlink($lockFile);
-            return response()->json(['error' => 'Hay ventas en curso. Finalízalas antes de restaurar la base de datos.'], 400);
-        }
-
         $tempDir = storage_path('app' . DIRECTORY_SEPARATOR . 'temp');
         
         // FIX: Verificar que se puede crear el directorio

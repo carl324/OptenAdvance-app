@@ -42,15 +42,7 @@ class BackupController extends Controller
                 return response()->json(['error' => 'No se pudo crear el lock de respaldo. Intenta de nuevo.'], 500);
             }
 
-            // 2) Verificar ventas activas
-            $tieneActivas = Venta::whereNotIn('estado', ['completada', 'anulada'])->exists();
-            if ($tieneActivas) {
-                Log::warning('BackupController::store - Intento de backup con ventas activas en curso');
-                @unlink($lockFile);
-                return response()->json(['error' => 'Hay ventas en curso. Finalízalas antes de crear la copia de seguridad.'], 400);
-            }
-
-            // 3) Obtener configuración de la base de datos
+            // 2) Obtener configuración de la base de datos
             $dbHost = Config::get('database.connections.mysql.host');
             $dbPort = Config::get('database.connections.mysql.port', 3306);
             $dbName = Config::get('database.connections.mysql.database');

@@ -57,30 +57,48 @@ class BackupAutomatico extends Command
     {
         $ahora = Carbon::now();
 
-        $horaConfig    = Carbon::createFromFormat('H:i:s', $config->hora_backup);
-        $minutosAhora  = $ahora->hour * 60 + $ahora->minute;
-        $minutosConfig = $horaConfig->hour * 60 + $horaConfig->minute;
-
-        if (abs($minutosAhora - $minutosConfig) > 5) {
-            return false;
-        }
-
+        // Si es la primera vez, ejecutar sin restricciones
         if (!$config->ultima_fecha_backup) {
             return true;
         }
 
         $ultimoBackup = Carbon::parse($config->ultima_fecha_backup);
 
+        // Verificar si ya pasó suficiente tiempo según la frecuencia
+        $suficientesTiempoTranscurrido = false;
         switch ($config->frecuencia) {
             case 'diario':
-                return $ultimoBackup->diffInHours($ahora) >= 23;
+                $suficientesTiempoTranscurrido = $ultimoBackup->diffInHours($ahora) >= 23;
+                break;
             case 'semanal':
-                return $ultimoBackup->diffInDays($ahora) >= 6;
+                $suficientesTiempoTranscurrido = $ultimoBackup->diffInDays($ahora) >= 6;
+                break;
             case 'mensual':
-                return $ultimoBackup->diffInDays($ahora) >= 28;
-            default:
-                return false;
+                $suficientesTiempoTranscurrido = $ultimoBackup->diffInDays($ahora) >= 28;
+                break;
         }
+
+        // Si aún no pasó suficiente tiempo, no ejecutar
+        if (!$suficientesTiempoTranscurrido) {
+            return false;
+        }
+
+        // Ya pasó suficiente tiempo, ahora verificar la ventana horaria
+        $horaConfig    = Carbon::createFromFormat('H:i:s', $config->hora_backup);
+        $minutosAhora  = $ahora->hour * 60 + $ahora->minute;
+        $minutosConfig = $horaConfig->hour * 60 + $horaConfig->minute;
+
+        // Ejecutar si está dentro de ventana ±15 minutos (ampliado de 5)
+        if (abs($minutosAhora - $minutosConfig) <= 15) {
+            return true;
+        }
+
+        // Si pasaron muchas horas sin ejecutar (ej: scheduler estuvo caído), ejecutar igual
+        if ($ultimoBackup->diffInHours($ahora) >= 48) {
+            return true;
+        }
+
+        return false;
     }
 
     private function crearBackup(ConfiguracionBackup $config): array
@@ -101,14 +119,14 @@ class BackupAutomatico extends Command
                 return ['success' => false, 'error' => 'No se encontró mysqldump en el sistema'];
             }
 
-            // Error #2: Carpeta no existe
+            // Error #2: Carpeta no existe o ruta inválida
             if (!File::exists($carpeta) && !is_dir($carpeta)) {
                 $this->notificarError(
-                    'Carpeta de backup no encontrada',
-                    'La carpeta destino "' . $carpeta . '" no existe. Verifica la ruta en la configuración de backup.',
+                    'Carpeta de backup inválida o inaccesible',
+                    'La ruta "' . $carpeta . '" no existe, no es accesible o NO tiene permisos de escritura.',
                     ['carpeta' => $carpeta]
                 );
-                return ['success' => false, 'error' => 'Carpeta no existe: ' . $carpeta];
+                return ['success' => false, 'error' => 'Carpeta inválida o inaccesible: ' . $carpeta];
             }
 
             // Error #3: Sin permisos — verificación real intentando escribir
@@ -146,7 +164,9 @@ class BackupAutomatico extends Command
                 $rutaCompleta
             );
 
-            exec($comando, $output, $returnVar);
+            Log::info('Ejecutando comando: ' . $comando);
+exec($comando, $output, $returnVar);
+Log::info('Return code: ' . $returnVar . ' | Output: ' . implode(' | ', $output));
 
             File::delete($archivoCredenciales);
             $archivoCredenciales = null;
@@ -184,7 +204,7 @@ $detalle = mb_detect_encoding($detalle, 'UTF-8', true)
         : mb_convert_encoding($detalle, 'UTF-8', 'CP850');
     $this->notificarError(
         'Error inesperado en el backup',
-        'Ocurrió un error inesperado al intentar crear el respaldo. Sugerencias: verifica que la carpeta destino exista y tenga permisos de escritura, que MySQL esté corriendo y que haya espacio disponible en disco.',
+        'Ocurrió un error inesperado al intentar crear el respaldo. Sugerencias: verifica que la carpeta destino exista y tenga permisos de escritura. que MySQL esté corriendo y que haya espacio disponible en disco.',
         ['detalle' => $detalle]
     );
     return ['success' => false, 'error' => $detalle];
@@ -192,15 +212,17 @@ $detalle = mb_detect_encoding($detalle, 'UTF-8', true)
     }
 
     /**
-     * Crea una notificación de error evitando duplicados en las últimas 24h.
+     * Crea una notificación de error evitando duplicados en la última hora.
      */
     private function notificarError(string $titulo, string $mensaje, array $data = []): void
     {
         try {
-          $yaExiste = Notification::where('modulo', 'backup')
-    ->where('titulo', $titulo)
-    ->where('leida', false)
-    ->exists();
+            // Evitar duplicados: no crear si ya existe similar no leída hace menos de 1 hora
+            $yaExiste = Notification::where('modulo', 'backup')
+                ->where('titulo', $titulo)
+                ->where('leida', false)
+                ->where('created_at', '>=', now()->subDay())
+                ->exists();
 
             if (!$yaExiste) {
                 Notification::crear('backup', 'error', $titulo, $mensaje, $data);
