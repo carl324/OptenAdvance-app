@@ -68,7 +68,7 @@ public function show(Cliente $cliente)
 {
     $cliente->load(['ventas' => function ($q) {
         $q->whereIn('estado', ['credito', 'parcial'])->orderByDesc('fecha');
-    }, 'abonos']);
+    }]);
 
     $totalComprado = $cliente->ventas()->sum('total');
     $totalAbonado  = $cliente->abonos()->sum('monto');
@@ -121,10 +121,10 @@ public function printAbonos(Cliente $cliente)
 
     // Filtro rango de fechas
     if ($fechaDesde = $request->input('fecha_desde')) {
-        $query->where('created_at', '>=', $fechaDesde . ' 00:00:00');
+        $query->where('created_at', '>=', \Carbon\Carbon::parse($fechaDesde)->startOfDay());
     }
     if ($fechaHasta = $request->input('fecha_hasta')) {
-        $query->where('created_at', '<=', $fechaHasta . ' 23:59:59');
+        $query->where('created_at', '<=', \Carbon\Carbon::parse($fechaHasta)->endOfDay());
     }
 
     $abonos = $query->orderByDesc('created_at')->paginate(5)->appends($request->query());
@@ -234,7 +234,6 @@ return response()->json([
     'estado_venta'        => $venta->estado,
     'comprobante'         => [
         'abono_id'       => $abono->id,
-        'cliente_nombre' => $cliente->nombre,
         'cliente_nombre' => $cliente->nombre,
         'cliente_nit'    => $cliente->nit,
         'venta_id'       => $venta->id,
