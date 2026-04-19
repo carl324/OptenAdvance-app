@@ -1351,7 +1351,13 @@ OptenHelpers.waitForBootstrap(function() {
           return;
         }
 
-        var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        // Validar que existe el meta tag CSRF antes de acceder
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfMeta) {
+          console.error('[OptenAdvance] Meta CSRF token no encontrado');
+          return;
+        }
+        var csrfToken = csrfMeta.getAttribute('content');
 
         function fmtInt(v) {
           var n = Math.round(Number(v || 0));
@@ -1404,14 +1410,14 @@ OptenHelpers.waitForBootstrap(function() {
           clearError(main);
           fetch('<?php echo e(route('caja.cierre.resumen')); ?>', { headers: { Accept: 'application/json' } })
             .then(function(res) {
-              return res.json().then(function(data) {
-                return { res: res, data: data };
-              });
+              // Validar HTTP status ANTES de parsear JSON
+              if (!res.ok) {
+                throw new Error('Error HTTP ' + res.status + ': No se pudo cargar el resumen');
+              }
+              return res.json();
             })
-            .then(function(result) {
-              var res = result.res;
-              var data = result.data;
-              if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo cargar el resumen de cierre');
+            .then(function(data) {
+              if (!data.success) throw new Error(data.message || 'No se pudo cargar el resumen de cierre');
 
               var totalAmountEl = modal.querySelector('.total-amount');
               if (totalAmountEl) totalAmountEl.textContent = formatMoneyNoDecimals(data.monto_cierre_calculado || 0);
@@ -1533,14 +1539,14 @@ OptenHelpers.waitForBootstrap(function() {
               })
             })
               .then(function(res) {
-                return res.json().then(function(data) {
-                  return { res: res, data: data };
-                });
+                // Validar HTTP status ANTES de parsear JSON
+                if (!res.ok) {
+                  throw new Error('Error HTTP ' + res.status + ': No se pudo cerrar la caja');
+                }
+                return res.json();
               })
-              .then(function(result) {
-                var res = result.res;
-                var data = result.data;
-                if (!res.ok || !data.success) {
+              .then(function(data) {
+                if (!data.success) {
                   throw new Error(data.message || 'No se pudo cerrar la caja');
                 }
 
@@ -1599,29 +1605,29 @@ OptenHelpers.waitForBootstrap(function() {
 </script>
 <script>
 OptenHelpers.waitForBootstrap(function() {
-  // 1. Interceptor global para fetch/AJAX
-  const originalFetch = window.fetch;
-  window.fetch = function(...args) {
-    return originalFetch.apply(this, args).then(function(response) {
-      // Si es 403 y hay JSON, verificar si debe mostrar modal
-      if (response.status === 403) {
-        response.clone().json().then(function(data) {
-          if (data.show_modal) {
-            var modalEl = document.getElementById('modalExpirado');
-            if (modalEl) {
-              var modal = new bootstrap.Modal(modalEl);
-              modal.show();
+ const _originalFetch = window.fetch;
+window.fetch = async function(...args) {
+    const response = await _originalFetch(...args);
+    
+    if (response.status === 403) {
+        const clone = response.clone();
+        try {
+            const data = await clone.json();
+            if (data.show_modal) {
+                var modalEl = document.getElementById('modalExpirado');
+                if (modalEl) {
+                    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+                return response;
             }
-          }
-        }).catch(function() {
-          // No es JSON, ignorar
-        });
-      }
-      return response;
-    });
-  };
+        } catch(e) {}
+    }
+    
+    return response;
+};
 
-  // 2. Verificar si hay flash message de licencia expirada
+  // 2. Verificar si hay flash message de licencia expirada (al cargar la página)
   <?php if(session('license_expired')): ?>
     var modalEl = document.getElementById('modalExpirado');
     if (modalEl) {
@@ -1629,20 +1635,31 @@ OptenHelpers.waitForBootstrap(function() {
       modal.show();
     }
   <?php endif; ?>
-
-  // 3. Interceptor para formularios que retornan con error
-  document.addEventListener('DOMContentLoaded', function() {
-    // Si la página se recargó con el flash message, el código de arriba ya lo manejó
-  });
 });
 </script>
 <script>
 function actualizarCampana() {
     fetch('/api/notifications/count')
-        .then(r => r.json())
+        .then(r => {
+            // Validar HTTP status ANTES de parsear
+            if (!r.ok) {
+                console.warn('[OptenAdvance] Error al obtener notificaciones:', r.status);
+                return null;
+            }
+            return r.json();
+        })
         .then(data => {
+            if (!data) return;  // Si hubo error en fetch anterior
+
             const span = document.getElementById('notification-count');
             if (!span) return;
+
+            // Validar que count existe
+            if (typeof data.count !== 'number') {
+                console.warn('[OptenAdvance] data.count no es válido:', data.count);
+                return;
+            }
+
             if (data.count > 0) {
                 span.textContent = data.count > 9 ? '9+' : data.count;
                 span.style.display = 'flex';
@@ -1650,7 +1667,9 @@ function actualizarCampana() {
                 span.style.display = 'none';
             }
         })
-        .catch(() => {});
+        .catch(err => {
+            console.error('[OptenAdvance] Error actualizando campana:', err);
+        });
 }
 
 actualizarCampana();

@@ -58,33 +58,29 @@ $hash = Cache::remember('license_machine_hash', 604800, function () use ($licens
     /**
      * Forzar regeneración del machine hash
      */
-    public function refreshMachineHash()
-    {
-        try {
-            Cache::forget('license_machine_hash');
+public function refreshMachineHash()
+{
+    try {
+        $hash = app(LicenseService::class)->getMachineHashPublic();
 
-            $hash = $this->generateMachineHash();
-
-            Cache::put('license_machine_hash', $hash, 604800);
-
-            return response()->json([
-                'success' => true,
-                'machine_hash' => $hash
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error al regenerar machine hash', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'error' => 'Error al regenerar hash: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'machine_hash' => $hash
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Error al regenerar machine hash', [
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'error' => 'Error al regenerar hash: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * 🆕 Subir y verificar archivo de licencia

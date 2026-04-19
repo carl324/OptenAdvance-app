@@ -1600,8 +1600,27 @@ OptenHelpers.waitForBootstrap(function() {
 </script>
 <script>
 OptenHelpers.waitForBootstrap(function() {
-  // NOTA: Interceptor global removido - cada fetch debe manejar sus propios errores
-  // Causaba conflictos cuando otros scripts esperaban manejar 403 de forma diferente
+ const _originalFetch = window.fetch;
+window.fetch = async function(...args) {
+    const response = await _originalFetch(...args);
+    
+    if (response.status === 403) {
+        const clone = response.clone();
+        try {
+            const data = await clone.json();
+            if (data.show_modal) {
+                var modalEl = document.getElementById('modalExpirado');
+                if (modalEl) {
+                    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+                return response;
+            }
+        } catch(e) {}
+    }
+    
+    return response;
+};
 
   // 2. Verificar si hay flash message de licencia expirada (al cargar la página)
   @if(session('license_expired'))

@@ -153,22 +153,20 @@ Route::delete('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionCo
             Route::get('/caja/cierre/print/{caja}', [CajaController::class, 'printCierre'])->name('caja.cierre.print');
 // Devoluciones
 
-Route::get('/ventas/{venta}/devolucion', [DevolucionController::class, 'create'])->name('ventas.devolucion');
-Route::post('/ventas/{venta}/devolucion', [DevolucionController::class, 'store'])->name('ventas.devolucion.store');
+           Route::get('/ventas/{venta}/devolucion', [DevolucionController::class, 'create'])->name('ventas.devolucion');
+           Route::post('/ventas/{venta}/devolucion', [DevolucionController::class, 'store'])->name('ventas.devolucion.store');
 // Ventas
-            Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
+            
             Route::get('/ventas/nueva', [VentaController::class, 'create'])->name('ventas.create');
             Route::post('/ventas', [VentaController::class, 'store'])->name('ventas.store');
-            Route::get('/ventas/{venta}', [VentaController::class, 'show'])->name('ventas.show');
-            Route::get('/ventas/{venta}/detalle', [VentaController::class, 'detalle'])->name('ventas.detalle');
-            Route::get('/ventas/{venta}/factura', [VentaController::class, 'factura'])->name('ventas.factura');
+            
+            
             Route::get('/ventas/{venta}/factura/pdf', [VentaController::class, 'descargarPDF'])->name('ventas.factura.pdf');
             Route::get('/ventas/{venta}/factura/impresion', [VentaController::class, 'impresion'])->name('ventas.factura.impresion');
-Route::post('/ventas/{venta}/anular', [VentaController::class, 'confirmarDevolucion'])->name('ventas.devolucion.confirmar-anulacion');
+            Route::post('/ventas/{venta}/anular', [VentaController::class, 'confirmarDevolucion'])->name('ventas.devolucion.confirmar-anulacion');
             // Productos
-            Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
-            Route::get('/api/productos', [VentaController::class, 'obtenerTodosProductos'])->name('productos.todos');
-            Route::get('/api/productos/buscar', [VentaController::class, 'buscarProductos'])->name('productos.buscar');
+
+            
             Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
             Route::put('/productos/{id}', [ProductoController::class, 'update']);
             Route::delete('/productos/{id}', [ProductoController::class, 'destroy']);
@@ -176,6 +174,13 @@ Route::post('/ventas/{venta}/anular', [VentaController::class, 'confirmarDevoluc
 
         // Rutas sin licencia requerida
         Route::middleware('role:admin,empleado')->group(function () {
+            Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
+            Route::get('/api/productos', [VentaController::class, 'obtenerTodosProductos'])->name('productos.todos');
+            Route::get('/api/productos/buscar', [VentaController::class, 'buscarProductos'])->name('productos.buscar');
+            Route::get('/ventas/{venta}/detalle', [VentaController::class, 'detalle'])->name('ventas.detalle');
+            Route::get('/ventas/{venta}/factura', [VentaController::class, 'factura'])->name('ventas.factura');
+            Route::get('/ventas/{venta}', [VentaController::class, 'show'])->name('ventas.show');
+            Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
             Route::get('/onboarding', fn() => view('onboarding'))->name('onboarding');
             Route::get('/soporte', fn() => view('soporte.index'))->name('soporte.index');
         });
