@@ -83,6 +83,9 @@ class ProductoController extends Controller
     // Registrar producto + movimiento inicial (AJAX)
     public function store(Request $request)
     {
+        if ($request->has('codigo_barras') && trim($request->codigo_barras) === '') {
+    $request->merge(['codigo_barras' => null]);
+}
         $data = $request->validate([
             'nombre' => 'required|string|max:100',
             'precio_compra' => 'required|numeric|gte:0',
@@ -97,8 +100,7 @@ class ProductoController extends Controller
 ]);
 
         
-        // Normalizar nombre
-        $data['nombre'] = trim(mb_strtolower($data['nombre']));
+       
 
         // Calcular precio con IVA
         $data['precio_con_iva'] = (int) round($data['precio_venta'] * (1 + ($data['iva'] / 100)));
@@ -190,6 +192,9 @@ class ProductoController extends Controller
      public function update(Request $request, $id)
     {
         try {
+            if ($request->has('codigo_barras') && trim($request->codigo_barras) === '') {
+    $request->merge(['codigo_barras' => null]);
+}
             $data = $request->validate([
                 'nombre'        => 'sometimes|string|max:100',
                 'precio_compra' => 'sometimes|numeric|gte:0',
@@ -203,7 +208,7 @@ class ProductoController extends Controller
             $producto = Producto::findOrFail($id);
 
             if (isset($data['nombre'])) {
-                $nombreNormalizado = trim(mb_strtolower($data['nombre']));
+                $nombreNormalizado = trim(mb_convert_case($data['nombre'], MB_CASE_TITLE, 'UTF-8'));
                 $existe = Producto::where('nombre', $nombreNormalizado)
                     ->where('id', '!=', $producto->id)
                     ->where('activo', 1)
