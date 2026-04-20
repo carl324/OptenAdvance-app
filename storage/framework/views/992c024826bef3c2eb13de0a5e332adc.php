@@ -780,6 +780,7 @@ function buscarClientePOS(q) {
         const res = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(q)}`, {
             headers: { 'Accept': 'application/json' }
         });
+        if (!res.ok) { console.error('Error buscarClientePOS HTTP:', res.status); return; }
         const clientes = await res.json();
         lista.innerHTML = '';
         if (!clientes.length) {
@@ -917,6 +918,7 @@ async function guardarRegistroRapido() {
     // Verificar duplicado en tiempo real antes de guardar
     if (telefono && !rrDuplicadoConfirmado) {
         const res = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(telefono)}`, { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) { console.error('Error guardarRegistroRapido HTTP:', res.status); return; }
         const clientes = await res.json();
         const duplicado = clientes.find(c => c.telefono === telefono);
         if (duplicado) {
@@ -1129,6 +1131,7 @@ function parseInputNumber(str) {
 async function cargarProductos() {
     try {
         const res = await fetch('/api/productos/buscar?q=__top__');
+        if (!res.ok) { console.error('Error cargarProductos HTTP:', res.status); return; }
         const data = await res.json();
         todosProductos = [];
         actualizarTablaProductos(data);
@@ -1228,27 +1231,7 @@ inputBuscar.addEventListener('input', function() {
     }, 300);
 });
 
-inputBuscar.addEventListener('input', function() {
-    clearTimeout(busquedaTimeout);
-    const query = this.value.trim();
 
-    if (query.length === 0) {
-        cargarProductos();
-        return;
-    }
-
-    if (query.length < 2) return;
-
-    busquedaTimeout = setTimeout(async () => {
-        try {
-            const res = await fetch(`/api/productos/buscar?q=${encodeURIComponent(query)}`);
-            const data = await res.json();
-            actualizarTablaProductos(data.length ? data : null);
-        } catch (e) {
-            mostrarAlertaCarrito('Error al buscar productos');
-        }
-    }, 300);
-});
 
 document.addEventListener('keydown', async function(e) {
     if (e.key !== 'Enter') return;
@@ -1310,11 +1293,11 @@ function agregarAlCarrito(producto) {
             return;
         }
     } else {
-        const precioBase = parseFloat(producto.precio);
-        const ivaRate = producto.iva || 0;
-        const ivaValor = ivaRate > 0 ? precioBase * ivaRate / 100 : 0;
-        const subtotalConIva = precioBase + ivaValor;
-        
+        const precioBase = Math.round(parseFloat(producto.precio));
+const ivaRate = producto.iva || 0;
+const ivaValor = ivaRate > 0 ? Math.round(precioBase * ivaRate / 100) : 0;
+const subtotalConIva = precioBase + ivaValor;
+
         const UNIDADES_ENTERAS = ['Unidad','Par','Docena','Caja','Paquete','Sobre','Frasco','Botella','Lata','Tubo'];
 carrito.push({
     id: producto.id,

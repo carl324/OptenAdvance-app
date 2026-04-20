@@ -211,6 +211,7 @@ const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 const VENTA_ID = {{ $venta->id }};
 let metodoSeleccionado = '';
 let montoCalculado = 0;
+let devolucionEnProceso = false;
 
 function formatoPrecio(n) {
     return '$' + Math.round(n).toLocaleString('es-CO');
@@ -281,6 +282,7 @@ function verificarBoton() {
 }
 
 async function confirmarDevolucion() {
+    if (devolucionEnProceso) return;
     const hayProductos = document.querySelectorAll('.producto-check:checked').length > 0;
 if (!hayProductos) {
     document.getElementById('msg-sin-productos').style.display = 'block';
@@ -323,6 +325,7 @@ if (!montoRealRaw) {
     }
 
     const btn = document.getElementById('btn-confirmar');
+    devolucionEnProceso = true;
     btn.disabled = true;
     btn.textContent = 'Procesando...';
 
@@ -344,6 +347,12 @@ if (!montoRealRaw) {
             })
         });
 
+        if (!res.ok && res.status !== 422) {
+            mostrarError('Error del servidor. Intenta de nuevo.');
+            btn.disabled = false;
+            btn.textContent = 'Confirmar devolución';
+            return;
+        }
         const data = await res.json();
 
         if (data.success) {
@@ -376,10 +385,12 @@ if (!montoRealRaw) {
             btn.textContent = 'Confirmar devolución';
         }
 
-    } catch(e) {
+} catch(e) {
         mostrarError('Error de conexión');
         btn.disabled = false;
         btn.textContent = 'Confirmar devolución';
+    } finally {
+        devolucionEnProceso = false;
     }
 }
 

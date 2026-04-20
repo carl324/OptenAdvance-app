@@ -218,13 +218,13 @@ $estadoClase = match($venta->estado) {
         $motivo = $venta->motivo_anulacion ?? null;
         if (empty($motivo)) {
             $motivos = $venta->detalles->pluck('motivo_anulacion')->filter()->unique()->values();
-            $motivo = $motivos->isNotEmpty() ? $motivos->implode('\n') : null;
+            $motivo = $motivos->isNotEmpty() ? $motivos->implode("\n") : null;
         }
     @endphp
     <div class="note-wrapper warning-alert py-4 px-sm-3 px-lg-5">
         <div class="alert">
             <h5 class="text-bold mb-15">Motivo de anulación</h5>
-            <p class="text-sm text-gray">{{ $motivo ?? 'No especificado' }}</p>
+           <p class="text-sm text-gray">{!! nl2br(e($motivo ?? 'No especificado')) !!}</p>
         </div>
     </div>
 @endif
