@@ -570,8 +570,10 @@ return view('ventas.detalle', compact(
             VentaDetalle::where('venta_id', $venta->id)
              ->update(['motivo_anulacion' => $data['motivo']]);
 
-            foreach ($venta->detalles as $detalle) {
-                $producto = Producto::find($detalle->producto_id);
+            $productosMap = Producto::whereIn('id', $venta->detalles->pluck('producto_id'))->get()->keyBy('id');
+
+foreach ($venta->detalles as $detalle) {
+    $producto = $productosMap->get($detalle->producto_id);
                 if (!$producto) {
                     throw new \Exception("El producto ID {$detalle->producto_id} no existe.");
                 }
