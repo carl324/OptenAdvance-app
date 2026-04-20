@@ -9,7 +9,6 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use App\Services\LicenseService;
-use App\Http\Controllers\LicenseNotificationController;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,23 +27,15 @@ class AppServiceProvider extends ServiceProvider
     {
         // ✅ ESPECÍFICO: Solo inyectar datos de licencia en vistas que los usan
         View::composer(['layouts.app', 'modals.license'], function ($view) {
-            // Cache para datos de licencia (10 minutos)
-            $licenseData = Cache::remember('app_license_data', 600, function () {
-                return app(LicenseService::class)->uiData();
-            });
-            
-            // Cache para notificación de licencia (5 minutos)
-            $notification = Cache::remember('app_license_notification', 300, function () {
-                $licenseService = app(LicenseService::class);
-                return app(LicenseNotificationController::class)->check($licenseService);
-            });
+    $licenseData = Cache::remember('app_license_data', 600, function () {
+        return app(LicenseService::class)->uiData();
+    });
 
-            $view->with([
-                'data' => $licenseData,
-                'licenseNotification' => $notification,
-            ]);
-        });
-
+    $view->with([
+        'data' => $licenseData,
+        'licenseNotification' => null,
+    ]);
+});
         // ✅ OPTIMIZADO: Composer específico para layouts.app con cache
         View::composer('layouts.app', function ($view) {
             // Cache de datos de caja (1 minuto - se actualiza frecuentemente)

@@ -41,6 +41,7 @@
             </div>
 
             
+            <div id="lista-notificaciones">
             <?php if($notifications->isEmpty()): ?>
                 <div style="text-align: center; padding: 60px 0;">
                     <i class="lni lni-checkmark-circle" style="font-size: 48px; color: #10b981; display: block; margin-bottom: 12px;"></i>
@@ -93,24 +94,106 @@
                     </div>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             <?php endif; ?>
+            </div>
 
+<div class="d-flex justify-content-between align-items-center mt-20" id="paginacion-notificaciones">
+    <p class="text-sm text-gray" id="paginacion-info"></p>
+    <div class="d-flex align-items-center gap-2">
+        <button id="btn-prev" onclick="cambiarPagina(-1)"
+            style="width:32px;height:32px;border-radius:6px;border:1px solid #e5e5e5;background:#fafafa;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <i class="lni lni-chevron-left" style="font-size:14px;"></i>
+        </button>
+        <span id="paginacion-paginas" class="text-sm text-gray" style="min-width:70px;text-align:center;"></span>
+        <button id="btn-next" onclick="cambiarPagina(1)"
+            style="width:32px;height:32px;border-radius:6px;border:1px solid #e5e5e5;background:#fafafa;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <i class="lni lni-chevron-right" style="font-size:14px;"></i>
+        </button>
+    </div>
+</div>
         </div>
     </div>
 </div>
 
 <script>
 const csrf = document.querySelector('meta[name="csrf-token"]').content;
+let paginaActual = 1;
 
-// Seleccionar todo
-document.getElementById('select-all')?.addEventListener('change', function() {
-    document.querySelectorAll('.notification-checkbox').forEach(cb => cb.checked = this.checked);
-    actualizarBotonEliminar();
-});
+function renderPaginacion(current, last, from, to, total) {
+    document.getElementById('paginacion-info').textContent =
+        total > 0 ? `Mostrando ${from}–${to} de ${total}` : '';
+    document.getElementById('paginacion-paginas').textContent =
+        total > 0 ? `Página ${current} de ${last}` : '';
+    document.getElementById('btn-prev').disabled = current <= 1;
+    document.getElementById('btn-next').disabled = current >= last;
+    document.getElementById('paginacion-notificaciones').style.display = total > 0 ? 'flex' : 'none';
+}
 
-// Detectar cambio en checkboxes individuales
-document.querySelectorAll('.notification-checkbox').forEach(cb => {
-    cb.addEventListener('change', actualizarBotonEliminar);
-});
+function renderLista(items) {
+    const contenedor = document.getElementById('lista-notificaciones');
+
+    if (!items.length) {
+        contenedor.innerHTML = `
+            <div style="text-align: center; padding: 60px 0;">
+                <i class="lni lni-checkmark-circle" style="font-size: 48px; color: #10b981; display: block; margin-bottom: 12px;"></i>
+                <h6 style="color: #1e293b; font-size: 16px; margin-bottom: 6px;">Todo al día</h6>
+                <p class="text-sm text-gray">No tienes notificaciones pendientes</p>
+            </div>`;
+        return;
+    }
+
+    const bgMap   = { error: 'danger-bg', warning: 'warning-bg', info: 'info-bg' };
+    const iconMap = { licencia: 'lni lni-certificate', backup: 'lni lni-database', sistema: 'lni lni-warning' };
+
+    contenedor.innerHTML = items.map(n => `
+        <div class="single-notification ${n.leida ? 'readed' : ''}" id="notification-${n.id}">
+            <div class="checkbox">
+                <div class="form-check checkbox-style mb-20">
+                    <input class="form-check-input notification-checkbox" type="checkbox" value="${n.id}">
+                </div>
+            </div>
+            <div class="notification">
+                <div class="image ${bgMap[n.tipo] ?? 'success-bg'}">
+                    <i class="${iconMap[n.modulo] ?? 'lni lni-information'}" style="font-size: 20px;"></i>
+                </div>
+                <div class="content">
+                    <h6>${n.titulo}</h6>
+                    <p class="text-sm text-gray">${n.mensaje}</p>
+                    <span class="text-sm text-medium text-gray">${n.created_at_human ?? ''}</span>
+                </div>
+            </div>
+            <div class="action">
+                <button class="delete-btn" onclick="eliminarNotificacion(${n.id})" title="Eliminar">
+                    <i class="lni lni-trash-can"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    // Re-bind checkboxes
+    document.querySelectorAll('.notification-checkbox').forEach(cb => {
+        cb.addEventListener('change', actualizarBotonEliminar);
+    });
+}
+
+function cargarPagina(pagina) {
+    paginaActual = pagina;
+    fetch(`<?php echo e(route('notifications.index')); ?>?page=${pagina}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        renderLista(data.data);
+        renderPaginacion(data.current_page, data.last_page, data.from, data.to, data.total);
+        actualizarBotonEliminar();
+    })
+    .catch(err => console.error('Error:', err));
+}
+
+window.cambiarPagina = function(dir) {
+    const nueva = paginaActual + dir;
+    if (nueva < 1) return;
+    cargarPagina(nueva);
+};
 
 function actualizarBotonEliminar() {
     const seleccionadas = document.querySelectorAll('.notification-checkbox:checked').length;
@@ -118,24 +201,24 @@ function actualizarBotonEliminar() {
     if (btn) btn.style.display = seleccionadas > 0 ? 'inline-block' : 'none';
 }
 
-// Eliminar seleccionadas
+document.getElementById('select-all')?.addEventListener('change', function() {
+    document.querySelectorAll('.notification-checkbox').forEach(cb => cb.checked = this.checked);
+    actualizarBotonEliminar();
+});
+
 document.getElementById('btn-delete-selected')?.addEventListener('click', function() {
     const ids = [...document.querySelectorAll('.notification-checkbox:checked')].map(cb => cb.value);
     if (!ids.length) return;
 
-    Promise.all(ids.map(id =>
-        fetch(`/notifications/${id}`, {
-            method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': csrf }
-        }).then(r => r.json())
-    )).then(() => {
-        ids.forEach(id => document.getElementById('notification-' + id)?.remove());
-        actualizarBotonEliminar();
-        document.getElementById('select-all').checked = false;
-    });
+    fetch(`<?php echo e(route('notifications.destroyAll')); ?>`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': csrf, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+    })
+    .then(r => r.json())
+    .then(() => cargarPagina(paginaActual));
 });
 
-// Eliminar individual
 function eliminarNotificacion(id) {
     fetch(`/notifications/${id}`, {
         method: 'DELETE',
@@ -144,12 +227,25 @@ function eliminarNotificacion(id) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            document.getElementById('notification-' + id).remove();
+            document.getElementById('notification-' + id)?.remove();
             actualizarBotonEliminar();
+            // Si la página quedó vacía, recargar la anterior
+            if (!document.querySelector('.single-notification')) {
+                cargarPagina(paginaActual > 1 ? paginaActual - 1 : 1);
+            }
         }
     });
 }
-</script>
 
+// Init paginación con datos del servidor
+renderPaginacion(
+    <?php echo e($notifications->currentPage()); ?>,
+    <?php echo e($notifications->lastPage()); ?>,
+    <?php echo e($notifications->firstItem() ?? 0); ?>,
+    <?php echo e($notifications->lastItem() ?? 0); ?>,
+    <?php echo e($notifications->total()); ?>
+
+);
+</script>
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\optenadvance\app\www\resources\views/notifications/index.blade.php ENDPATH**/ ?>
