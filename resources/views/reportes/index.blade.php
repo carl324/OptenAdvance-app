@@ -115,7 +115,7 @@
                     <p class="text-xs mb-0" style="color:#bbb;">Transacciones y totales</p>
                   </div>
                 </div>
-                <button onclick="exportar('ventas', 'export-ventas-desde', 'export-ventas-hasta')"
+                <button onclick="exportar(event, 'ventas', 'export-ventas-desde', 'export-ventas-hasta')"
                         style="height:28px;padding:0 14px;border-radius:5px;border:1px solid #e5e5e5;background:#fff;font-size:11px;font-weight:600;color:#365CF5;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
                   <i class="lni lni-download" style="font-size:11px;"></i> .xlsx
                 </button>
@@ -144,7 +144,7 @@
                     <p class="text-xs mb-0" style="color:#bbb;">Stock y movimientos</p>
                   </div>
                 </div>
-                <button onclick="exportar('movimientos', 'export-inv-desde', 'export-inv-hasta')"
+                <button onclick="exportar(event, 'movimientos', 'export-inv-desde', 'export-inv-hasta')"
                         style="height:28px;padding:0 14px;border-radius:5px;border:1px solid #e5e5e5;background:#fff;font-size:11px;font-weight:600;color:#365CF5;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
                   <i class="lni lni-download" style="font-size:11px;"></i> .xlsx
                 </button>
@@ -173,7 +173,7 @@
                     <p class="text-xs mb-0" style="color:#bbb;">Aperturas y cierres</p>
                   </div>
                 </div>
-                <button onclick="exportar('cajas', 'export-caja-desde', 'export-caja-hasta')"
+                <button onclick="exportar(event, 'cajas', 'export-caja-desde', 'export-caja-hasta')"
                         style="height:28px;padding:0 14px;border-radius:5px;border:1px solid #e5e5e5;background:#fff;font-size:11px;font-weight:600;color:#365CF5;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
                   <i class="lni lni-download" style="font-size:11px;"></i> .xlsx
                 </button>
@@ -408,8 +408,9 @@ document.addEventListener('DOMContentLoaded', function () {
 async function cargarKpis() {
   try {
     const res  = await fetch('/api/reportes/kpis', { headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' } });
-    const data = await res.json();
-    if (!data.success) return;
+if (!res.ok) { console.error('Error KPIs HTTP:', res.status); return; }
+const data = await res.json();
+if (!data.success) return;
 
     const { kpis, variaciones, periodo } = data;
 
@@ -447,8 +448,9 @@ async function cargarTendencia(agrupacion) {
     const res  = await fetch(`/api/reportes/tendencia?agrupacion=${agrupacion}`, {
       headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' }
     });
-    const data = await res.json();
-    if (!data.success) return;
+if (!res.ok) { console.error('Error tendencia HTTP:', res.status); return; }
+const data = await res.json();
+if (!data.success) return;
 
     const labels  = data.labels;
     const totales = data.totales;
@@ -533,8 +535,9 @@ async function cargarCajeros(agrupacion) {
     const res  = await fetch(`/api/reportes/cajeros?agrupacion=${agrupacion}`, {
       headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' }
     });
-    const data = await res.json();
-    if (!data.success) return;
+if (!res.ok) { console.error('Error cajeros HTTP:', res.status); return; }
+const data = await res.json();
+if (!data.success) return;
 
     todosLosCajeros = data.cajeros;
 
@@ -603,18 +606,20 @@ function renderChartCajeros(cajeros) {
   });
 }
 
-function verTodosCajeros() {
-  // Recarga el chart con todos los cajeros sin límite
-  fetch(`/api/reportes/cajeros?agrupacion=${document.getElementById('selectCajeros').value}&todos=1`, {
-    headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' }
-  })
-  .then(r => r.json())
-  .then(data => {
+async function verTodosCajeros() {
+  try {
+    const res = await fetch(`/api/reportes/cajeros?agrupacion=${document.getElementById('selectCajeros').value}&todos=1`, {
+      headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' }
+    });
+    if (!res.ok) { console.error('Error verTodosCajeros HTTP:', res.status); return; }
+    const data = await res.json();
     if (data.success) {
       renderChartCajeros(data.cajeros);
       document.getElementById('btnMasCajeros').style.display = 'none';
     }
-  });
+  } catch (e) {
+    console.error('Error verTodosCajeros:', e);
+  }
 }
 
 // ─── PRODUCTOS ───────────────────────────────────────────
@@ -624,8 +629,9 @@ async function cargarProductos(agrupacion) {
     const res  = await fetch(`/api/reportes/productos?agrupacion=${agrupacion}`, {
       headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' }
     });
-    const data = await res.json();
-    if (!data.success) return;
+if (!res.ok) { console.error('Error productos HTTP:', res.status); return; }
+const data = await res.json();
+if (!data.success) return;
 
     // Actualizar productos activos
     document.getElementById('kpiProductosActivos').textContent = (data.productos_activos || 0).toLocaleString('es-CO');
@@ -645,8 +651,11 @@ const nombreEl = document.getElementById('kpiMasVendidoNombre');
 nombreEl.textContent = top.nombre;
 nombreEl.setAttribute('data-bs-title', top.nombre);
 const tooltipExistente = bootstrap.Tooltip.getInstance(nombreEl);
-if (tooltipExistente) tooltipExistente.dispose();
-new bootstrap.Tooltip(nombreEl, { placement: 'top', trigger: 'hover focus', boundary: 'viewport' });
+if (typeof bootstrap !== 'undefined') {
+  const tooltipExistente = bootstrap.Tooltip.getInstance(nombreEl);
+  if (tooltipExistente) tooltipExistente.dispose();
+  new bootstrap.Tooltip(nombreEl, { placement: 'top', trigger: 'hover focus', boundary: 'viewport' });
+}
 document.getElementById('kpiMasVendidoTotal').textContent    = formatCOP(top.total_vendido);
 document.getElementById('kpiMasVendidoUnidades').textContent = top.unidades.toLocaleString('es-CO') + ' und';
 document.getElementById('kpiMasVendidoGanancia').textContent = formatCOP(top.ganancia);
@@ -659,7 +668,7 @@ document.getElementById('kpiMasVendidoGanancia').textContent = formatCOP(top.gan
   }
 }
 // ─── EXPORTAR ────────────────────────────────────────────
-function exportar(tipo, desdeId, hastaId) {
+function exportar(event, tipo, desdeId, hastaId) {
   const desde = document.getElementById(desdeId).value;
   const hasta = document.getElementById(hastaId).value;
 

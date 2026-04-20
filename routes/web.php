@@ -157,7 +157,7 @@ Route::delete('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionCo
            Route::post('/ventas/{venta}/devolucion', [DevolucionController::class, 'store'])->name('ventas.devolucion.store');
 // Ventas
             
-            Route::get('/ventas/nueva', [VentaController::class, 'create'])->name('ventas.create');
+            
             Route::post('/ventas', [VentaController::class, 'store'])->name('ventas.store');
             
             
@@ -174,6 +174,7 @@ Route::delete('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionCo
 
         // Rutas sin licencia requerida
         Route::middleware('role:admin,empleado')->group(function () {
+            Route::get('/ventas/nueva', [VentaController::class, 'create'])->name('ventas.create');
             Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
             Route::get('/api/productos', [VentaController::class, 'obtenerTodosProductos'])->name('productos.todos');
             Route::get('/api/productos/buscar', [VentaController::class, 'buscarProductos'])->name('productos.buscar');
