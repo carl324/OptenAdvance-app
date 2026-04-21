@@ -39,28 +39,22 @@ class AppServiceProvider extends ServiceProvider
         // ✅ OPTIMIZADO: Composer específico para layouts.app con cache
         View::composer('layouts.app', function ($view) {
             // Cache de datos de caja (1 minuto - se actualiza frecuentemente)
-            $cajaData = Cache::remember('app_caja_actual_data', 60, function () {
-                $cajaActual = Caja::where('estado', 'abierta')->first();
-                
-                $ventasHoy = null;
-                $ingresosHoy = null;
-                
-                if ($cajaActual) {
-                    // ✅ UNA SOLA QUERY con agregación en lugar de 2
-                    $stats = Venta::where('caja_id', $cajaActual->id)
-                        ->whereNotIn('estado', ['anulada', 'cancelada'])
-                        ->selectRaw('COUNT(*) as count, COALESCE(SUM(total), 0) as ingresos')
-                        ->first();
-                    
-                    $ventasHoy = $stats->count ?? 0;
-                    $ingresosHoy = (float)($stats->ingresos ?? 0);
-                }
-                
-                return compact('cajaActual', 'ventasHoy', 'ingresosHoy');
-            });
+            $cajaActual = Caja::where('estado', 'abierta')->first();
 
-            // Extraer datos del cache
-            extract($cajaData);
+$ventasHoy = null;
+$ingresosHoy = null;
+
+if ($cajaActual) {
+   $stats = Venta::where('caja_id', $cajaActual->id)
+    ->whereNotIn('estado', ['anulada', 'cancelada', 'devuelta', 'dev_parcial'])
+    ->selectRaw('COUNT(*) as count, COALESCE(SUM(total), 0) as ingresos')
+    ->first();
+    
+    $ventasHoy = $stats->count ?? 0;
+    $ingresosHoy = (float)($stats->ingresos ?? 0);
+}
+
+           
             
             $cajaAbierta = (bool) $cajaActual;
             $cajaHoraApertura = $cajaActual 

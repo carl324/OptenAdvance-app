@@ -200,12 +200,12 @@
 
     <!-- Header -->
     <div class="header-info">
-      @if($empresa && $empresa->logo)
-    <img src="{{ asset($empresa->logo) }}" alt="Logo" style="width:60px;height:60px;border-radius:none;object-fit:contain;" />
-@endif
+      <?php if($empresa && $empresa->logo): ?>
+    <img src="<?php echo e(asset($empresa->logo)); ?>" alt="Logo" style="width:60px;height:60px;border-radius:none;object-fit:contain;" />
+<?php endif; ?>
         <div class="header-text">
             <h1>Historial de Abonos</h1>
-            <p>Impreso el {{ now()->format('d/m/Y H:i') }}</p>
+            <p>Impreso el <?php echo e(now()->format('d/m/Y H:i')); ?></p>
         </div>
     </div>
 
@@ -215,19 +215,19 @@
         <div class="cliente-info">
             <div class="campo">
                 <div class="label">Nombre</div>
-                <div class="valor">{{ $cliente->nombre }}</div>
+                <div class="valor"><?php echo e($cliente->nombre); ?></div>
             </div>
             <div class="campo">
                 <div class="label">NIT / CC</div>
-                <div class="valor">{{ $cliente->nit ?? 'No aplica' }}</div>
+                <div class="valor"><?php echo e($cliente->nit ?? 'No aplica'); ?></div>
             </div>
             <div class="campo">
                 <div class="label">Teléfono</div>
-                <div class="valor">{{ $cliente->telefono ?? 'No aplica' }}</div>
+                <div class="valor"><?php echo e($cliente->telefono ?? 'No aplica'); ?></div>
             </div>
             <div class="campo">
                 <div class="label">Email</div>
-                <div class="valor">{{ $cliente->email ?? 'No aplica' }}</div>
+                <div class="valor"><?php echo e($cliente->email ?? 'No aplica'); ?></div>
             </div>
         </div>
     </div>
@@ -235,12 +235,12 @@
     <!-- Tabla de Abonos -->
     <div class="table-wrapper">
         <p class="seccion-titulo">Abonos registrados</p>
-        @if($abonos->isEmpty())
+        <?php if($abonos->isEmpty()): ?>
             <div class="sin-abonos">
                 
                 Sin abonos registrados en el período seleccionado
             </div>
-        @else
+        <?php else: ?>
             <table>
                 <thead>
                     <thead>
@@ -253,57 +253,57 @@
 </thead>
                 </thead>
                 <tbody>
-                    @foreach($abonos as $abono)
-                    @php
+                    <?php $__currentLoopData = $abonos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $abono): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
                         $fecha = $abono->created_at;
                         $hora = $fecha->format('g'); // Hora sin cero a izquierda (1-12)
                         $minuto = $fecha->format('i');
                         $ampm = $fecha->format('a'); // 'am' o 'pm'
                         $fechaFormato = $fecha->format('d/m/Y') . ' ' . $hora . ':' . $minuto . ' ' . $ampm;
-                    @endphp
+                    ?>
                    <tr>
-    <td>{{ $fechaFormato }}</td>
-    <td>#{{ optional($abono->venta->factura)->numero ?? str_pad($abono->venta_id, 6, '0', STR_PAD_LEFT) }}</td>
-    <td style="text-transform:capitalize;">{{ $abono->forma_pago }}</td>
-    <td class="monto monto-positivo">${{ number_format($abono->monto, 0, ',', '.') }}</td>
+    <td><?php echo e($fechaFormato); ?></td>
+    <td>#<?php echo e(optional($abono->venta->factura)->numero ?? str_pad($abono->venta_id, 6, '0', STR_PAD_LEFT)); ?></td>
+    <td style="text-transform:capitalize;"><?php echo e($abono->forma_pago); ?></td>
+    <td class="monto monto-positivo">$<?php echo e(number_format($abono->monto, 0, ',', '.')); ?></td>
 </tr>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </tbody>
             </table>
-        @endif
+        <?php endif; ?>
     </div>
 
     <!-- Resumen -->
-    @if(!$abonos->isEmpty())
+    <?php if(!$abonos->isEmpty()): ?>
     <div class="resumen">
         <p class="seccion-titulo">Resumen</p>
         <div class="resumen-row">
             <span class="label">Total abonado</span>
-            <span class="valor monto-positivo">${{ number_format($abonos->sum('monto'), 0, ',', '.') }}</span>
+            <span class="valor monto-positivo">$<?php echo e(number_format($abonos->sum('monto'), 0, ',', '.')); ?></span>
         </div>
         <div class="resumen-row">
             <span class="label">Cantidad de abonos</span>
-            <span class="valor">{{ $abonos->count() }}</span>
+            <span class="valor"><?php echo e($abonos->count()); ?></span>
         </div>
         <div class="resumen-row">
             <span class="label">Saldo pendiente cliente</span>
             <span class="valor">
-                @if($cliente->saldo_pendiente > 0)
-                    <span style="color:#b91c1c;">${{ number_format($cliente->saldo_pendiente, 0, ',', '.') }}</span>
-                @else
+                <?php if($cliente->saldo_pendiente > 0): ?>
+                    <span style="color:#b91c1c;">$<?php echo e(number_format($cliente->saldo_pendiente, 0, ',', '.')); ?></span>
+                <?php else: ?>
                     <span style="color:#166534;">Al día</span>
-                @endif
+                <?php endif; ?>
             </span>
         </div>
     </div>
-    @endif
+    <?php endif; ?>
 
     <!-- Footer -->
     <div class="footer">
-        Documento generado el {{ now()->format('d/m/Y H:i:s') }}<br>
+        Documento generado el <?php echo e(now()->format('d/m/Y H:i:s')); ?><br>
         Este reporte es válido como soporte oficial de los abonos registrados en el sistema.
     </div>
 
 </div>
 </body>
-</html>
+</html><?php /**PATH C:\optenadvance\app\www\resources\views/clientes/historial-abonos-print.blade.php ENDPATH**/ ?>

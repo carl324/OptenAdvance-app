@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title','base-datos')
 
-@section('content')
+<?php $__env->startSection('title','base-datos'); ?>
+
+<?php $__env->startSection('content'); ?>
 
 
 
@@ -88,8 +88,8 @@
                                         Crea un respaldo completo de tu base de datos. El archivo se guardará en tu carpeta de <strong>Descargas</strong> y podrás restaurarlo cuando lo necesites.
                                     </p>
 
-                                    <form method="POST" action="{{ route('backup.store') }}" id="backup-form">
-                                        @csrf
+                                    <form method="POST" action="<?php echo e(route('backup.store')); ?>" id="backup-form">
+                                        <?php echo csrf_field(); ?>
                                         <label style="font-size:13px; color:#475569; display:flex; align-items:flex-start; gap:10px; margin-bottom:20px; cursor: pointer; user-select: none;">
                                             <input type="checkbox" name="confirm_backup" id="confirm_backup_checkbox" style="margin-top: 3px; width: 18px; height: 18px; cursor: pointer;">
                                             <span>He leído y acepto que se generará un archivo de respaldo en mi carpeta de Descargas</span>
@@ -299,7 +299,7 @@
                 </h6>
 
                 <form id="form-restore" enctype="multipart/form-data" method="POST">
-                    @csrf
+                    <?php echo csrf_field(); ?>
                     
                     <div style="margin-bottom: 24px;">
                         <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 12px;">
@@ -395,7 +395,7 @@
                 <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.6;">
                     Si tienes dudas sobre el proceso de restauración, consulta nuestra documentación o contacta a soporte.
                 </p>
-                <a href="{{ route('soporte.index') }}" class="main-btn light-btn btn-hover w-100" style="padding: 10px; font-size: 13px;">
+                <a href="<?php echo e(route('soporte.index')); ?>" class="main-btn light-btn btn-hover w-100" style="padding: 10px; font-size: 13px;">
                     Contactar a soporte
                 </a>
             </div>
@@ -526,11 +526,11 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadSpinner.style.display = 'flex';
         btnRestore.disabled = true;
 
-        fetch('{{ route("database.restore") }}', {
+        fetch('<?php echo e(route("database.restore")); ?>', {
     method: 'POST',
     body: formData,
     headers: {
-        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
     }
 })
 .then(response => {
@@ -766,4 +766,5 @@ if (!horaValue) {
 
 
 
-    @endsection
+    <?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\optenadvance\app\www\resources\views/db/index.blade.php ENDPATH**/ ?>

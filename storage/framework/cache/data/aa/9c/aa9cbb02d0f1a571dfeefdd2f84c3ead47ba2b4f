@@ -1,1 +1,1 @@
-1776724665a:6:{s:6:"status";s:7:"expired";s:8:"start_at";s:12:"Apr 20, 2026";s:6:"end_at";s:12:"Apr 20, 2026";s:14:"days_remaining";i:0;s:4:"type";s:5:"trial";s:17:"show_notification";b:0;}
+1776812807a:6:{s:6:"status";s:12:"trial_active";s:8:"start_at";s:12:"Apr 20, 2026";s:6:"end_at";s:12:"Apr 21, 2026";s:14:"days_remaining";i:1;s:4:"type";s:5:"trial";s:17:"show_notification";b:1;}

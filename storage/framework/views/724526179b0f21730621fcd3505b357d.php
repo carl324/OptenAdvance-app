@@ -1,12 +1,10 @@
-@extends('layouts.app')
+<?php $__env->startSection('title','Empresa'); ?>
 
-@section('title','Empresa')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 
 
 
-    @php
+    <?php
         // Flag: SOLO si existe al menos un producto ACTIVO con iva > 0
         // Nota: se calcula en la vista usando la colección $productos.
         // Si $productos no viene inyectado en esta vista, se usa un fallback local
@@ -24,7 +22,7 @@
                 break;
             }
         }
-    @endphp
+    ?>
 
     <div class="wrap">
         <section class="tab-components">
@@ -55,14 +53,14 @@
         
         <div id="logo-preview-wrapper" onclick="document.getElementById('logo-input').click()"
              style="width:100px;height:100px;border-radius:none;border:1.5px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;background:#fff;flex-shrink:0;">
-            @if($empresa && $empresa->logo)
-                <img id="logo-preview" src="{{ asset($empresa->logo) }}" style="width:100%;height:100%;object-fit:contain;">
-            @else
+            <?php if($empresa && $empresa->logo): ?>
+                <img id="logo-preview" src="<?php echo e(asset($empresa->logo)); ?>" style="width:100%;height:100%;object-fit:contain;">
+            <?php else: ?>
                 <div id="logo-placeholder" style="text-align:center;color:#94a3b8;">
                     <i class="lni lni-image" style="font-size:26px;display:block;margin-bottom:4px;"></i>
                     <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Logo</span>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
 
         <div>
@@ -82,13 +80,13 @@
 <br>
                                 <div class="input-style-2">
                                     <label for="nombre" class="text-dark mb-2 d-block">Nombre de la empresa</label>
-                                    <input id="nombre" name="nombre" type="text" placeholder="Nombre de la empresa" value="{{ old('nombre', $empresa->nombre ?? '') }}" />
+                                    <input id="nombre" name="nombre" type="text" placeholder="Nombre de la empresa" value="<?php echo e(old('nombre', $empresa->nombre ?? '')); ?>" />
                                     <span class="icon"><i class="lni lni-briefcase"></i></span>
                                 </div>
 
                                 <div class="input-style-2">
                                     <label for="nit" class="text-dark mb-2 d-block">NIT</label>
-                                    <input id="nit" name="nit" type="text" placeholder="NIT de la empresa" value="{{ old('nit', $empresa->nit ?? '') }}" />
+                                    <input id="nit" name="nit" type="text" placeholder="NIT de la empresa" value="<?php echo e(old('nit', $empresa->nit ?? '')); ?>" />
                                     <span class="icon"><i class="mdi mdi-card-account-details-outline"></i></span>
                                 </div>
 
@@ -104,22 +102,22 @@
                             <div class="card-style mb-30">
                                 <div class="input-style-2">
                                     <label for="telefono" class="text-dark mb-2 d-block">Teléfono</label>
-                                    <input id="telefono" name="telefono" type="text" placeholder="Número de teléfono" value="{{ old('telefono', $empresa->telefono ?? '') }}" />
+                                    <input id="telefono" name="telefono" type="text" placeholder="Número de teléfono" value="<?php echo e(old('telefono', $empresa->telefono ?? '')); ?>" />
                                     <span class="icon"><i class="lni lni-phone"></i></span>
                                 </div>                            
                                 <div class="input-style-2">
                                     <label for="email" class="text-dark mb-2 d-block">Email de contacto</label>
-                                    <input id="email" name="email" type="text" placeholder="Email de contacto" value="{{ old('email', $empresa->email ?? '') }}" />
+                                    <input id="email" name="email" type="text" placeholder="Email de contacto" value="<?php echo e(old('email', $empresa->email ?? '')); ?>" />
                                     <span class="icon"><i class="lni lni-envelope"></i></span>
                                 </div>                                
                                 <div class="input-style-2">
                                     <label for="direccion" class="text-dark mb-2 d-block">Dirección</label>
-                                    <input id="direccion" name="direccion" type="text" placeholder="Dirección" value="{{ old('direccion', $empresa->direccion ?? '') }}" />
+                                    <input id="direccion" name="direccion" type="text" placeholder="Dirección" value="<?php echo e(old('direccion', $empresa->direccion ?? '')); ?>" />
                                     <span class="icon"><i class="lni lni-map-marker"></i></span>
                                 </div>
                                 <div class="input-style-2">
                                     <label for="moneda" class="text-dark mb-2 d-block">Moneda</label>
-                                    <input id="moneda" name="moneda" type="text" placeholder="Moneda (ej: COP, USD)" value="{{ old('moneda', $empresa->moneda ?? '') }}" />
+                                    <input id="moneda" name="moneda" type="text" placeholder="Moneda (ej: COP, USD)" value="<?php echo e(old('moneda', $empresa->moneda ?? '')); ?>" />
                                     <span class="icon"><i class="mdi mdi-currency-usd"></i></span>
                                 </div>
                             </div>
@@ -127,7 +125,7 @@
                             <!--<div class="card-style mb-30">
                                 <h6 class="mb-20">Configuración de impuestos</h6>
                                 <div class="form-check form-switch toggle-switch d-flex align-items-center gap-3">
-                                    <input id="switch-cobra-iva" name="cobra_iva" class="form-check-input" type="checkbox" {{ old('cobra_iva', $empresa->cobra_iva ?? 0) ? 'checked' : '' }} />
+                                    <input id="switch-cobra-iva" name="cobra_iva" class="form-check-input" type="checkbox" <?php echo e(old('cobra_iva', $empresa->cobra_iva ?? 0) ? 'checked' : ''); ?> />
                                     <label class="form-check-label text-sm" for="switch-cobra-iva">
                                         Cobrar IVA
                                     </label>
@@ -299,9 +297,9 @@ Los productos que actualmente tienen IVA dejarán de cobrarlo a partir de este m
 
     document.addEventListener('DOMContentLoaded', function(){
         var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-        var csrf = (csrfMeta && csrfMeta.getAttribute('content')) ? csrfMeta.getAttribute('content') : '{{ csrf_token() }}';
-        var empresaId = {{ $empresa->id ?? 'null' }};
-        var existenProductosConIVA = {{ $existenProductosConIVA ? 'true' : 'false' }};
+        var csrf = (csrfMeta && csrfMeta.getAttribute('content')) ? csrfMeta.getAttribute('content') : '<?php echo e(csrf_token()); ?>';
+        var empresaId = <?php echo e($empresa->id ?? 'null'); ?>;
+        var existenProductosConIVA = <?php echo e($existenProductosConIVA ? 'true' : 'false'); ?>;
 
         // Switch cobrador IVA
         // NOTA: Element 'switch-cobra-iva' está comentado en HTML (línea 127-135)
@@ -413,7 +411,7 @@ var btnCancelar     = document.getElementById('btn-iva-cancelar');
                 valor: valor
             };
 
-            fetch("{{ route('empresa.update') }}", {
+            fetch("<?php echo e(route('empresa.update')); ?>", {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrf,
@@ -554,10 +552,10 @@ var btnCancelar     = document.getElementById('btn-iva-cancelar');
     // Subir
     const fd = new FormData();
     fd.append('logo', file);
-    fd.append('_token', '{{ csrf_token() }}');
+    fd.append('_token', '<?php echo e(csrf_token()); ?>');
 
     try {
-        const res = await fetch('{{ route("empresa.logo") }}', { method: 'POST', body: fd });
+        const res = await fetch('<?php echo e(route("empresa.logo")); ?>', { method: 'POST', body: fd });
         const data = await res.json();
         if (data.success) {
             sucEl.textContent = 'Logo actualizado correctamente';
@@ -575,4 +573,5 @@ var btnCancelar     = document.getElementById('btn-iva-cancelar');
     </script>
 
 
-    @endsection
+    <?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\optenadvance\app\www\resources\views/empresa/index.blade.php ENDPATH**/ ?>

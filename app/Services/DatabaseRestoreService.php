@@ -86,7 +86,7 @@ class DatabaseRestoreService
             }
 
             $command = sprintf(
-                '"%s" --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > "%s" 2>NUL',
+                '"%s" --host=%s --port=%s --user=%s --password=%s --no-create-info --single-transaction --skip-triggers %s > "%s" 2>NUL',
                 $mysqldumpPath,
                 $dbHost,
                 $dbPort,

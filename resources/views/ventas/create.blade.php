@@ -441,6 +441,7 @@ textarea {
   inputmode="numeric"
   placeholder="0"
   value="0"
+   maxlength="10"
   autocomplete="off"
   style="width: 100%; padding: 12px 15px 12px 35px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 18px; font-weight: 700; color: #1e293b; outline: none;"
 >
@@ -846,7 +847,7 @@ function validarCupoCredito() {
     }
 
     if (clienteCupoCredito === null) {
-        err.textContent = 'Este cliente no tiene crédito habilitado.';
+        err.innerHTML = `Este cliente no tiene crédito habilitado. <a href="/clientes/${clienteSeleccionadoId}">Habilitar crédito</a>`;
     } else if (clienteCupoCredito !== -1) {
     const total = window.totalVentaNumeric || 0;
     const cupoDisponible = clienteCupoCredito - clienteSaldoPendiente;

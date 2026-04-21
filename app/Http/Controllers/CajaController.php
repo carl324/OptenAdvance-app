@@ -14,55 +14,47 @@ class CajaController extends Controller
     use Auditable;
 
     public function resumenCierre()
-    {
-        $caja = Caja::where('estado', 'abierta')->first();
+{
+    $caja = Caja::where('estado', 'abierta')->first();
 
-        if (!$caja) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No hay caja abierta'
-            ], 409);
-        }
+    if (!$caja) {
+        return response()->json(['success' => false, 'message' => 'No hay caja abierta'], 409);
+    }
 
-        // Considerar solo ventas válidas (no anuladas/canceladas) para totales
-       
-
-        $stats = Venta::where('caja_id', $caja->id)
+$stats = Venta::where('caja_id', $caja->id)
     ->selectRaw("
-        COUNT(CASE WHEN estado NOT IN ('anulada','cancelada') THEN 1 END) as cantidad_ventas,
-        COALESCE(SUM(CASE WHEN estado NOT IN ('anulada','cancelada') THEN total ELSE 0 END), 0) as total_ingresos,
-        COALESCE(SUM(CASE WHEN forma_pago='efectivo' AND estado NOT IN ('anulada','cancelada') THEN total ELSE 0 END), 0) as total_efectivo,
-        COALESCE(SUM(CASE WHEN forma_pago='tarjeta' AND estado NOT IN ('anulada','cancelada') THEN total ELSE 0 END), 0) as total_tarjeta,
-        COALESCE(SUM(CASE WHEN forma_pago='transferencia' AND estado NOT IN ('anulada','cancelada') THEN total ELSE 0 END), 0) as total_transferencia,
-        COALESCE(SUM(CASE WHEN forma_pago='efectivo' AND estado='anulada' THEN total ELSE 0 END), 0) as devoluciones_efectivo
+        COUNT(CASE WHEN estado NOT IN ('anulada','devuelta') THEN 1 END) as cantidad_ventas,
+        COALESCE(SUM(CASE WHEN estado NOT IN ('anulada') THEN total ELSE 0 END), 0) as total_ingresos,
+        COALESCE(SUM(CASE WHEN forma_pago='efectivo' AND estado NOT IN ('anulada') THEN total ELSE 0 END), 0) as total_efectivo,
+        COALESCE(SUM(CASE WHEN forma_pago='tarjeta' AND estado NOT IN ('anulada') THEN total ELSE 0 END), 0) as total_tarjeta,
+        COALESCE(SUM(CASE WHEN forma_pago='transferencia' AND estado NOT IN ('anulada') THEN total ELSE 0 END), 0) as total_transferencia
     ")
     ->first();
 
-$cantidadVentas      = (int) $stats->cantidad_ventas;
-$totalIngresos       = (float) $stats->total_ingresos;
-$totalEfectivo       = (float) $stats->total_efectivo;
-$totalTarjeta        = (float) $stats->total_tarjeta;
-$totalTransferencia  = (float) $stats->total_transferencia;
-$devolucionesEfectivo = (float) $stats->devoluciones_efectivo;
-$totalOtros          = $totalIngresos - ($totalEfectivo + $totalTarjeta + $totalTransferencia);
-$montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
+    $abonosEfectivo = \App\Models\Abono::where('forma_pago', 'efectivo')
+        ->where('created_at', '>=', $caja->fecha_apertura)
+        ->sum('monto');
 
+    $devolucionesEfectivo = \App\Models\Devolucion::where('metodo_reembolso', 'efectivo')
+        ->where('fecha', '>=', $caja->fecha_apertura)
+        ->sum('monto_real');
 
+    $totalEfectivo = (float) $stats->total_efectivo + (float) $abonosEfectivo - (float) $devolucionesEfectivo;
+    $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
 
-        return response()->json([
-            'success' => true,
-            'caja_id' => $caja->id,
-            'total_ventas_cantidad' => $cantidadVentas,
-            'total_ingresos' => $totalIngresos,
-            'total_efectivo' => $totalEfectivo,
-            'total_tarjeta' => $totalTarjeta,
-            'total_transferencia' => $totalTransferencia,
-            'total_otros' => $totalOtros,
-            'monto_apertura' => (float) $caja->monto_apertura,
-            'monto_cierre_calculado' => $montoCierreCalculado,
-            'devoluciones_efectivo' => $devolucionesEfectivo,
-        ]);
-    }
+    return response()->json([
+        'success'                => true,
+        'caja_id'                => $caja->id,
+        'total_ventas_cantidad'  => (int) $stats->cantidad_ventas,
+        'total_ingresos'         => (float) $stats->total_ingresos,
+        'total_efectivo'         => $totalEfectivo,
+        'total_tarjeta'          => (float) $stats->total_tarjeta,
+        'total_transferencia'    => (float) $stats->total_transferencia,
+        'monto_apertura'         => (float) $caja->monto_apertura,
+        'monto_cierre_calculado' => $montoCierreCalculado,
+        'devoluciones_efectivo'  => (float) $devolucionesEfectivo,
+    ]);
+}
 
     public function abrir(Request $request)
     {
@@ -71,7 +63,7 @@ $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
         }
 
         $data = $request->validate([
-            'monto_apertura' => ['required', 'numeric', 'min:0'],
+            'monto_apertura' => ['required', 'numeric', 'min:0', 'max:2147483647'],
             'nota_apertura'  => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -111,7 +103,7 @@ $montoCierreCalculado = (float) $caja->monto_apertura + $totalEfectivo;
         }
 
         $data = $request->validate([
-            'monto_cierre_real' => ['required', 'numeric', 'min:0'],
+            'monto_cierre_real' => ['required', 'numeric', 'min:0', 'max:2147483647'],
             'nota_cierre'       => ['nullable', 'string', 'max:255'],
             'imprimir'          => ['nullable', 'boolean'],
         ]);

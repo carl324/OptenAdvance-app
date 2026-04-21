@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
         // NOTA: El backup automático se gestiona desde Windows Task Scheduler
         // Ver: C:\optenadvance\app\scripts\ejecutar-backup.bat
         // Tarea: "OptenBackupAutomatico" (cada minuto)
-
+         
         // Verificar estado de licencia cada hora
         $schedule->command('licencia:verificar')->hourly();
     }
