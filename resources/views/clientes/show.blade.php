@@ -206,12 +206,12 @@
             <div class="text-danger text-xs mt-1 d-none" id="error-edicion"></div>
           </div>
           <br>
-          {{-- Resumen financiero --}}
+          {{-- Resumen financiero 
           <div style="background:#f8fafc;border-radius:12px;padding:16px;margin-top:10px;">
             <p class="text-xs text-gray mb-15 fw-semibold" style="text-transform:uppercase;letter-spacing:1px;">Resumen financiero</p>
             <div class="d-flex justify-content-between mb-10">
               <span class="text-sm text-gray">Total comprado</span>
-              <span class="text-sm fw-semibold">${{ number_format($totalComprado, 0, ',', '.') }}</span>
+              <span class="text-sm fw-semibold" style="color:#16a34a;">${{ number_format($totalComprado, 0, ',', '.') }}</span>
             </div>
             <div class="d-flex justify-content-between mb-10">
               <span class="text-sm text-gray">Total abonado</span>
@@ -223,9 +223,9 @@
                 ${{ number_format($cliente->saldo_pendiente, 0, ',', '.') }}
               </span>
             </div>
-          </div>
+          </div> --}}
         </div>
-      </div>
+      </div> 
 
       {{-- ===== Columna derecha ===== --}}
       <div class="col-lg-8">

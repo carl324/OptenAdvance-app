@@ -118,12 +118,12 @@ Route::delete('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionCo
 
             // Reportes
             Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
-            Route::get('/reportes/export', [ReporteController::class, 'export'])->name('reportes.export');
+           
             Route::get('/api/reportes/kpis', [ReporteController::class, 'apiKpis'])->name('reportes.api.kpis');
             Route::get('/api/reportes/tendencia', [ReporteController::class, 'apiTendencia'])->name('reportes.api.tendencia');
             Route::get('/api/reportes/cajeros', [ReporteController::class, 'apiCajeros'])->name('reportes.api.cajeros');
             Route::get('/api/reportes/productos', [ReporteController::class, 'apiProductos'])->name('reportes.api.productos');
-            Route::get('/api/reportes/export', [ReporteController::class, 'apiExport'])->name('reportes.api.export');
+            
             Route::get('/reportes/ventas/{id}/detalles', [ReporteController::class, 'ventaDetalles']);
 
             // Backup config
@@ -139,12 +139,12 @@ Route::delete('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionCo
             Route::get('/api/notifications/count', [NotificationController::class, 'count'])->name('notifications.count');
 
             // Backup con licencia
-            Route::middleware(CheckLicense::class)->group(function () {
+            
                 Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
-            });
+            
         });
 
-        // ========== ADMIN Y EMPLEADO ==========
+        // ========== ADMIN Y EMPLEADO RUTAS BLOQUEDAS POR LICENCIA ==========
         Route::middleware(['role:admin,empleado', CheckLicense::class])->group(function () {
             // Caja
             Route::post('/caja/abrir', [CajaController::class, 'abrir'])->name('caja.abrir');
@@ -165,8 +165,8 @@ Route::delete('/ajustes/motivos-devolucion/{motivo}', [ConfiguracionDevolucionCo
             Route::get('/ventas/{venta}/factura/impresion', [VentaController::class, 'impresion'])->name('ventas.factura.impresion');
             Route::post('/ventas/{venta}/anular', [VentaController::class, 'confirmarDevolucion'])->name('ventas.devolucion.confirmar-anulacion');
             // Productos
-
-            
+            Route::get('/reportes/export', [ReporteController::class, 'export'])->name('reportes.export');
+            Route::get('/api/reportes/export', [ReporteController::class, 'apiExport'])->name('reportes.api.export');
             Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
             Route::put('/productos/{id}', [ProductoController::class, 'update']);
             Route::delete('/productos/{id}', [ProductoController::class, 'destroy']);

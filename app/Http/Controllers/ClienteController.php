@@ -70,13 +70,12 @@ public function show(Cliente $cliente)
         $q->whereIn('estado', ['credito', 'parcial'])->orderByDesc('fecha');
     }]);
 
-    $totalComprado = $cliente->ventas()->sum('total');
-    $totalAbonado  = $cliente->abonos()->sum('monto');
+    $totalComprado = $cliente->ventas()->whereNotIn('estado', ['anulada', 'devuelta'])->sum('total');
 
     // Cargar abonos paginados correctamente
     $abonos = $cliente->abonos()->orderByDesc('created_at')->paginate(5);
 
-    return view('clientes.show', compact('cliente', 'totalComprado', 'totalAbonado', 'abonos'));
+    return view('clientes.show', compact('cliente', 'totalComprado', 'abonos'));
 }
     public function update(Request $request, Cliente $cliente)
     {

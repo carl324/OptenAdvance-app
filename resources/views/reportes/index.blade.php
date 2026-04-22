@@ -689,12 +689,13 @@ function exportar(event, tipo, desdeId, hastaId) {
 
   const params = new URLSearchParams({ tipo, fecha_inicio: desde, fecha_fin: hasta });
 
-  fetch(`/api/reportes/export?${params}`, {
+fetch(`/api/reportes/export?${params}`, {
     headers: {
-      'X-CSRF-TOKEN': csrf,
-      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'X-CSRF-TOKEN': csrf,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
     }
-  })
+})
   .then(response => {
     if (response.status === 413) {
       showExportLimitModal();

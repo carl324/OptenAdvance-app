@@ -1083,7 +1083,7 @@
         @elseif($data['status'] === 'expired')
             <div class="lic-modal-permission-item d-flex align-items-start">
                 <i style="color: #ef4444" class="mdi mdi-alert-circle-outline lic-modal-check-icon me-2 mt-1"></i>
-                <span>Tu licencia ha terminado. Solo puedes ver las ventas, pero no agregar productos ni exportar a Excel. Contacta con soporte para reactivar tu suscripción y desbloquear todas las funciones.</span>
+                <span>Tu licencia ha terminado. El sistema ha entrado en modo lectura. Contacta con soporte para reactivar tu suscripción y desbloquear todas las funciones.</span>
             </div>
         @endif
     </div>
