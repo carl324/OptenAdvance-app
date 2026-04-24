@@ -633,20 +633,25 @@ public function obtenerTodosProductos()
 
     // Descargar factura en PDF
     public function descargarPDF(Venta $venta)
-    {
-        $venta->load('detalles.producto', 'factura');
-        $empresa = Empresa::first();
+{
+    $venta->load('detalles.producto', 'factura');
+    $empresa = Empresa::first();
 
-        $pdf = \PDF::loadView('ventas.factura-pdf', [
-            'venta' => $venta,
-            'empresa' => $empresa
-        ]);
+    $productosDevueltos = \App\Models\DevolucionDetalle::whereHas('devolucion', fn($q) => $q->where('venta_id', $venta->id))
+        ->selectRaw('producto_id, SUM(cantidad_devuelta) as total_devuelto')
+        ->groupBy('producto_id')
+        ->pluck('total_devuelto', 'producto_id');
 
-        $nombreArchivo = 'factura-' . ($venta->factura->numero ?? $venta->id) . '.pdf';
+    $pdf = \PDF::loadView('ventas.factura-pdf', [
+        'venta'              => $venta,
+        'empresa'            => $empresa,
+        'productosDevueltos' => $productosDevueltos,
+    ]);
 
-        return $pdf->download($nombreArchivo);
-    }
+    $nombreArchivo = 'factura-' . ($venta->factura->numero ?? $venta->id) . '.pdf';
 
+    return $pdf->download($nombreArchivo);
+}
     // Vista para impresión (recibo thermal)
 public function impresion(Venta $venta)
 {

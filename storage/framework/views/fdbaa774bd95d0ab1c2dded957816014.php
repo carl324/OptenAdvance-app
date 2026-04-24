@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Personal')
 
-@section('content')
+<?php $__env->startSection('title', 'Personal'); ?>
+
+<?php $__env->startSection('content'); ?>
 <br><br>
 <style>
 /* ========== Perfil Colapsable ========== */
@@ -157,7 +157,7 @@
                 <img src="assets/images/profile/admin.png" alt="" />
               </div>
                 <div class="profile-info-compact">
-                  <h6 class="mb-1">{{ auth()->user()->name ?? 'Administrador' }}</h6>
+                  <h6 class="mb-1"><?php echo e(auth()->user()->name ?? 'Administrador'); ?></h6>
                   <p class="text-sm text-gray mb-0">Administrador</p>
                 </div>
             </div>
@@ -171,17 +171,17 @@
             <div class="profile-info">
               <div id="profile-alert" class="alert d-none" role="alert"></div>
 
-              <form id="form-perfil-admin" data-endpoint="{{ route('perfil.admin.update') }}" novalidate>
-                @csrf
+              <form id="form-perfil-admin" data-endpoint="<?php echo e(route('perfil.admin.update')); ?>" novalidate>
+                <?php echo csrf_field(); ?>
                 <div class="input-style-1">
                   <label>Nombre</label>
-                  <input type="text" name="name" value="{{ auth()->user()->name ?? '' }}" maxlength="100" aria-invalid="false" />
+                  <input type="text" name="name" value="<?php echo e(auth()->user()->name ?? ''); ?>" maxlength="100" aria-invalid="false" />
                   <div class="invalid-feedback d-none" id="profile-error-name"></div>
                 </div>
                 
                 <div class="input-style-1">
                   <label>Email</label>
-                  <input type="text" name="email" value="{{ auth()->user()->email ?? '' }}" maxlength="150" aria-invalid="false" />
+                  <input type="text" name="email" value="<?php echo e(auth()->user()->email ?? ''); ?>" maxlength="150" aria-invalid="false" />
                   <div class="invalid-feedback d-none" id="profile-error-email"></div>
                 </div>
                 <div class="input-style-1">
@@ -215,8 +215,8 @@
             </button>
           </div>
           <div id="empleado-alert" class="alert d-none" role="alert"></div>
-          <form id="form-empleado" data-endpoint="{{ route('personal.store') }}" novalidate>
-            @csrf
+          <form id="form-empleado" data-endpoint="<?php echo e(route('personal.store')); ?>" novalidate>
+            <?php echo csrf_field(); ?>
             <div class="row">
               <div class="col-12">
                 <div class="input-style-1">
@@ -266,9 +266,9 @@
       <!-- Columna derecha: Lista de empleados -->
       <div class="col-lg-6">
         
-        @forelse($empleados as $empleado)
+        <?php $__empty_1 = true; $__currentLoopData = $empleados; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $empleado): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
           <div class="card-style settings-card-1 mb-30">
-            <div class="profile-header" onclick="toggleEmpleado({{ $empleado->id }})">
+            <div class="profile-header" onclick="toggleEmpleado(<?php echo e($empleado->id); ?>)">
               <div class="profile-preview">
                 
                 <div class="profile-image-small">
@@ -277,51 +277,51 @@
                   
                 </div>
                 <div class="profile-info-compact">
-                  <h6 class="mb-1">{{ $empleado->name ?? $empleado->username }}</h6>
+                  <h6 class="mb-1"><?php echo e($empleado->name ?? $empleado->username); ?></h6>
                   <p class="text-sm text-gray mb-0">Empleado</p>
                 </div>
               </div>
               <button class="toggle-btn" type="button">
-                <i class="lni lni-chevron-down" id="toggle-icon-{{ $empleado->id }}"></i>
+                <i class="lni lni-chevron-down" id="toggle-icon-<?php echo e($empleado->id); ?>"></i>
               </button>
             </div>
 
-            <div class="profile-content" id="empleado-content-{{ $empleado->id }}" style="display: none;">
+            <div class="profile-content" id="empleado-content-<?php echo e($empleado->id); ?>" style="display: none;">
               <div class="profile-info">
-                <div id="empleado-alert-{{ $empleado->id }}" class="alert d-none" role="alert"></div>
+                <div id="empleado-alert-<?php echo e($empleado->id); ?>" class="alert d-none" role="alert"></div>
 
                 <div class="input-style-1">
                   <label>Nombre</label>
-                  <input type="text" id="empleado-name-{{ $empleado->id }}" value="{{ $empleado->name ?? '' }}" maxlength="100" aria-invalid="false" />
-                  <div class="invalid-feedback d-none" id="empleado-error-name-{{ $empleado->id }}"></div>
+                  <input type="text" id="empleado-name-<?php echo e($empleado->id); ?>" value="<?php echo e($empleado->name ?? ''); ?>" maxlength="100" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="empleado-error-name-<?php echo e($empleado->id); ?>"></div>
                 </div>
                 <div class="input-style-1">
                   <label>Email</label>
-                  <input type="text" id="empleado-email-{{ $empleado->id }}" value="{{ $empleado->email ?? '' }}" maxlength="150" aria-invalid="false" />
-                  <div class="invalid-feedback d-none" id="empleado-error-email-{{ $empleado->id }}"></div>
+                  <input type="text" id="empleado-email-<?php echo e($empleado->id); ?>" value="<?php echo e($empleado->email ?? ''); ?>" maxlength="150" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="empleado-error-email-<?php echo e($empleado->id); ?>"></div>
                 </div>
                 <div class="input-style-1">
                   <label>Teléfono</label>
-                  <input type="text" id="empleado-phone-{{ $empleado->id }}" value="{{ $empleado->phone ?? '' }}" maxlength="20" aria-invalid="false" />
-                  <div class="invalid-feedback d-none" id="empleado-error-phone-{{ $empleado->id }}"></div>
+                  <input type="text" id="empleado-phone-<?php echo e($empleado->id); ?>" value="<?php echo e($empleado->phone ?? ''); ?>" maxlength="20" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="empleado-error-phone-<?php echo e($empleado->id); ?>"></div>
                 </div>
                 <div class="input-style-1 mt-2">
                   <label>Contraseña (Actualizar)</label>
-                  <input type="text" id="empleado-password-{{ $empleado->id }}" placeholder="Dejar vacío para no cambiar" maxlength="60" aria-invalid="false" />
-                  <div class="invalid-feedback d-none" id="empleado-error-password-{{ $empleado->id }}"></div>
+                  <input type="text" id="empleado-password-<?php echo e($empleado->id); ?>" placeholder="Dejar vacío para no cambiar" maxlength="60" aria-invalid="false" />
+                  <div class="invalid-feedback d-none" id="empleado-error-password-<?php echo e($empleado->id); ?>"></div>
                 </div>
                 <div class="d-flex gap-2 mt-3">
-                  <button type="button" class="main-btn light-btn btn-hover flex-fill" data-name="{{ $empleado->name ?? '' }}" onclick="openDeleteModal({{ $empleado->id }}, this.dataset.name)" id="btn-eliminar-{{ $empleado->id }}">
+                  <button type="button" class="main-btn light-btn btn-hover flex-fill" data-name="<?php echo e($empleado->name ?? ''); ?>" onclick="openDeleteModal(<?php echo e($empleado->id); ?>, this.dataset.name)" id="btn-eliminar-<?php echo e($empleado->id); ?>">
                     <i class="lni lni-trash-can"></i> Eliminar
                   </button>
-                  <button type="button" class="main-btn primary-btn btn-hover flex-fill" onclick="saveEmpleado({{ $empleado->id }})" id="btn-guardar-{{ $empleado->id }}">
+                  <button type="button" class="main-btn primary-btn btn-hover flex-fill" onclick="saveEmpleado(<?php echo e($empleado->id); ?>)" id="btn-guardar-<?php echo e($empleado->id); ?>">
                     <i class="lni lni-save"></i> Guardar
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        @empty
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
           <div class="card-style settings-card-1 mb-30">
             <div class="profile-header">
               <div class="profile-preview">
@@ -332,7 +332,7 @@
               </div>
             </div>
           </div>
-        @endforelse
+        <?php endif; ?>
 
       </div>
       <!-- end col -->
@@ -341,12 +341,12 @@
     <!-- end row -->
   </div>
   <!-- end container -->
-    @if(auth()->user()->role === 'admin')
-    @php
+    <?php if(auth()->user()->role === 'admin'): ?>
+    <?php
       $reveal = DB::table('super_admin_reveal')->where('revealed', false)->first();
-    @endphp
+    ?>
 
-    @if($reveal)
+    <?php if($reveal): ?>
 <div class="modal fade show" id="superAdminModal" tabindex="-1" style="display: block; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); transition: all 0.4s ease;">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 420px; margin: 1.75rem auto;">
         <div class="modal-content" style="border: none; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); background: #ffffff;">
@@ -369,21 +369,22 @@
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div style="padding: 14px 18px; background: #f8fafc; border-radius: 14px; border: 1px solid #f1f5f9;">
                         <span style="display: block; font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Usuario (Email)</span>
-                        <p style="color: #334155; font-weight: 700; font-size: 14px; margin: 0;">{{ $reveal->email }}</p>
+                        <p style="color: #334155; font-weight: 700; font-size: 14px; margin: 0;"><?php echo e($reveal->email); ?></p>
                     </div>
 
                     <div style="padding: 16px; background: #ffffff; border-radius: 14px; border: 2px dashed #e2e8f0; text-align: left;">
                         <span style="display: block; font-size: 9px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Contraseña de Acceso</span>
                         <code style="font-size: 18px; font-weight: 800; color: #0f172a; font-family: 'JetBrains Mono', monospace;">
-                            {{ Crypt::decryptString($reveal->password) }}
+                            <?php echo e(Crypt::decryptString($reveal->password)); ?>
+
                         </code>
                     </div>
                 </div>
             </div>
 
             <div class="modal-footer" style="border: none; padding: 0 32px 32px 32px; display: flex; flex-direction: column; gap: 8px;">
-                <form method="POST" action="{{ route('superadmin.mark-revealed') }}" style="width: 100%;">
-    @csrf
+                <form method="POST" action="<?php echo e(route('superadmin.mark-revealed')); ?>" style="width: 100%;">
+    <?php echo csrf_field(); ?>
     <label style="display:flex;align-items:center;gap:10px;margin-bottom:14px;cursor:pointer;font-size:13px;font-weight:600;color:#475569;">
         <input type="checkbox" id="check-guardado" onchange="document.getElementById('btn-confirmar-reveal').disabled = !this.checked" style="width:16px;height:16px;accent-color:#0f172a;cursor:pointer;">
         Confirmo que he guardado las credenciales en un lugar seguro
@@ -393,7 +394,7 @@
     </button>
 </form>
                 
-                <button onclick="descargarCredenciales('{{ $reveal->email }}', '{{ Crypt::decryptString($reveal->password) }}')" class="btn-sub-compact">
+                <button onclick="descargarCredenciales('<?php echo e($reveal->email); ?>', '<?php echo e(Crypt::decryptString($reveal->password)); ?>')" class="btn-sub-compact">
                     <i class="mdi mdi-download"></i> Descargar copia
                 </button>
             </div>
@@ -462,8 +463,8 @@
           a.click();
         }
       </script>
-    @endif
-  @endif
+    <?php endif; ?>
+  <?php endif; ?>
 </section>
 
 
@@ -837,7 +838,7 @@ async function confirmDeleteEmpleado() {
 }
 </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
 <!-- Modal simple de confirmación de eliminación -->
 <style>
@@ -855,3 +856,5 @@ async function confirmDeleteEmpleado() {
     </div>
   </div>
 </div>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\optenadvance\app\www\resources\views/personal/index.blade.php ENDPATH**/ ?>

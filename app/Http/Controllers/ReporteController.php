@@ -801,10 +801,18 @@ public function index(Request $request)
                 ], 413);
             }
 
-            $data = $ventasQuery
-                ->with('factura', 'detalles')
-                ->orderBy('created_at', 'desc')
-                ->get();
+           $data = $ventasQuery
+    ->with(['factura', 'detalles'])
+    ->orderBy('fecha', 'desc')
+    ->get();
+
+// Cargar montos devueltos para dev_parcial en una sola query
+$devParcialIds = $data->where('estado', 'dev_parcial')->pluck('id');
+$montosDevueltos = \DB::table('devoluciones')
+    ->whereIn('venta_id', $devParcialIds)
+    ->selectRaw('venta_id, SUM(monto_real) as total_devuelto')
+    ->groupBy('venta_id')
+    ->pluck('total_devuelto', 'venta_id');
         }
 
         // Crear spreadsheet
@@ -891,7 +899,7 @@ public function index(Request $request)
 
         } else {
             // Headers para ventas sin detalles expandidos
-            $headers = ['Venta ID', 'Fecha', 'N° Factura', 'Cliente', 'Vendedor', 'Rol', 'IVA', 'Total', 'Estado', 'Medio de pago', 'Motivo de anulación'];
+           $headers = ['Venta ID', 'Fecha', 'N° Factura', 'Cliente', 'Vendedor', 'Rol', 'Total', 'Estado', 'Medio de pago'];
 
             $col = 'A';
             $headerCells = [];
@@ -905,38 +913,43 @@ public function index(Request $request)
             $this->aplicarEstilosHeader($sheet, $headerCells);
 
            $row = 2;
-$totalVentas = 0;
-$totalIva = 0;
-$ventasCompletadas = 0;
-// Precargar usuarios para evitar N+1
-$userIds = $data->map(function($v) { return $v->user_id; })->filter()->unique()->values()->all();
+$totalIngresos = 0;
+$totalVentasContadas = 0;
+
+$userIds = $data->map(fn($v) => $v->user_id)->filter()->unique()->values()->all();
 $users = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
 
 foreach ($data as $venta) {
-    $medioPago = optional($venta->factura)->forma_pago ?? '-';
+    $medioPago     = optional($venta->factura)->forma_pago ?? '-';
     $facturaNumero = optional($venta->factura)->numero ?? '-';
-    
-    $motivoAnulacion = '-';
-    if ($venta->estado === 'anulada') {
-        $motivoAnulacion = optional($venta->detalles->first())->motivo_anulacion ?? '-';
-    }
-    
-    $ventaUser = $users->get($venta->user_id);
-    $vendedorNombre = optional($ventaUser)->name ?? '-';
-    $vendedorRol = optional($ventaUser)->role ?? '-';
+    $ventaUser     = $users->get($venta->user_id);
 
-    $values = [];
-    $values[] = $venta->id;
-    $values[] = $venta->created_at ? $venta->created_at->format('d/m/Y H:i') : '';
-    $values[] = $facturaNumero;
-    $values[] = optional($venta->factura)->cliente_nombre ?? '-';
-    $values[] = $vendedorNombre;
-    $values[] = $vendedorRol;
-    $values[] = $venta->detalles->sum('iva') ?? 0;
-    $values[] = $venta->total;
-    $values[] = $venta->estado;
-    $values[] = $medioPago;
-    $values[] = $motivoAnulacion;
+    switch ($venta->estado) {
+        case 'completada':
+            $ingresoReal = $venta->total;
+            break;
+        case 'credito':
+        case 'parcial':
+            $ingresoReal = $venta->total - $venta->saldo_pendiente;
+            break;
+        case 'dev_parcial':
+            $ingresoReal = $venta->total - ($montosDevueltos[$venta->id] ?? 0);
+            break;
+        default:
+            $ingresoReal = 0;
+    }
+
+    $values = [
+        $venta->id,
+        $venta->fecha ? $venta->fecha->format('d/m/Y H:i') : '',
+        $facturaNumero,
+        optional($venta->factura)->cliente_nombre ?? '-',
+        optional($ventaUser)->name ?? '-',
+        optional($ventaUser)->role ?? '-',
+        $venta->total,
+        $venta->estado,
+        $medioPago,
+    ];
 
     $col = 'A';
     foreach ($values as $val) {
@@ -944,44 +957,31 @@ foreach ($data as $venta) {
         $col++;
     }
 
+    if (!in_array($venta->estado, ['anulada', 'devuelta'])) {
+        $totalIngresos += $ingresoReal;
+        $totalVentasContadas++;
+    }
+
     $row++;
 
-    if ($venta->estado === 'completada') {
-        $totalVentas += $venta->total;
-        $totalIva += ($venta->detalles->sum('iva') ?? 0);
-        $ventasCompletadas++;
-    }
 }
 
             // Agregar fila de resumen
-            $row += 1;
-            $sheet->setCellValue('A' . $row, 'RESUMEN');
-            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-            $sheet->getStyle('A' . $row)->getFill()->setFillType('solid')->getStartColor()->setRGB('E8E8E8');
+           $row += 1;
+$sheet->setCellValue('A' . $row, 'RESUMEN');
+$sheet->getStyle('A' . $row)->getFont()->setBold(true);
+$sheet->getStyle('A' . $row)->getFill()->setFillType('solid')->getStartColor()->setRGB('E8E8E8');
 
-            $row += 1;
-            $sheet->setCellValue('A' . $row, 'Total Ventas Completadas:');
-            $sheet->setCellValue('B' . $row, $ventasCompletadas);
-            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+$row += 1;
+$sheet->setCellValue('A' . $row, 'Total Ventas:');
+$sheet->setCellValue('B' . $row, $totalVentasContadas);
+$sheet->getStyle('A' . $row)->getFont()->setBold(true);
 
-            $row += 1;
-            $sheet->setCellValue('A' . $row, 'Total Ingresos:');
-            $sheet->setCellValue('B' . $row, $totalVentas);
-            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-            $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
-
-            $row += 1;
-            $sheet->setCellValue('A' . $row, 'Total IVA Recolectado:');
-            $sheet->setCellValue('B' . $row, $totalIva);
-            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-            $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
-
-            $row += 1;
-            $baseImponible = $totalVentas - $totalIva;
-            $sheet->setCellValue('A' . $row, 'Base Imponible:');
-            $sheet->setCellValue('B' . $row, $baseImponible);
-            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-            $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+$row += 1;
+$sheet->setCellValue('A' . $row, 'Total Ingresos:');
+$sheet->setCellValue('B' . $row, $totalIngresos);
+$sheet->getStyle('A' . $row)->getFont()->setBold(true);
+$sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
 
         }
 

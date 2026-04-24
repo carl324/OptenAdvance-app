@@ -146,6 +146,7 @@ class DevolucionController extends Controller
                 'message'         => 'Devolución registrada correctamente',
                 'devolucion_id'   => $devolucion->id,
                 'monto_calculado' => $montoCalculado,
+                'monto_real'      => $data['monto_real'],
             ]);
 
         } catch (\Exception $e) {

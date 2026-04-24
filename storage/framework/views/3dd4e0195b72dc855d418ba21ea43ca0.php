@@ -18,9 +18,18 @@
   <link rel="stylesheet" href="/assets/css/main.css" />
   <link rel="stylesheet" href="/assets/css/truncate-tooltips.css" />
   <style>
+  /* Tamaño íconos sidebar */
+.sidebar-nav .icon i {
+  font-size: 1.4rem;
+}
+
+/* Tamaño texto sidebar */
+.sidebar-nav .text {
+  font-size: 1rem;
+}
     /* Sidebar width adjustment */
     .sidebar-nav-wrapper {
-      width: 190px;
+      width: 200px;
       /* antes suele estar en 260–280 */
     }
 
@@ -32,7 +41,7 @@
     /* Responsive: en pantallas pequeñas no tocar */
     @media (max-width: 991px) {
       .sidebar-nav-wrapper {
-        width: 260px;
+        width: 200px;
       }
 
       .main-wrapper {
@@ -846,7 +855,7 @@
           <div class="col-lg-7 col-md-7 col-6">
             <div class="header-right">
               <?php if(auth()->user()->role === 'admin'): ?>
-<div class="notification-box ml-15 d-none d-md-flex">
+<div class="notification-box ml-15 ">
     <button type="button" id="notification-bell" onclick="window.location='<?php echo e(route('notifications.index')); ?>'" style="position: relative;">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M11 20.1667C9.88317 20.1667 8.88718 19.63 8.23901 18.7917H13.761C13.113 19.63 12.1169 20.1667 11 20.1667Z" fill="" />
@@ -856,7 +865,7 @@
     </button>
 </div>
 <?php endif; ?>
-              <div class="header-message-box ml-15 d-none d-md-flex">
+              <div class="header-message-box ml-15 ">
                   <button class="dropdown-toggle" type="button" id="message" data-bs-toggle="dropdown"
                     aria-expanded="false">
                     <i class="mdi mdi-cash-register" style="font-size: 32px;"></i>

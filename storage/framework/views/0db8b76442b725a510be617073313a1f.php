@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Factura - {{ $venta->factura->numero ?? $venta->id }}</title>
+    <title>Factura - <?php echo e($venta->factura->numero ?? $venta->id); ?></title>
     <style>
         * {
             margin: 0;
@@ -182,14 +182,14 @@
 </head>
 <body>
 <div class="container">
-  @php
+  <?php
     $factura = $venta->factura;
     $total = $factura->total ?? $venta->total ?? 0;
     $impuestos = $factura->impuestos ?? $venta->detalles->sum(fn($d) => $d->iva ?? 0);
     $hasIva = ((float) $impuestos) > 0;
     $subtotal = $total - $impuestos;
-@endphp
-    @if($venta->estado === 'anulada')
+?>
+    <?php if($venta->estado === 'anulada'): ?>
     <div style="
         position: fixed;
         top: 50%;
@@ -215,31 +215,33 @@
             Anulada
         </div>
     </div>
-@endif
+<?php endif; ?>
     <!-- Header -->
      <h2 class="text-center">FACTURA COMERCIAL</h2>
      <br><br>
     <table class="header-table">
         <tr>
             <td class="company-info" style="width: 65%;">
-             @if($empresa && $empresa->logo)
-        <img src="{{ public_path($empresa->logo) }}" alt="Logo" style="max-height:60px;max-width:140px;object-fit:contain;display:block;margin-bottom:6px;" />
-    @endif
-                <h1>{{ $empresa->nombre ?? 'Mi Empresa' }}</h1>
-                <p>NIT: {{ $empresa->nit ?? '---' }}</p>
-                <p>{{ $empresa->direccion ?? '' }}</p>
-                <p>Tel: {{ $empresa->telefono ?? '' }}</p>
-                <p>Email: {{ $empresa->email ?? '' }}</p>
+             <?php if($empresa && $empresa->logo): ?>
+        <img src="<?php echo e(public_path($empresa->logo)); ?>" alt="Logo" style="max-height:60px;max-width:140px;object-fit:contain;display:block;margin-bottom:6px;" />
+    <?php endif; ?>
+                <h1><?php echo e($empresa->nombre ?? 'Mi Empresa'); ?></h1>
+                <p>NIT: <?php echo e($empresa->nit ?? '---'); ?></p>
+                <p><?php echo e($empresa->direccion ?? ''); ?></p>
+                <p>Tel: <?php echo e($empresa->telefono ?? ''); ?></p>
+                <p>Email: <?php echo e($empresa->email ?? ''); ?></p>
             </td>
             <td class="invoice-details" style="width: 35%;">
                 
                 <p class="invoice-number">
-                    ID de Factura: {{ $factura->numero ?? '—' }}
+                    ID de Factura: <?php echo e($factura->numero ?? '—'); ?>
+
                 </p>
                 <p><strong>Fecha de emisión:</strong>
-                    {{ optional($factura->created_at)->format('d/m/Y H:i') ?? '—' }}
+                    <?php echo e(optional($factura->created_at)->format('d/m/Y H:i') ?? '—'); ?>
+
                 </p>
-                <p><strong>Método de Pago:</strong> {{ $factura->forma_pago ?? '—' }}</p>
+                <p><strong>Método de Pago:</strong> <?php echo e($factura->forma_pago ?? '—'); ?></p>
             </td>
         </tr>
     </table>
@@ -251,11 +253,11 @@
                 <td>
                     <div class="client-label">Cliente:</div>
                     <p>
-                        <strong>{{ $factura->cliente_nombre ?? 'Consumidor final' }}</strong>
+                        <strong><?php echo e($factura->cliente_nombre ?? 'Consumidor final'); ?></strong>
                     </p>
-                    @if(!empty($factura->cliente_nit))
-                        <p>Documento/NIT: {{ $factura->cliente_nit }}</p>
-                    @endif
+                    <?php if(!empty($factura->cliente_nit)): ?>
+                        <p>Documento/NIT: <?php echo e($factura->cliente_nit); ?></p>
+                    <?php endif; ?>
                 </td>
             </tr>
         </table>
@@ -268,53 +270,58 @@
                 <th style="width:40%;">Producto</th>
                 <th class="text-right" style="width:8%;">Cantidad</th>
                 <th class="text-right" style="width:14%;">Precio Unitario</th>
-                @if($hasIva)
+                <?php if($hasIva): ?>
                     <!-- <th class="text-right" style="width:10%;">Tarifa IVA</th> -->
                     <th class="text-right" style="width:10%;">Valor IVA</th>
-                @endif
+                <?php endif; ?>
                 <th class="text-right" style="width:18%;">Total</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($venta->detalles as $detalle)
-                @php
+            <?php $__empty_1 = true; $__currentLoopData = $venta->detalles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $detalle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php
     $tarifaIva = optional($detalle->producto)->iva ?? null;
     $ivaValor = $detalle->iva ?? 0;
     $lineSubtotal = ($detalle->precio_unitario ?? 0) * ($detalle->cantidad ?? 1);
     $devuelto = $productosDevueltos[$detalle->producto_id] ?? 0;
     $totalDevuelto = $devuelto >= $detalle->cantidad;
     $parcial = $devuelto > 0 && !$totalDevuelto;
-@endphp
+?>
                 <tr>
-                    <td class="product-cell" style="{{ $totalDevuelto ? 'text-decoration:line-through;color:#999;' : '' }}">
-    {{ optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id }}
-    @if($totalDevuelto)
+                    <td class="product-cell" style="<?php echo e($totalDevuelto ? 'text-decoration:line-through;color:#999;' : ''); ?>">
+    <?php echo e(optional($detalle->producto)->nombre ?? 'Producto #' . $detalle->producto_id); ?>
+
+    <?php if($totalDevuelto): ?>
         <span style="font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#999;display:block;">Reembolsado</span>
-    @elseif($parcial)
-        <span style="font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#f2994a;display:block;">Parcial ({{ $devuelto }} dev.)</span>
-    @endif
+    <?php elseif($parcial): ?>
+        <span style="font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#f2994a;display:block;">Parcial (<?php echo e($devuelto); ?> dev.)</span>
+    <?php endif; ?>
 </td>
-                    <td class="text-right">{{ $detalle->cantidad }}</td>
+                    <td class="text-right"><?php echo e($detalle->cantidad); ?></td>
                     <td class="text-right">
-                        {{ number_format($detalle->precio_unitario ?? 0, 0, ',', '.') }}
+                        <?php echo e(number_format($detalle->precio_unitario ?? 0, 0, ',', '.')); ?>
+
                     </td>
-                    @if($hasIva)
+                    <?php if($hasIva): ?>
                         <!-- <td class="text-right">
-                            {{ $tarifaIva ? $tarifaIva.'%' : '—' }}
+                            <?php echo e($tarifaIva ? $tarifaIva.'%' : '—'); ?>
+
                         </td> -->
                         <td class="text-right">
-                            {{ number_format($ivaValor, 0, ',', '.') }}
+                            <?php echo e(number_format($ivaValor, 0, ',', '.')); ?>
+
                         </td>
-                    @endif
+                    <?php endif; ?>
                     <td class="text-right">
-                        {{ number_format($lineSubtotal + $ivaValor, 0, ',', '.') }}
+                        <?php echo e(number_format($lineSubtotal + $ivaValor, 0, ',', '.')); ?>
+
                     </td>
                 </tr>
-            @empty
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <tr>
-                    <td colspan="{{ $hasIva ? 6 : 4 }}" class="text-center">Sin productos</td>
+                    <td colspan="<?php echo e($hasIva ? 6 : 4); ?>" class="text-center">Sin productos</td>
                 </tr>
-            @endforelse
+            <?php endif; ?>
         </tbody>
     </table>
 
@@ -324,21 +331,21 @@
             <tr>
                 <td></td>
                 <td class="label">Subtotal:</td>
-                <td class="value">{{ number_format($subtotal, 0, ',', '.') }}</td>
+                <td class="value"><?php echo e(number_format($subtotal, 0, ',', '.')); ?></td>
             </tr>
 
-            @if($hasIva)
+            <?php if($hasIva): ?>
             <tr>
                 <td></td>
                 <td class="label">IVA:</td>
-                <td class="value">{{ number_format($impuestos, 0, ',', '.') }}</td>
+                <td class="value"><?php echo e(number_format($impuestos, 0, ',', '.')); ?></td>
             </tr>
-            @endif
+            <?php endif; ?>
 
             <tr class="total">
                 <td></td>
                 <td class="label">TOTAL:</td>
-                <td class="value">{{ number_format($total, 0, ',', '.') }}</td>
+                <td class="value"><?php echo e(number_format($total, 0, ',', '.')); ?></td>
             </tr>
         </table>
     </div>
@@ -350,3 +357,4 @@
 
 </body>
 </html>
+<?php /**PATH C:\optenadvance\app\www\resources\views/ventas/factura-pdf.blade.php ENDPATH**/ ?>

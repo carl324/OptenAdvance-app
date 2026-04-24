@@ -18,7 +18,7 @@ Schedule::command('backup:automatico')
     ->withoutOverlapping();
 
 Schedule::command('disco:verificar')
-    ->everyMinute()
+    ->daily()
     ->withoutOverlapping();
     
 Schedule::command('app:archivar-movimientos')->monthlyOn(1, '03:00');

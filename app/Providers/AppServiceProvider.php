@@ -45,12 +45,24 @@ $ventasHoy = null;
 $ingresosHoy = null;
 
 if ($cajaActual) {
-   $stats = Venta::where('caja_id', $cajaActual->id)
-    ->whereNotIn('estado', ['anulada', 'cancelada', 'devuelta', 'dev_parcial'])
-    ->selectRaw('COUNT(*) as count, COALESCE(SUM(total), 0) as ingresos')
-    ->first();
-    
-    $ventasHoy = $stats->count ?? 0;
+    $stats = Venta::where('caja_id', $cajaActual->id)
+        ->whereNotIn('estado', ['anulada', 'cancelada', 'devuelta'])
+        ->selectRaw('
+            COUNT(*) as count,
+            COALESCE(SUM(
+                CASE
+                    WHEN estado = "completada" THEN total
+                    WHEN estado IN ("credito", "parcial") THEN total - saldo_pendiente
+                    WHEN estado = "dev_parcial" THEN total - COALESCE((
+                        SELECT SUM(monto_real) FROM devoluciones WHERE venta_id = ventas.id
+                    ), 0)
+                    ELSE 0
+                END
+            ), 0) as ingresos
+        ')
+        ->first();
+
+    $ventasHoy  = $stats->count ?? 0;
     $ingresosHoy = (float)($stats->ingresos ?? 0);
 }
 
