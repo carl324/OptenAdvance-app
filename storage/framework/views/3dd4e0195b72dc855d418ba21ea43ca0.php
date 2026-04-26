@@ -1018,30 +1018,23 @@
                     </div>
                     <h3 class="lic-modal-cert-title">OptenAdvance</h3>
                     <p style="color: #94a3b8; font-size: 14px; margin-top: 5px;">
-                        <?php if($data['status'] === 'active'): ?>
-                            Licencia Corporativa
-                        <?php elseif($data['status'] === 'expired'): ?>
-                            Licencia Vencida
-                        <?php else: ?>
-                            Prueba Gratuita
-                        <?php endif; ?>
-                    </p>
+    <?php if($data['status'] === 'active'): ?>
+        Licencia Corporativa
+    <?php else: ?>
+        Licencia Vencida
+    <?php endif; ?>
+</p>
                 </div>
 
                 <div class="lic-modal-info-side">
                     <div class="lic-modal-header text-center text-md-start">
                         <span class="lic-modal-status-badge 
-    <?php echo e($data['status'] === 'active' ? 'lic-modal-status-active' : ($data['status'] === 'expired' ? 'lic-modal-status-expired' : 'lic-modal-status-trial')); ?>">
+    <?php echo e($data['status'] === 'active' ? 'lic-modal-status-active' : 'lic-modal-status-expired'); ?>">
     <span style="width: 8px; height: 8px; 
-        background: <?php echo e($data['status'] === 'active' ? '#16a34a' : ($data['status'] === 'expired' ? '#ef4444' : '#3b82f6')); ?>;
+        background: <?php echo e($data['status'] === 'active' ? '#16a34a' : '#ef4444'); ?>;
         border-radius: 50%;"></span>
-    <?php if($data['status'] === 'active'): ?>
-        Suscripción Activa
-    <?php elseif($data['status'] === 'expired'): ?>
-        Licencia Vencida
-    <?php else: ?>
-        Modo de Prueba
-    <?php endif; ?>
+    <?php echo e($data['status'] === 'active' ? 'Suscripción Activa' : 'Licencia Vencida'); ?>
+
 </span>
 
                         <h2 class="lic-modal-title-main">Tu Licencia</h2>
@@ -1077,28 +1070,20 @@
     </h4>
     <div class="lic-modal-permissions-list">
         <?php if($data['status'] === 'active'): ?>
-            <div class="lic-modal-permission-item">
-                <i class="mdi mdi-check-circle-outline lic-modal-check-icon"></i>
-                <span>Acceso ilimitado a todas las funciones de OptenAdvance</span>
-            </div>
-            <div class="lic-modal-permission-item">
-                <i class="mdi mdi-check-circle-outline lic-modal-check-icon"></i>
-                <span>Soporte Técnico VIP y acceso a futuras actualizaciones (primeros 3 meses)</span>
-            </div>
-        <?php elseif($data['status'] === 'trial' || $data['status'] === 'trial_active' || $data['status'] === 'trial_first'): ?>
-            <div class="lic-modal-permission-item d-flex align-items-start">
-    <i class="mdi mdi-information-outline lic-modal-check-icon me-2 mt-1"></i>
-    <span>
-        Actualmente estás usando una licencia de prueba. Puedes explorar todas las funciones, pero recuerda que una vez terminado el periodo de prueba, deberás contactar con soporte para renovación.
-    </span>
-</div>
-
-        <?php elseif($data['status'] === 'expired'): ?>
-            <div class="lic-modal-permission-item d-flex align-items-start">
-                <i style="color: #ef4444" class="mdi mdi-alert-circle-outline lic-modal-check-icon me-2 mt-1"></i>
-                <span>Tu licencia ha terminado. El sistema ha entrado en modo lectura. Contacta con soporte para reactivar tu suscripción y desbloquear todas las funciones.</span>
-            </div>
-        <?php endif; ?>
+    <div class="lic-modal-permission-item">
+        <i class="mdi mdi-check-circle-outline lic-modal-check-icon"></i>
+        <span>Acceso ilimitado a todas las funciones de OptenAdvance</span>
+    </div>
+    <div class="lic-modal-permission-item">
+        <i class="mdi mdi-check-circle-outline lic-modal-check-icon"></i>
+        <span>Soporte Técnico VIP y acceso a futuras actualizaciones (primeros 3 meses)</span>
+    </div>
+<?php else: ?>
+    <div class="lic-modal-permission-item d-flex align-items-start">
+        <i style="color: #ef4444" class="mdi mdi-alert-circle-outline lic-modal-check-icon me-2 mt-1"></i>
+        <span>Tu licencia ha terminado. El sistema ha entrado en modo lectura. Contacta con soporte para reactivar tu suscripción y desbloquear todas las funciones.</span>
+    </div>
+<?php endif; ?>
     </div>
 </div>
 

@@ -97,9 +97,6 @@ public function install($file): array
 
         // Validar hardware
 if ($machineHash !== $this->machineHash()) {
-    $now = Carbon::now();
-    DB::table('license_state')->where('id', 1)->delete();
-    $this->persistState('trial_first', null, $now);
     return [
         'success' => false,
         'message' => 'Esta licencia no corresponde a este equipo'
@@ -153,18 +150,7 @@ if ($machineHash !== $this->machineHash()) {
 
 // 1. Archivo no existe → verificar trial
 if (!file_exists($this->path)) {
-    $row = DB::table('license_state')->first();
-
-    if (!$row) {
-        return $this->persistState('trial_first', null, $now);
-    }
-
-    $trialStart = Carbon::parse($row->created_at);
-    if ($trialStart->diffInDays($now) >= 3) {
-        return $this->persistState('expired', null, $now);
-    }
-
-    return $this->persistState('trial_active', null, $now);
+    return $this->persistState('expired', null, $now);
 }
 
 
@@ -210,8 +196,7 @@ if (!file_exists($this->path)) {
 
         // 4. Hardware (con caché del hash)
 if ($machineHash !== $this->machineHash()) {
-    DB::table('license_state')->where('id', 1)->delete();
-    return $this->persistState('trial_first', null, $now);
+    return $this->persistState('expired', null, $now);
 }
 
         // 5. Vencimiento real
@@ -227,10 +212,6 @@ if ($machineHash !== $this->machineHash()) {
         }
 
         // 7. Retornar estado según tipo de licencia
-        if ($type === 'trial') {
-            return $this->persistState('trial_active', $machineHash, $now);
-        }
-
         return $this->persistState('active', $machineHash, $now);
     }
 
@@ -272,9 +253,9 @@ if ($machineHash !== $this->machineHash()) {
                         $daysRemaining = now()->diffInDays($endAt, false);
                         $data['days_remaining'] = (int) ceil($daysRemaining);
                         
-                        $data['show_notification'] = in_array($status, ['active', 'trial_active']) 
-                                                      && $data['days_remaining'] >= 0 
-                                                      && $data['days_remaining'] <= 30;
+                        $data['show_notification'] = $status === 'active'
+                              && $data['days_remaining'] >= 0 
+                              && $data['days_remaining'] <= 30;
                     }
                 }
             }
