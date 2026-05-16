@@ -40,7 +40,6 @@ class BackupAutomatico extends Command
                 Log::error('Backup automático fallido: ' . $resultado['error']);
                 return 1;
             }
-
         } catch (\Exception $e) {
             $this->error('Error inesperado: ' . $e->getMessage());
             Log::error('Error inesperado en backup automático: ' . $e->getMessage());
@@ -159,7 +158,7 @@ class BackupAutomatico extends Command
                 $rutaCompleta
             );
 
-exec($comando, $output, $returnVar);
+            exec($comando, $output, $returnVar);
 
             File::delete($archivoCredenciales);
             $archivoCredenciales = null;
@@ -170,9 +169,9 @@ exec($comando, $output, $returnVar);
                     File::delete($rutaCompleta);
                 }
                 $detalle = implode(' | ', $output);
-$detalle = mb_detect_encoding($detalle, 'UTF-8', true) 
-    ? $detalle 
-    : mb_convert_encoding($detalle, 'UTF-8', 'CP850');
+                $detalle = mb_detect_encoding($detalle, 'UTF-8', true)
+                    ? $detalle
+                    : mb_convert_encoding($detalle, 'UTF-8', 'CP850');
                 $this->notificarError(
                     'Error al generar el archivo de backup',
                     'mysqldump no pudo generar el archivo de respaldo. Detalle: ' . ($detalle ?: 'Sin detalles disponibles'),
@@ -186,22 +185,21 @@ $detalle = mb_detect_encoding($detalle, 'UTF-8', true)
                 'archivo' => $nombreArchivo,
                 'ruta'    => $rutaCompleta
             ];
-
         } catch (\Exception $e) {
-    if ($archivoCredenciales && File::exists($archivoCredenciales)) {
-        File::delete($archivoCredenciales);
-    }
-    $detalle = $e->getMessage();
-    $detalle = mb_detect_encoding($detalle, 'UTF-8', true)
-        ? $detalle
-        : mb_convert_encoding($detalle, 'UTF-8', 'CP850');
-    $this->notificarError(
-        'Error inesperado en el backup',
-        'Ocurrió un error inesperado al intentar crear el respaldo. Sugerencias: verifica que la carpeta destino exista y tenga permisos de escritura. que MySQL esté corriendo y que haya espacio disponible en disco.',
-        ['detalle' => $detalle]
-    );
-    return ['success' => false, 'error' => $detalle];
-}
+            if ($archivoCredenciales && File::exists($archivoCredenciales)) {
+                File::delete($archivoCredenciales);
+            }
+            $detalle = $e->getMessage();
+            $detalle = mb_detect_encoding($detalle, 'UTF-8', true)
+                ? $detalle
+                : mb_convert_encoding($detalle, 'UTF-8', 'CP850');
+            $this->notificarError(
+                'Error inesperado en el backup',
+                'Ocurrió un error inesperado al intentar crear el respaldo. Sugerencias: verifica que la carpeta destino exista y tenga permisos de escritura. que MySQL esté corriendo y que haya espacio disponible en disco.',
+                ['detalle' => $detalle]
+            );
+            return ['success' => false, 'error' => $detalle];
+        }
     }
 
     /**
@@ -272,7 +270,6 @@ $detalle = mb_detect_encoding($detalle, 'UTF-8', true)
                     File::delete($archivo);
                 });
             }
-
         } catch (\Exception $e) {
             Log::error('Error limpiando backups antiguos: ' . $e->getMessage());
         }
