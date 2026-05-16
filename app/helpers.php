@@ -55,7 +55,6 @@ if (!function_exists('formatoHoraInteligente')) {
                 ? $datetime
                 : \Carbon\Carbon::parse($datetime);
 
-            // Locale español
             \Carbon\Carbon::setLocale(config('app.locale', 'es') ?: 'es');
 
             $now = \Carbon\Carbon::now($dt->getTimezone());

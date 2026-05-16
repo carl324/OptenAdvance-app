@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Empleado extends User
 {
-    use SoftDeletes;  // ← agrega esto
+    use SoftDeletes;  
 
     protected $table = 'users';
 
@@ -17,9 +17,6 @@ class Empleado extends User
             $builder->where('activo', 1);
         });
 
-        // Opcional: combina scopes si quieres mantener activo + softdelete
-        // static::addGlobalScope('soft', function (Builder $builder) {
-        //     $builder->whereNull('deleted_at');
-        // });
+        
     }
 }

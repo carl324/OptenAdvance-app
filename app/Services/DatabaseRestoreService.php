@@ -208,7 +208,7 @@ class DatabaseRestoreService
             return $output[0];
         }
         
-        // ESTRATEGIA 3: Buscar en ubicaciones comunes de Laragon
+
         $commonPaths = [
             'C:\\laragon\\bin\\mysql',
             'D:\\laragon\\bin\\mysql',

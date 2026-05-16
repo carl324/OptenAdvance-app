@@ -25,7 +25,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // ✅ ESPECÍFICO: Solo inyectar datos de licencia en vistas que los usan
         View::composer(['layouts.app', 'modals.license'], function ($view) {
     $licenseData = Cache::remember('app_license_data', 600, function () {
         return app(LicenseService::class)->uiData();
@@ -36,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
         'licenseNotification' => null,
     ]);
 });
-        // ✅ OPTIMIZADO: Composer específico para layouts.app con cache
+
         View::composer('layouts.app', function ($view) {
             // Cache de datos de caja (1 minuto - se actualiza frecuentemente)
             $cajaActual = Caja::where('estado', 'abierta')->first();

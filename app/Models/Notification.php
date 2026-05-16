@@ -22,10 +22,7 @@ class Notification extends Model
         'data'  => 'array',
     ];
 
-    // ============================================================
-    // Helper estático para crear notificaciones desde cualquier lado
-    // Uso: Notification::crear('backup', 'error', 'Backup fallido', 'Descripción')
-    // ============================================================
+
     public static function crear(
         string $modulo,
         string $tipo,
@@ -43,13 +40,12 @@ class Notification extends Model
         ]);
     }
 
-    // Scope para no leídas
     public function scopeNoLeidas($query)
     {
         return $query->where('leida', false);
     }
 
-    // Scope por módulo
+
     public function scopeModulo($query, string $modulo)
     {
         return $query->where('modulo', $modulo);

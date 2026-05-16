@@ -31,9 +31,7 @@ class InventarioMovimiento extends Model
 
     public static function entrada($productoId, $cantidad, $origen, $referenciaId = null, $descripcion = null, $userId = null)
     {
-        // Envolver en transacción para garantizar consistencia atómica:
-        // Si create() falla → no se modifica stock
-        // Si increment() falla → se revierte el create()
+
         return DB::transaction(function () use ($productoId, $cantidad, $origen, $referenciaId, $descripcion, $userId) {
             self::create([
                 'producto_id'   => $productoId,
@@ -53,23 +51,20 @@ class InventarioMovimiento extends Model
 
     public static function salida($productoId, $cantidad, $origen, $referenciaId = null, $descripcion = null, $userId = null)
     {
-        // Envolver en transacción para garantizar consistencia atómica:
-        // Validación + decremento + movimiento deben ser indivisibles
-        // Si cualquier paso falla → todo se revierte
+
         return DB::transaction(function () use ($productoId, $cantidad, $origen, $referenciaId, $descripcion, $userId) {
-            // Validación atómica: verificar stock y decrementar en una operación
-            // La cláusula where+decrement es atómica en la BD
+
             $actualizados = DB::table('productos')
                 ->where('id', $productoId)
-                ->where('stock', '>=', $cantidad)  // Asegurar que hay stock suficiente
+                ->where('stock', '>=', $cantidad)  
                 ->decrement('stock', $cantidad);
 
-            // Si no se actualizó ninguna fila, significa que no hay stock suficiente
+
             if ($actualizados === 0) {
                 throw new \Exception("No hay suficiente stock para el producto ID {$productoId}. Intenta realizar una salida de {$cantidad} unidades.");
             }
 
-            // Solo registrar el movimiento si el decremento fue exitoso
+
             self::create([
                 'producto_id'   => $productoId,
                 'tipo'          => 'salida',

@@ -8,9 +8,7 @@ use Carbon\Carbon;
 
 class Reporte extends Model
 {
-    // Este modelo no tiene tabla propia, solo maneja consultas
-    // Nota: los datos consultados por este modelo representan registros históricos
-    // es_dato_historico = true (flag informativo, no afecta consultas)
+
     protected $table = null;
 
     /**
@@ -19,6 +17,7 @@ class Reporte extends Model
      * @param array $filtros ['fecha_inicio', 'fecha_fin', 'estado', 'order']
      * @return \Illuminate\Database\Eloquent\Builder
      */
+    
     public static function ventas(array $filtros = [])
     {
         $query = Venta::with('factura')->select('ventas.*');
