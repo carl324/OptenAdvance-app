@@ -26,19 +26,14 @@ class BackupAutomatico extends Command
             }
 
             if (!$this->debeEjecutarBackup($config)) {
-                $this->info('No es momento de ejecutar backup');
                 return 0;
             }
-
-            $this->info('Iniciando backup automático...');
 
             $resultado = $this->crearBackup($config);
 
             if ($resultado['success']) {
                 $config->update(['ultima_fecha_backup' => now()]);
                 $this->limpiarBackupsAntiguos($config);
-                $this->info('✓ Backup completado: ' . $resultado['archivo']);
-                Log::info('Backup automático exitoso: ' . $resultado['archivo']);
                 return 0;
             } else {
                 $this->error('✗ Error: ' . $resultado['error']);
@@ -164,9 +159,7 @@ class BackupAutomatico extends Command
                 $rutaCompleta
             );
 
-            Log::info('Ejecutando comando: ' . $comando);
 exec($comando, $output, $returnVar);
-Log::info('Return code: ' . $returnVar . ' | Output: ' . implode(' | ', $output));
 
             File::delete($archivoCredenciales);
             $archivoCredenciales = null;
@@ -277,7 +270,6 @@ $detalle = mb_detect_encoding($detalle, 'UTF-8', true)
             if ($backups->count() > $retencion) {
                 $backups->skip($retencion)->each(function ($archivo) {
                     File::delete($archivo);
-                    Log::info('Backup antiguo eliminado: ' . basename($archivo));
                 });
             }
 
