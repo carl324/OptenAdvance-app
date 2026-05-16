@@ -165,11 +165,9 @@ class PersonalController extends Controller
         return response()->json(['success' => false, 'message' => 'No puede eliminar un administrador.'], 403);
     }
 
-    // Borrar el email antes del soft delete
     $empleado->email = null;
     $empleado->save();
     
-    // Ejecutar soft delete
     $empleado->delete();
 
     return response()->json(['success' => true, 'message' => 'Empleado eliminado correctamente.']);

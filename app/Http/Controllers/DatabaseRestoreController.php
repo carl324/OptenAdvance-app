@@ -57,7 +57,7 @@ class DatabaseRestoreController extends Controller
                 Log::warning('DatabaseRestoreController: Intento de restauración mientras otra está en proceso');
                 return response()->json(['error' => 'Una restauración ya está en proceso. Intenta de nuevo más tarde.'], 429);
             }
-            @unlink($lockFile); // ← FIX: Eliminar lock expirado
+            @unlink($lockFile); 
         }
 
         if (!@file_put_contents($lockFile, time())) {

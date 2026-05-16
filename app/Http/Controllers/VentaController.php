@@ -19,12 +19,7 @@ use App\Traits\Auditable;
 class VentaController extends Controller
 {
     use Auditable;
-    /**
-     * Normalizar productos según configuración de IVA de empresa
-     * Soluciona deuda técnica #5: evitar repetición de lógica IVA
-     * @param mixed $productos Colección o resultado query de productos
-     * @return mixed
-     */
+    
     private function normalizarIVA($productos)
     {
         $empresa = Empresa::first();
@@ -118,7 +113,7 @@ if ($request->has('ids')) {
                 'productos.*.iva'      => 'nullable|numeric|min:0|max:100',
             ]);
 
-            // Nota: no se normaliza aquí para no imponer validación de montos.
+           
 
             $caja = Caja::where('estado', 'abierta')->first();
             if (!$caja) {
@@ -128,16 +123,16 @@ if ($request->has('ids')) {
                 ], 409);
             }
 
-            // Bug #23: Forzar forma_pago a 'efectivo' si viene vacio o null
+           
             $data['forma_pago'] = $data['forma_pago'] ?? 'efectivo';
 
             $empresa = Empresa::first();
-            // Determina si actualmente la empresa cobra IVA (por defecto true si no existe registro)
+
             $cobraIva = $empresa ? (bool) $empresa->cobra_iva : true;
 
             DB::beginTransaction();
 
-            // Validar stock
+
             foreach ($data['productos'] as $item) {
                 $producto = Producto::find($item['id']);
                 if (!$producto || !$producto->activo) {
@@ -147,7 +142,7 @@ if ($request->has('ids')) {
                     ]);
                     throw new \Exception("El producto no está disponible");
                 }
-                // Bug #21: Validar que cantidad sea <= stock actual (doble validación contra oversell)
+
                 if ($producto->stock < $item['cantidad']) {
                     Log::warning('Stock insuficiente', [
                         'producto_id' => $item['id'],
@@ -159,15 +154,15 @@ if ($request->has('ids')) {
                 }
             }
 
-            // Calcular totales y preparar detalles (un solo loop para evitar inconsistencias)
+
             $totalNeto = 0;
             $totalIva  = 0;
             $productosCalculados = [];
 
             foreach ($data['productos'] as $item) {
     $producto = Producto::findOrFail($item['id']);
-    $precioBase = $producto->precio_venta;  // ← Usar precio_venta
-    $precioCompraHistorico = $producto->precio_compra;  // ← NUEVO: Capturar precio_compra
+    $precioBase = $producto->precio_venta;  
+    $precioCompraHistorico = $producto->precio_compra; 
     $ivaRate = $cobraIva ? $producto->iva : 0;
 
     // Subtotal entero, sin IVA
@@ -261,7 +256,6 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
                 'updated_at'     => now(),
             ]);
 
-            // Detalles y stock (usando cálculos previamente hechos, SIN recalcular IVA)
             foreach ($productosCalculados as $calc) {
                 VentaDetalle::create([
                     'venta_id'        => $venta->id,
@@ -334,7 +328,6 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
         }
     }
 
-    // Listado de ventas - Soluciona N+1 queries (#1) + Paginación en BD (#2)
     public function index(Request $request)
     {
         $registrosPorPagina = 10;
@@ -350,7 +343,6 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
         $query = Venta::with('factura', 'detalles.producto')
             ->orderByDesc('fecha');
 
-        // Filtro: texto (multi-columna)
         if ($search = trim($request->input('search', ''))) {
             $query->where(function ($q) use ($search) {
                 $like = '%' . strtolower($search) . '%';
@@ -390,17 +382,14 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
                     $query->where('created_at', '<=', $end);
                 }
             } catch (\Exception $e) {
-                // Ignorar formato inválido de fecha para no romper la vista
                 Log::warning('Fecha de filtro inválida en index ventas: ' . $e->getMessage());
             }
         }
 
-        // Ejecutar paginación luego de aplicar filtros
         $ventas = $query->paginate($perPage)->appends($request->query());
 
-        // Si la request es AJAX o espera JSON, devolver JSON con data y meta
         if ($request->ajax() || $request->wantsJson()) {
-            // Transformar colección para enviar solo campos necesarios y evitar serializar toda la entidad
+     
             $ventas->getCollection()->transform(function ($venta) {
                 return [
                     'id' => $venta->id,
@@ -430,7 +419,7 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
         return view('ventas.index', compact('ventas', 'empresa', 'registrosPorPagina'));
     }
 
-    // Mostrar factura (devuelve fragmento HTML para modal)
+
     public function show(Venta $venta)
     {
         $venta->load('detalles.producto', 'factura');
@@ -440,7 +429,7 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
         return view('ventas.show', compact('venta', 'factura', 'empresa'));
     }
 
-    // Mostrar detalle de venta (nueva vista)
+    // Mostrar detalle de venta 
     public function detalle(Venta $venta)
     {
         $venta->load('detalles.producto', 'factura', 'cliente');
@@ -455,7 +444,7 @@ $saldoPendiente = $esCredito ? $totalFinal : 0;
             return ($d->precio_unitario * $d->cantidad);
         });
 
-        // IVA total (si está guardado por detalle)
+
         $totalIva = $detalles->sum('iva');
 
         // Total final (usar factura->total si existe, sino calcular)
@@ -501,14 +490,12 @@ return view('ventas.detalle', compact(
 ));
     }
 
-    // Mostrar formulario de anulación (modal)
     public function devolucion(Venta $venta)
     {
         $empresa = Empresa::first();
         return view('ventas.devolucion', compact('venta', 'empresa'));
     }
 
-    // Mostrar factura en página separada
     public function factura(Venta $venta)
     {
         $venta->load('detalles.producto', 'factura');
@@ -517,7 +504,7 @@ return view('ventas.detalle', compact(
         return view('ventas.factura', compact('venta', 'empresa'));
     }
 
-    // Confirmar anulación
+
         public function confirmarDevolucion(Request $request, Venta $venta)
     {
         $data = $request->validate([
@@ -555,7 +542,7 @@ return view('ventas.detalle', compact(
 
         DB::beginTransaction();
         try {
-            // Snapshot antes
+           
             $antes = [
                 'estado' => $venta->estado,
                 'total'  => $venta->total,
@@ -592,7 +579,7 @@ foreach ($venta->detalles as $detalle) {
                 );
             }
 
-            // ── Auditoría ──
+   
             self::registrar(
                 'anulacion_venta',
                 'venta',
@@ -620,7 +607,6 @@ foreach ($venta->detalles as $detalle) {
 
 
 
-    // Obtener todos los productos
 public function obtenerTodosProductos()
 {
     $productos = Producto::activos()
@@ -631,7 +617,7 @@ public function obtenerTodosProductos()
     return response()->json($this->normalizarIVA($productos));
 }
 
-    // Descargar factura en PDF
+
     public function descargarPDF(Venta $venta)
 {
     $venta->load('detalles.producto', 'factura');
@@ -652,7 +638,8 @@ public function obtenerTodosProductos()
 
     return $pdf->download($nombreArchivo);
 }
-    // Vista para impresión (recibo thermal)
+
+
 public function impresion(Venta $venta)
 {
     $venta->load('detalles.producto', 'factura');

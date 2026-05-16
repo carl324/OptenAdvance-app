@@ -83,7 +83,7 @@ public function refreshMachineHash()
 }
 
     /**
-     * 🆕 Subir y verificar archivo de licencia
+     *  Subir y verificar archivo de licencia
      */
     public function uploadLicense(Request $request, LicenseService $licenseService)
 {
@@ -130,7 +130,7 @@ public function refreshMachineHash()
 }
 
     /**
-     * 🆕 Obtener datos de la licencia actual
+     *  Obtener datos de la licencia actual
      */
     public function getLicenseData(LicenseService $licenseService)
     {

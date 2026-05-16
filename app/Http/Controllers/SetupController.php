@@ -28,7 +28,6 @@ class SetupController extends Controller
             return redirect('/login');
         }
 
-        // Validación controlada en el servidor con mensajes personalizados (en español)
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
@@ -63,7 +62,6 @@ class SetupController extends Controller
         try {
             $user = null;
             DB::transaction(function() use ($data, &$user) {
-                // Re-check inside transaction to avoid race conditions
                 if (User::where('role', 'admin')->exists()) {
                     throw new \RuntimeException('Administrator already exists');
                 }
@@ -76,7 +74,6 @@ class SetupController extends Controller
                 ]);
             });
 
-            // Login the newly created admin and redirect to dashboard
             if ($user) {
                 Auth::login($user);
                 return redirect('/onboarding');
@@ -84,7 +81,6 @@ class SetupController extends Controller
 
             return redirect('/login');
         } catch (\Throwable $e) {
-            // Do not expose internal error details or passwords
             return back()->withErrors(['setup' => 'No se pudo crear el administrador.']);
         }
     }

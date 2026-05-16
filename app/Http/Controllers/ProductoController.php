@@ -19,7 +19,7 @@ class ProductoController extends Controller
     {
         $search = $request->input('search', '');
         
-        // Búsqueda server-side con when()
+        
         $productos = Producto::activos()
             ->when($search, function ($query, $search) {
     return $query->where(function($q) use ($search) {
@@ -49,7 +49,6 @@ class ProductoController extends Controller
     ->limit(100)
     ->get();
 
-        // Si es solicitud AJAX, devolver JSON con HTML renderizado
         if ($request->ajax() || $request->wantsJson()) {
             $showActions = Auth::check() && Auth::user()->role === 'admin';
 
@@ -128,8 +127,6 @@ class ProductoController extends Controller
         try {
             $stockInicial = $data['stock'];
 
-            // Crear producto con stock inicial en una única transacción
-            // Esto garantiza que ambas operaciones (crear + registrar movimiento) son atómicas
             $producto = Producto::create([
     'nombre'        => $data['nombre'],
     'codigo_barras' => $data['codigo_barras'] ?? null,
@@ -223,7 +220,6 @@ class ProductoController extends Controller
             $producto = Producto::where('id', $producto->id)->lockForUpdate()->first();
             $stockAnterior = $producto->stock;
 
-            // Snapshot antes — solo campos que pueden cambiar
             $antes = [
                 'nombre'       => $producto->nombre,
                 'precio_venta' => $producto->precio_venta,
@@ -322,7 +318,7 @@ class ProductoController extends Controller
         try {
             $producto = Producto::findOrFail($id);
 
-            // Snapshot antes de eliminar
+
             $antes = [
                 'nombre'       => $producto->nombre,
                 'precio_venta' => $producto->precio_venta,

@@ -51,7 +51,7 @@ class SuperAdminController extends Controller
     Auth::login($user); 
     $request->session()->put('super_admin_login_time', now());
     
-    return redirect()->route('superadmin.recovery');  // ← ESTA LÍNEA
+    return redirect()->route('superadmin.recovery'); 
 }
     // Mostrar panel
     public function showRecovery()
@@ -98,7 +98,7 @@ class SuperAdminController extends Controller
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 
-    return redirect('/login') // ← Redirige al login NORMAL, no al de superadmin
+    return redirect('/login')
         ->with('success', 'Puede iniciar sesión normalmente');
 }
 public function markRevealed(Request $request)

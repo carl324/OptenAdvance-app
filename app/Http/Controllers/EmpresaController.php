@@ -8,14 +8,10 @@ use App\Models\Empresa;
 
 class EmpresaController extends Controller
 {
-    /** Mostrar formulario de edición de la empresa (único registro) */
     public function edit()
     {
-        // Obtener el primer (y único) registro de la tabla `empresa` (puede ser null)
         $empresa = Empresa::first();
 
-        // Mostrar siempre la vista `empresa.index`. Si no existe empresa,
-        // la vista debe mostrar el formulario vacío para registrar los datos.
         return view('empresa.index', compact('empresa'));
     }
 public function updateLogo(Request $request)
@@ -55,7 +51,6 @@ public function updateLogo(Request $request)
         'url'     => asset($path),
     ]);
 }
-    /** Actualizar datos de la empresa existente */
     public function update(Request $request)
     {
         // Si viene un campo específico, validar solo ese campo (AJAX por-campo)
@@ -63,7 +58,6 @@ public function updateLogo(Request $request)
             $campo = $request->input('campo');
             $valor = $request->input('valor');
 
-            // Normalizar valor vacío a null para reglas nullable
             if ($valor === '') {
                 $valor = null;
             }

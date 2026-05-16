@@ -64,8 +64,6 @@ class ReporteController extends Controller
         $tipo = $request->input('tipo', 'ventas');
         $empresa = Empresa::first();
 
-        // Preparar filtros - IMPORTANTES: estos se aplican tanto en vista como en exportación
-        // Se aplican saneamientos idénticos a los usados en la vista para mantener consistencia
         $filtros = [
             'fecha_inicio' => $this->sanitizeDate($request->input('fecha_inicio')),
             'fecha_fin' => $this->sanitizeDate($request->input('fecha_fin')),
@@ -139,14 +137,12 @@ class ReporteController extends Controller
         ]);
     }
 
-    /**
-     * Exporta el reporte de ventas completo (ventas + detalle) a Excel
-     */
+  
     private function exportVentasCompletas($sheet, $filtros, $empresa)
     {
         $sheet->setTitle('Ventas Completas');
         
-        // Headers (añadimos Vendedor y Rol)
+     
         $headers = ['Fecha', 'Venta ID', 'N° Factura', 'Cliente', 'Vendedor', 'Rol', 'Total', 'Estado', 'Medio de pago'];
 
         // Verificar si hay datos históricos con IVA > 0
@@ -255,7 +251,6 @@ foreach ($ventas as $venta) {
             $sheet->getStyle($colIva . '2:' . $colIva . $row)->getNumberFormat()->setFormatCode($currencyFormat);
         }
 
-        // Auto size
         $lastCol = Coordinate::stringFromColumnIndex(count($headers));
         foreach (range('A', $lastCol) as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
@@ -287,9 +282,9 @@ foreach ($ventas as $venta) {
         $totalSalidas = 0;
 
         foreach ($movimientos as $m) {
-            // Origen del registro (solo para UI / export)
+            
             $m->origen_reporte = 'inventario';
-            // Usar formato consistente con BD (created_at siempre es datetime)
+      
             if ($m->created_at instanceof \Carbon\Carbon) {
                 $fecha = $m->created_at->format('Y-m-d H:i');
             } elseif (is_string($m->created_at)) {
@@ -375,8 +370,6 @@ foreach ($ventas as $venta) {
     // Aplicar estilos al header
     $this->aplicarEstilosHeader($sheet, $headerCells);
 
-    // Obtener datos con JOIN a users dos veces (para apertura y cierre)
-    $rows = \DB::table('cajas as c')
         ->leftJoin('users as ua', 'ua.id', '=', 'c.user_id')
         ->leftJoin('users as uc', 'uc.id', '=', 'c.user_cierre_id')
         ->whereBetween('c.fecha_apertura', [$filtros['fecha_inicio'] . ' 00:00:00', $filtros['fecha_fin'] . ' 23:59:59'])
@@ -400,7 +393,6 @@ foreach ($ventas as $venta) {
 
     $row = 2;
     foreach ($rows as $r) {
-        // Formatear fechas
         $fechaA = $r->fecha_apertura ? (\Carbon\Carbon::parse($r->fecha_apertura)->format('Y-m-d H:i')) : '';
         $fechaC = $r->fecha_cierre ? (\Carbon\Carbon::parse($r->fecha_cierre)->format('Y-m-d H:i')) : 'Abierta';
 
@@ -434,11 +426,7 @@ foreach ($ventas as $venta) {
     }
 }
 
-    /**
-     * Sanitiza una fecha recibida por input.
-     * Si la fecha no es válida devuelve null (ignorar silenciosamente).
-     * Acepta formatos legibles por Carbon::parse().
-     */
+  
     private function sanitizeDate($date)
     {
         if (empty($date)) {
@@ -455,24 +443,18 @@ foreach ($ventas as $venta) {
         }
     }
 
-    /**
-     * Normaliza order a 'asc' o 'desc'.
-     */
+  
     private function sanitizeOrder($order)
     {
         $o = strtolower((string)$order);
         return $o === 'asc' ? 'asc' : 'desc';
     }
 
-    /**
-     * Sanitiza el filtro estado: acepta SOLO 'completada' o 'anulada'.
-     * Si no es uno de estos valores, devuelve null para que no se aplique filtro.
-     */
+
     private function sanitizeEstado($estado)
     {
         if (empty($estado)) return null;
         $s = strtolower((string)$estado);
-        // Whitelist: solo valores permitidos
         if (in_array($s, ['completada', 'anulada'], true)) {
             return $s;
         }
@@ -552,10 +534,7 @@ public function apiKpis(Request $request)
     }
 }
 
-/**
- * API: Datos para la gráfica de tendencia de ventas
- * agrupacion: 'diario' | 'semanal' | 'mensual'
- */
+
 public function apiTendencia(Request $request)
 {
     try {
@@ -815,7 +794,7 @@ $montosDevueltos = \DB::table('devoluciones')
     ->pluck('total_devuelto', 'venta_id');
         }
 
-        // Crear spreadsheet
+     
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -985,12 +964,11 @@ $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
 
         }
 
-        // Auto-size columns
+
         foreach ($sheet->getColumnDimensions() as $col) {
             $col->setAutoSize(true);
         }
 
-        // Crear archivo temporal
         $writer = new Xlsx($spreadsheet);
         $nombreTipo = ($tipo === 'movimientos') ? 'inventario' : (($tipo === 'cajas') ? 'cajas' : 'venta');
         $fileName = 'reporte_' . $nombreTipo . '.xlsx';
