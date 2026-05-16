@@ -17,14 +17,14 @@ class LicenseDays extends Command
         $file = storage_path('app/license/license.lic');
 
         if (!file_exists($file)) {
-            $this->error('❌ SIN LICENCIA');
+            $this->error(' SIN LICENCIA');
             return 1;
         }
 
         $raw = @file_get_contents($file);
         
         if ($raw === false || strlen($raw) < 17) {
-            $this->error('❌ ARCHIVO DE LICENCIA CORRUPTO O VACÍO');
+            $this->error(' ARCHIVO DE LICENCIA CORRUPTO O VACÍO');
             return 1;
         }
 
@@ -41,14 +41,14 @@ class LicenseDays extends Command
         );
 
         if ($plain === false) {
-            $this->error('❌ LICENCIA CORRUPTA O INVÁLIDA');
+            $this->error('LICENCIA CORRUPTA O INVÁLIDA');
             return 1;
         }
 
         $parts = explode('|', $plain);
         
         if (count($parts) !== 5) {
-            $this->error('❌ FORMATO DE LICENCIA INVÁLIDO');
+            $this->error('FORMATO DE LICENCIA INVÁLIDO');
             return 1;
         }
 
@@ -78,7 +78,7 @@ class LicenseDays extends Command
             $this->error("❌ LICENCIA VENCIDA");
             $this->line("   Expiró hace: " . abs($daysRemaining) . " días");
         } elseif ($daysRemaining <= 7) {
-            $this->warn("⚠️  LICENCIA POR VENCER");
+            $this->warn(" LICENCIA POR VENCER");
             $this->line("   Días restantes: {$daysRemaining}");
         } else {
             $this->info("✓ LICENCIA ACTIVA");
