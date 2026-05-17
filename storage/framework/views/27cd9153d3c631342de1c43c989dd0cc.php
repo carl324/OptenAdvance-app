@@ -3,11 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>@yield('title', 'Inicia sesión')</title>
+    <title><?php echo $__env->yieldContent('title', 'Inicia sesión'); ?></title>
     <link rel="icon" type="image/png" href="/assets/images/logo/icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
 
     <!-- CSS global y navbar simple (offline, sin librerías) -->
     <link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
@@ -117,23 +117,30 @@
                             <p class="text-sm mb-25">
                                 Ingresa tus credenciales para acceder al sistema.
                             </p>
-                            <form method="POST" autocomplete="off" action="{{ route('login.submit') }}">
-                                @csrf
+                            <form method="POST" autocomplete="off" action="<?php echo e(route('login.submit')); ?>">
+                                <?php echo csrf_field(); ?>
                                 <div class="row">
 
-                                    @if($errors->has('auth'))
+                                    <?php if($errors->has('auth')): ?>
                                     <div class="col-12">
-                                        <div class="alert alert-danger" role="alert">{{ $errors->first('auth') }}</div>
+                                        <div class="alert alert-danger" role="alert"><?php echo e($errors->first('auth')); ?></div>
                                     </div>
-                                    @endif
+                                    <?php endif; ?>
 
                                     <div class="col-12">
                                         <div class="input-style-1">
                                             <label>Correo electrónico</label>
-                                            <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="email" value="{{ old('email') }}" placeholder="Ingresa tu correo electrónico" />
-                                            @error('email')
-                                            <div class="text-danger" style="font-size:13px; margin-top:6px;">{{ $message }}</div>
-                                            @enderror
+                                            <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="email" value="<?php echo e(old('email')); ?>" placeholder="Ingresa tu correo electrónico" />
+                                            <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                            <div class="text-danger" style="font-size:13px; margin-top:6px;"><?php echo e($message); ?></div>
+                                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                         </div>
                                     </div>
 
@@ -151,9 +158,16 @@
                                                 </button>
                                             </div>
 
-                                            @error('password')
-                                            <div class="text-danger small mt-2">{{ $message }}</div>
-                                            @enderror
+                                            <?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                            <div class="text-danger small mt-2"><?php echo e($message); ?></div>
+                                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                         </div>
                                     </div>
 
@@ -195,13 +209,14 @@
   <div class="row">
     <div class="col-md-6 d-flex align-items-center">
       <p class="text-sm mb-0">
-        © {{ date('Y') }} OptenAdvance · v{{ config('app.version') }}
+        © <?php echo e(date('Y')); ?> OptenAdvance · v<?php echo e(config('app.version')); ?>
+
       </p>
     </div>
 
     <div class="col-md-6 d-flex align-items-center justify-content-md-end">
       <p class="text-sm mb-0 ">
-        ¿Problemas? <a href="{{ route('soporte.off') }}">Contactar a soporte</a>
+        ¿Problemas? <a href="<?php echo e(route('soporte.off')); ?>">Contactar a soporte</a>
       </p>
     </div>
   </div>
@@ -297,7 +312,7 @@ function validateAndRedirect() {
   }
   
   // Si el checkbox está marcado, redirigir
-  window.location.href = '{{ url("superadmin/login") }}';
+  window.location.href = '<?php echo e(url("superadmin/login")); ?>';
 }
 
 // Remover el error cuando el usuario marque el checkbox
@@ -316,21 +331,35 @@ document.getElementById('recoveryInfoModal').addEventListener('keypress', functi
 });
 </script>
    <!-- <div class="login-wrap">
-        <form method="POST" action="{{ route('login.submit') }}">
-            @csrf
+        <form method="POST" action="<?php echo e(route('login.submit')); ?>">
+            <?php echo csrf_field(); ?>
             <div class="field">
                 <label for="username">Usuario</label>
-                <input id="username" name="username" type="text" value="{{ old('username') }}" required autofocus>
-                @error('username')
-                    <div class="error">{{ $message }}</div>
-                @enderror
+                <input id="username" name="username" type="text" value="<?php echo e(old('username')); ?>" required autofocus>
+                <?php $__errorArgs = ['username'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                    <div class="error"><?php echo e($message); ?></div>
+                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
             </div>
             <div class="field">
                 <label for="password">Contraseña</label>
                 <input id="password" name="password" type="password" required>
-                @error('password')
-                    <div class="error">{{ $message }}</div>
-                @enderror
+                <?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                    <div class="error"><?php echo e($message); ?></div>
+                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
             </div>
             <button type="submit">Entrar</button>
         </form>
@@ -381,4 +410,4 @@ document.getElementById('recoveryInfoModal').addEventListener('keypress', functi
 })(); 
 </script>
   </body>
-</html>
+</html><?php /**PATH C:\OptenAdvance\app\www\resources\views\auth\login.blade.php ENDPATH**/ ?>
