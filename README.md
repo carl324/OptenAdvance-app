@@ -141,8 +141,7 @@ La aplicación es accesible desde cualquier navegador web local, ofrece una inte
 
 ### Instalación Automática (Recomendado)
 
-1. **Descargar el instalador**
-   - Descarga el archivo `AOptenAdvance-setup.exe` desde el repositorio
+Descarga el instalador AOptenAdvance-setup.exe desde [Google Drive] https://drive.google.com/drive/folders/1p8_FDsl8g1cmWWTX4iKv41qwjsU7HRbe?usp=sharing  — el archivo pesa 100MB y no está en el repositorio por limitaciones de GitHub
 
 2. **Ejecutar como Administrador**
    - Haz clic derecho en el archivo `.exe`
