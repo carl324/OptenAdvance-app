@@ -1,3 +1,299 @@
+
+<!-- ==================== ENGLISH VERSION / VERSIÓN EN INGLÉS ==================== -->
+
+# OptenAdvance
+
+Fully functional and offline Point of Sale (POS) system for Windows, designed for small and medium-sized businesses.
+
+---
+
+## Description
+
+**OptenAdvance** is a modern Point of Sale application developed with Laravel that operates 100% offline. It provides all the necessary features to manage sales, inventory, employees, and customers securely and reliably, without depending on internet connectivity.
+
+The application is accessible from any local web browser, offers an intuitive interface, and includes advanced audit features, reports, and business management capabilities.
+
+---
+
+##  Main Features
+
+### Cash Management
+- Daily cash register opening and closing
+- Cash control and discrepancy tracking
+- Cash reports by period
+
+### Data Management
+- **Products**: Create, read, update, and delete (CRUD) with inventory control
+- **Employees**: Complete personnel management with profiles
+- **Customers**: Customer database with purchase history
+- **Roles**: Permission system (Admin and Employee)
+
+### Sales and Transactions
+- Interactive and efficient point of sale
+- Integrated **internal credit system**
+- **Sales cancellation** with audit control
+- **Product returns** with inventory reintegration
+- Immediate digital receipts
+
+### Invoicing
+- Automatic invoice generation with company data (NIT, business name, etc.)
+- **PDF invoice downloads** customized
+- **Direct printing** from the application
+- Automatic sequential numbering
+
+### Reports and Analysis
+- **Dashboard** with key performance indicators (KPI)
+- Detailed sales reports
+- **Excel export** for additional analysis
+- Advanced filters by period, employee, customer, etc.
+
+### Audit and Security
+- **Complete record** of all transactions
+- Change traceability (who, when, what changed)
+- History of cancellations and returns
+- User session and role control
+
+### System Administration
+- **License system** with validity validation (active/expired)
+- **System notifications** (license status, backup failures, etc.)
+- **Automatic scheduled backups**
+- **Manual backups** on demand
+- **Database restoration** from previous backups
+- Background service manager
+
+
+---
+
+##  Technology Stack
+
+### Backend
+- **PHP 8.x** - Programming language
+- **Laravel Framework** - Robust MVC framework
+- **MySQL** - Relational database
+
+### Local Server
+- **Apache HTTP Server** - Local web server
+- **Self-signed SSL certificate** - Secure HTTPS connections
+
+### Services
+- **NSSM** (Non-Sucking Service Manager) - Windows service manager
+- **Windows Task Scheduler** - For scheduled backups
+
+### Technical Features
+- **100% Offline** - Does not require internet connection
+- **Web Interface** - Accessible from local browser
+- **Cross-platform (local)** - Works in any Windows browser
+
+---
+
+##  Optimization and Performance
+
+### Speed and Scalability
+- **Optimized database** - Handles thousands of records without speed loss
+- **Smart indexes** - Queries optimized for instant searches
+- **Implemented cache** - Significantly reduces load times
+- **Data compression** - Minimizes storage usage
+
+### Optimized Apache
+- **Maximum performance configuration** - Adjustments for fast loading
+- **GZIP compression** - Reduces HTTP response sizes
+- **Keep-Alive enabled** - Reuses connections for greater speed
+- **Optimized KeepAliveTimeout** - Balance between performance and resources
+
+### Client-side Performance
+- **Lightweight interface** - Initial load < 2 seconds
+- **Minified JavaScript** - Reduces file sizes
+- **Lazy loading** - Loads data on demand
+- **Asynchronous synchronization** - Does not block the interface
+
+---
+
+##  Reliability and Automatic Recovery
+
+### Continuous Monitoring
+- **24/7 service surveillance** - Constant monitoring of Apache and MySQL
+- **Failure detection** - Automatically identifies service downtime
+- **Real-time alerts** - Immediate notification of issues
+
+### Automatic Recovery
+- **Automatic Apache restart** - Starts automatically if stopped
+- **Automatic MySQL restart** - Automatically restarts in case of failure
+- **No manual intervention** - System repairs itself
+- **Guaranteed availability** - Minimizes downtime
+- **Recovery logs** - Record of each automatic restart
+
+### System Resilience
+- **Integrity validation** - Verifies service status on startup
+- **Automatic database recovery** - Recovery from locks or inconsistencies
+- **Crash protection** - Automatic connection retry attempts
+- **Heartbeat monitoring** - Continuous pulse of critical services
+
+---
+
+##  System Requirements
+
+- **Operating System**: Windows 7 or higher (Windows 10/11 recommended)
+- **Disk Space**: Minimum 500 MB
+- **RAM**: Minimum 2 GB (4 GB recommended)
+- **Browser**: Chrome, Edge, Firefox or similar (modern)
+- **Permissions**: Administrator access for installation
+
+---
+
+##  Installation
+
+### Automatic Installation (Recommended)
+
+Download the OptenAdvance-setup.exe installer from [Google Drive](https://drive.google.com/drive/folders/1p8_FDsl8g1cmWWTX4iKv41qwjsU7HRbe?usp=sharing) — the file weighs 100MB and is not in the repository due to GitHub limitations
+
+2. **Run as Administrator**
+   - Right-click on the `.exe` file
+   - Select "Run as administrator"
+
+3. **Follow the installation wizard**
+   - The installer will automatically download and install:
+     - Apache HTTP Server
+     - MySQL Database Server
+     - PHP
+     - OptenAdvance
+     - SSL Certificate
+
+4. **Automatic startup**
+   - Services will start automatically upon completion
+
+
+
+
+##  Important Directories
+
+```
+OptenAdvance/
+├── app/
+│   ├── apache/          # Apache web server
+│   ├── mysql/           # MySQL database
+│   ├── php/             # PHP interpreter
+│   ├── www/             # Laravel application
+│   ├── scripts/         # Installation and management scripts
+│   ├── ssl/             # SSL certificates
+│   ├── logs/            # Error logs
+│   └── Backup/          # Database backups
+└── README.md            # This file
+```
+
+---
+
+##  Security
+
+- **Self-signed SSL certificate** - Prevents browser warnings
+- **Roles and permissions system** - Role-based access control
+- **License validation** - Protects against unauthorized use
+- **Complete audit** - Record of all actions
+- **Encrypted passwords** - Secure hashing with Laravel
+
+---
+
+##  Usage
+
+
+
+### Daily Operation
+- **Cash opening**: Start of shift
+- **Sales**: Record each transaction
+- **Cancellations**: Manage incorrect sales
+- **Cash closing**: End of shift with cash validation
+
+### Maintenance
+- **Backups**: Run automatically according to schedule
+- **Reports**: Generate anytime from the dashboard
+- **License**: Validates automatically on startup
+
+---
+
+##  System Administration
+
+### Backups
+```bash
+# Execute manual backup
+app\scripts\ejecutar-backup.bat
+```
+
+### Service Monitoring
+```bash
+# Monitor service status
+app\scripts\monitor-services.bat
+```
+
+### Service Installation
+```bash
+# Install as Windows services
+app\scripts\instalar-servicio.bat
+
+# Uninstall services
+app\scripts\desinstalar-servicio.bat
+```
+
+---
+
+##  Reports and Export
+
+- **Dashboard**: Summary view with main KPIs
+- **Sales Reports**: Complete details with filters
+- **Excel Export**: For external analysis and audit
+- **PDF Invoices**: Downloadable anytime
+
+---
+
+##  License System
+
+OptenAdvance uses a license system to protect its intellectual property:
+
+- **Validation**: Automatically validated on startup
+- **Notifications**: Alerts when license is about to expire
+- **Restricted Features**: Limits according to license type
+
+
+
+##  License
+
+OptenAdvance © 2026. All rights reserved.
+
+This software is protected by copyright. Its reproduction, distribution, or modification without explicit authorization from the developer is prohibited.
+
+---
+
+##  Acknowledgments
+
+Developed with open source technologies:
+- Laravel Framework
+- Apache HTTP Server
+- MySQL Community Edition
+- PHP
+
+---
+
+##  Future Roadmap
+- [ ] Integration with DIAN for tax control
+- [ ] Mobile application for sellers
+- [ ] Payment gateway integration
+- [ ] Cloud synchronization (optional mode)
+- [ ] REST API for integrations
+- [ ] Purchasing and supplier module
+- [ ] Employee time tracking control
+- [ ] Loyalty program for customers
+
+---
+
+
+<img width="1366" height="768" alt="Screenshot (94)" src="https://github.com/user-attachments/assets/985e1866-a8ed-4ab7-aa00-d7fe5d658e09" />
+<img width="1366" height="768" alt="Screenshot (93)" src="https://github.com/user-attachments/assets/d3734a46-1ff0-42c3-b2e4-868f5bb5c1aa" />
+<img width="1366" height="768" alt="Screenshot (96)" src="https://github.com/user-attachments/assets/76d041d4-284d-4371-bb08-63c283aed5c1" />
+<img width="1366" height="768" alt="Screenshot (95)" src="https://github.com/user-attachments/assets/c11e55b1-6b84-47d7-9aa5-81349d1ada00" />
+
+
+<!-- ====================  VERSION EN ESPAÑOL / SPANISH VERSION ==================== -->
+
+
+
 # OptenAdvance
 
 Sistema de Punto de Venta (POS) completamente funcional y offline para Windows, diseñado para pequeños y medianos negocios.
