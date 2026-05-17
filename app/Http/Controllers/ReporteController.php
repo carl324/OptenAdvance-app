@@ -370,6 +370,8 @@ foreach ($ventas as $venta) {
     // Aplicar estilos al header
     $this->aplicarEstilosHeader($sheet, $headerCells);
 
+    // Obtener datos con JOIN a users dos veces (para apertura y cierre)
+    $rows = \DB::table('cajas as c')
         ->leftJoin('users as ua', 'ua.id', '=', 'c.user_id')
         ->leftJoin('users as uc', 'uc.id', '=', 'c.user_cierre_id')
         ->whereBetween('c.fecha_apertura', [$filtros['fecha_inicio'] . ' 00:00:00', $filtros['fecha_fin'] . ' 23:59:59'])
@@ -393,6 +395,7 @@ foreach ($ventas as $venta) {
 
     $row = 2;
     foreach ($rows as $r) {
+        // Formatear fechas
         $fechaA = $r->fecha_apertura ? (\Carbon\Carbon::parse($r->fecha_apertura)->format('Y-m-d H:i')) : '';
         $fechaC = $r->fecha_cierre ? (\Carbon\Carbon::parse($r->fecha_cierre)->format('Y-m-d H:i')) : 'Abierta';
 
@@ -426,7 +429,11 @@ foreach ($ventas as $venta) {
     }
 }
 
-  
+    /**
+     * Sanitiza una fecha recibida por input.
+     * Si la fecha no es válida devuelve null (ignorar silenciosamente).
+     * Acepta formatos legibles por Carbon::parse().
+     */
     private function sanitizeDate($date)
     {
         if (empty($date)) {
@@ -443,18 +450,24 @@ foreach ($ventas as $venta) {
         }
     }
 
-  
+    /**
+     * Normaliza order a 'asc' o 'desc'.
+     */
     private function sanitizeOrder($order)
     {
         $o = strtolower((string)$order);
         return $o === 'asc' ? 'asc' : 'desc';
     }
 
-
+    /**
+     * Sanitiza el filtro estado: acepta SOLO 'completada' o 'anulada'.
+     * Si no es uno de estos valores, devuelve null para que no se aplique filtro.
+     */
     private function sanitizeEstado($estado)
     {
         if (empty($estado)) return null;
         $s = strtolower((string)$estado);
+        // Whitelist: solo valores permitidos
         if (in_array($s, ['completada', 'anulada'], true)) {
             return $s;
         }
@@ -534,7 +547,10 @@ public function apiKpis(Request $request)
     }
 }
 
-
+/**
+ * API: Datos para la gráfica de tendencia de ventas
+ * agrupacion: 'diario' | 'semanal' | 'mensual'
+ */
 public function apiTendencia(Request $request)
 {
     try {
@@ -794,7 +810,7 @@ $montosDevueltos = \DB::table('devoluciones')
     ->pluck('total_devuelto', 'venta_id');
         }
 
-     
+        // Crear spreadsheet
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -964,11 +980,12 @@ $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
 
         }
 
-
+        // Auto-size columns
         foreach ($sheet->getColumnDimensions() as $col) {
             $col->setAutoSize(true);
         }
 
+        // Crear archivo temporal
         $writer = new Xlsx($spreadsheet);
         $nombreTipo = ($tipo === 'movimientos') ? 'inventario' : (($tipo === 'cajas') ? 'cajas' : 'venta');
         $fileName = 'reporte_' . $nombreTipo . '.xlsx';

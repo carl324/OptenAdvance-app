@@ -2,216 +2,209 @@
 <html lang="es">
 
 <head>
-  <meta charset="UTF-8">
-  <title><?php echo $__env->yieldContent('title', 'Inicia sesión'); ?></title>
-   <link rel="icon" type="image/png" href="/assets/images/logo/icon.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title><?php echo $__env->yieldContent('title', 'Inicia sesión'); ?></title>
+    <link rel="icon" type="image/png" href="/assets/images/logo/icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Meta CSRF centralizado -->
-  <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
 
-  <!-- CSS global y navbar simple (offline, sin librerías) -->
-  <link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="/assets/css/lineicons.css" />
-  <link rel="stylesheet" href="/assets/css/materialdesignicons.min.css" />
-  <link rel="stylesheet" href="/assets/css/fullcalendar.css" />
-  <link rel="stylesheet" href="/assets/css/main.css" />
+    <!-- CSS global y navbar simple (offline, sin librerías) -->
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/assets/css/lineicons.css" />
+    <link rel="stylesheet" href="/assets/css/materialdesignicons.min.css" />
+    <link rel="stylesheet" href="/assets/css/fullcalendar.css" />
+    <link rel="stylesheet" href="/assets/css/main.css" />
 
-<style>
-.input-group-password {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: all 0.2s ease;
-}
+    <style>
+        .input-group-password {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
 
-.input-group-password:focus-within {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
+        .input-group-password:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
 
-.input-group-password .form-control {
-  border: none !important;
-  background: #f9fafb;
-  padding: 12px 16px;
-  font-size: 14px;
-  box-shadow: none !important;
-}
+        .input-group-password .form-control {
+            border: none !important;
+            background: #f9fafb;
+            padding: 12px 16px;
+            font-size: 14px;
+            box-shadow: none !important;
+        }
 
-.input-group-password .form-control:focus {
-  background: #ffffff;
-}
+        .input-group-password .form-control:focus {
+            background: #ffffff;
+        }
 
-.btn-password-toggle {
-  border: none !important;
-  background: #f9fafb !important;
-  color: #64748b !important;
-  padding: 0 16px !important;
-  transition: all 0.2s ease !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+        .btn-password-toggle {
+            border: none !important;
+            background: #f9fafb !important;
+            color: #64748b !important;
+            padding: 0 16px !important;
+            transition: all 0.2s ease !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-.btn-password-toggle:hover {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
-}
+        .btn-password-toggle:hover {
+            background: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
 
-.btn-password-toggle:active {
-  transform: scale(0.95);
-}
+        .btn-password-toggle:active {
+            transform: scale(0.95);
+        }
 
-.btn-password-toggle i {
-  font-size: 20px;
-}
-/* Chrome / Edge (WebKit / Blink) */
-input[type="password"]::-webkit-credentials-auto-fill-button {
-  visibility: hidden;
-  position: absolute;
-  right: 0;
-}
+        .btn-password-toggle i {
+            font-size: 20px;
+        }
 
-/* Edge / IE */
-input[type="password"]::-ms-reveal,
-input[type="password"]::-ms-clear {
-  display: none;
-}
+        /* Chrome / Edge (WebKit / Blink) */
+        input[type="password"]::-webkit-credentials-auto-fill-button {
+            visibility: hidden;
+            position: absolute;
+            right: 0;
+        }
 
-/* Opcional: refuerzo general */
-input[type="password"] {
-  appearance: none;
-  -webkit-appearance: none;
-}
+        /* Edge / IE */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
 
-</style>
+        /* Opcional: refuerzo general */
+        input[type="password"] {
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+    </style>
 </head>
+
 <body>
   <!-- ======== main-wrapper start =========== -->
     <section class="signin-section">
         <div class="container-fluid">
-          <!-- ========== title-wrapper start ========== -->
-          
-          <!-- ========== title-wrapper end ========== -->
+            <!-- ========== title-wrapper start ========== -->
 
-          <div class="row g-0 auth-row">
-            <div class="col-lg-6">
-              <div class="auth-cover-wrapper bg-primary-100">
-                <div class="auth-cover">
-                  
-                  <div class="cover-image">
-                    <img src="assets/images/auth/login.png" alt="" />
-                  </div>
-                  <div class="shape-image">
-                    <img src="assets/images/auth/shape.svg" alt="" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- end col -->
-            <div class="col-lg-6">
-              <div class="signin-wrapper">
-                <div class="form-wrapper">
-                  <h6 class="mb-15">Formulario de inicio de sesión</h6>
-                  <p class="text-sm mb-25">
-                    Ingresa tus credenciales para acceder al sistema.
-                  </p>
-                  <form method="POST" autocomplete="off" action="<?php echo e(route('login.submit')); ?>">
-                    <?php echo csrf_field(); ?>
-                    <div class="row">
+            <!-- ========== title-wrapper end ========== -->
 
-                      <?php if($errors->has('auth')): ?>
-                        <div class="col-12">
-                          <div class="alert alert-danger" role="alert"><?php echo e($errors->first('auth')); ?></div>
+            <div class="row g-0 auth-row">
+                <div class="col-lg-6">
+                    <div class="auth-cover-wrapper bg-primary-100">
+                        <div class="auth-cover">
+
+                            <div class="cover-image">
+                                <img src="assets/images/auth/login.png" alt="" />
+                            </div>
+                            <div class="shape-image">
+                                <img src="assets/images/auth/shape.svg" alt="" />
+                            </div>
                         </div>
-                      <?php endif; ?>
+                    </div>
+                </div>
+                <!-- end col -->
+                <div class="col-lg-6">
+                    <div class="signin-wrapper">
+                        <div class="form-wrapper">
+                            <h6 class="mb-15">Formulario de inicio de sesión</h6>
+                            <p class="text-sm mb-25">
+                                Ingresa tus credenciales para acceder al sistema.
+                            </p>
+                            <form method="POST" autocomplete="off" action="<?php echo e(route('login.submit')); ?>">
+                                <?php echo csrf_field(); ?>
+                                <div class="row">
 
-                        <div class="col-12">
-                        <div class="input-style-1">
-                          <label>Correo electrónico</label>
-                          <input type="text" autocomplete="off"
-  autocorrect="off"
-  autocapitalize="off"
-  spellcheck="false" name="email" value="<?php echo e(old('email')); ?>" placeholder="Ingresa tu correo electrónico" />
-                          <?php $__errorArgs = ['email'];
+                                    <?php if($errors->has('auth')): ?>
+                                    <div class="col-12">
+                                        <div class="alert alert-danger" role="alert"><?php echo e($errors->first('auth')); ?></div>
+                                    </div>
+                                    <?php endif; ?>
+
+                                    <div class="col-12">
+                                        <div class="input-style-1">
+                                            <label>Correo electrónico</label>
+                                            <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="email" value="<?php echo e(old('email')); ?>" placeholder="Ingresa tu correo electrónico" />
+                                            <?php $__errorArgs = ['email'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                            <div class="text-danger" style="font-size:13px; margin-top:6px;"><?php echo e($message); ?></div>
-                          <?php unset($message);
+                                            <div class="text-danger" style="font-size:13px; margin-top:6px;"><?php echo e($message); ?></div>
+                                            <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-                        </div>
-                      </div>
-                      
-                      
-                      <!-- end col -->
-                      <!-- Reemplaza toda la sección del password en login.blade.php -->
+                                        </div>
+                                    </div>
 
-<div class="col-12">
-  <div class="mb-3">
-    <label class="form-label fw-semibold" style="color: #0f172a; font-size: 14px;">Contraseña</label>
-    <div class="input-group input-group-password">
-      <input type="password"  autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" name="password" id="password-input" class="form-control" placeholder="Ingresa tu contraseña" style="border-right: none; padding-right: 12px;" />
-      <button class="btn btn-password-toggle" type="button" id="togglePassword" aria-label="Mostrar contraseña">
-        <i class="mdi mdi-eye" id="eye-icon"></i>
-      </button>
-    </div>
-    
-    <?php $__errorArgs = ['password'];
+
+                                    <!-- end col -->
+                                    <!-- Reemplaza toda la sección del password en login.blade.php -->
+
+                                    <div class="col-12">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold" style="color: #0f172a; font-size: 14px;">Contraseña</label>
+                                            <div class="input-group input-group-password">
+                                                <input type="password" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" name="password" id="password-input" class="form-control" placeholder="Ingresa tu contraseña" style="border-right: none; padding-right: 12px;" />
+                                                <button class="btn btn-password-toggle" type="button" id="togglePassword" aria-label="Mostrar contraseña">
+                                                    <i class="mdi mdi-eye" id="eye-icon"></i>
+                                                </button>
+                                            </div>
+
+                                            <?php $__errorArgs = ['password'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> 
-    <div class="text-danger small mt-2"><?php echo e($message); ?></div> 
-    <?php unset($message);
+$message = $__bag->first($__errorArgs[0]); ?>
+                                            <div class="text-danger small mt-2"><?php echo e($message); ?></div>
+                                            <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?> 
-  </div>
-</div>
-                      
-                      <!-- end col -->
-                      
-                      <!-- end col -->
-                     
-                      <!-- end col -->
-                       <div class="col-12 mb-3">
-  <div class="form-check">
-    <input class="form-check-input" type="checkbox" name="remember" id="remember">
-    <label class="form-check-label text-sm" for="remember" style="color:#64748b;">
-      Mantener sesión iniciada
-    </label>
-  </div>
-</div>
-                      <div class="col-12"><br><br>
-  <div class="button-group d-flex justify-content-center flex-wrap">
-    <button class="main-btn primary-btn btn-hover w-100 text-center">
-      Iniciar Sesión
-    </button>
-  </div>
+unset($__errorArgs, $__bag); ?>
+                                        </div>
+                                    </div>
 
-  <div class="text-start mt-3">
-  <a href="#" 
-   class="text-decoration-none fw-semibold small text-muted"
-   data-bs-toggle="modal" 
-   data-bs-target="#recoveryInfoModal">
-   ¿Has olvidado tu contraseña?
-</a>
 
-</div>
 
-</div>
+                                    <!-- end col -->
+                                    <div class="col-12 mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                                            <label class="form-check-label text-sm" for="remember" style="color:#64748b;">
+                                                Mantener sesión iniciada
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12"><br><br>
+                                        <div class="button-group d-flex justify-content-center flex-wrap">
+                                            <button class="main-btn primary-btn btn-hover w-100 text-center">
+                                                Iniciar Sesión
+                                            </button>
+                                        </div>
+
+                                        <div class="text-start mt-3">
+                                            <a href="#" class="text-decoration-none fw-semibold small text-muted" data-bs-toggle="modal" data-bs-target="#recoveryInfoModal">
+                                                ¿Has olvidado tu contraseña?
+                                            </a>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                                <!-- end row -->
+                            </form>
+                        </div>
 
                     </div>
-                    <!-- end row -->
-                  </form>
-                </div>
-                
-              </div>
-              
+
 <div class="container">
   <div class="row">
     <div class="col-md-6 d-flex align-items-center">
