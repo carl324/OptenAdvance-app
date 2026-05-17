@@ -142,7 +142,7 @@ La aplicación es accesible desde cualquier navegador web local, ofrece una inte
 ### Instalación Automática (Recomendado)
 
 1. **Descargar el instalador**
-   - Descarga el archivo `AdvancePOS-Installer.exe` desde el repositorio
+   - Descarga el archivo `AOptenAdvance-setup.exe` desde el repositorio
 
 2. **Ejecutar como Administrador**
    - Haz clic derecho en el archivo `.exe`
@@ -192,13 +192,7 @@ OptenAdvance/
 
 ##  Uso
 
-### Primer Inicio
-1. Accede a: `https://localhost`
-2. Inicia sesión con credenciales de admin
-3. Crea empleados y asigna roles
-4. Configura datos de la empresa (NIT, razón social, etc.)
-5. Carga el catálogo de productos
-6. Comienza a registrar ventas
+
 
 ### Operación Diaria
 - **Apertura de caja**: Inicio de jornada
@@ -288,3 +282,7 @@ Desarrollado con tecnologías de código abierto:
 ---
 
 
+<img width="1366" height="768" alt="Captura de pantalla (94)" src="https://github.com/user-attachments/assets/985e1866-a8ed-4ab7-aa00-d7fe5d658e09" />
+<img width="1366" height="768" alt="Captura de pantalla (93)" src="https://github.com/user-attachments/assets/d3734a46-1ff0-42c3-b2e4-868f5bb5c1aa" />
+<img width="1366" height="768" alt="Captura de pantalla (96)" src="https://github.com/user-attachments/assets/76d041d4-284d-4371-bb08-63c283aed5c1" />
+<img width="1366" height="768" alt="Captura de pantalla (95)" src="https://github.com/user-attachments/assets/c11e55b1-6b84-47d7-9aa5-81349d1ada00" />
